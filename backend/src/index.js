@@ -4,7 +4,7 @@ const connectDB = require('./config/db');
 
 const PORT = process.env.PORT || 5000;
 
-// Connect to MongoDB then start server
+// Connect to MongoDB and start Express server
 connectDB()
   .then(() => {
     app.listen(PORT, () => {

@@ -13,6 +13,8 @@ import {
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
+  const [aiInsights, setAiInsights] = useState([]);
+  const [aiRecommendations, setAiRecommendations] = useState([]);
   const [stats, setStats] = useState({
     todaySales: 0,
     monthlyRevenue: 0,
@@ -20,6 +22,55 @@ const Dashboard = () => {
     lowStockCount: 0,
   });
   const [loading, setLoading] = useState(true);
+
+  // Static mock fallbacks if backend AI services are unreachable
+  const mockInsights = [
+    {
+      id: 1,
+      type: 'positive',
+      message: 'Jasmine Rice sales increased by 15% compared to last week (Mock Fallback).',
+      icon: 'TrendingUp',
+      color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30'
+    },
+    {
+      id: 2,
+      type: 'warning',
+      message: 'Fresh Milk is running low and will run out within 3 days based on velocity (Mock Fallback).',
+      icon: 'AlertTriangle',
+      color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/30'
+    },
+    {
+      id: 3,
+      type: 'negative',
+      message: 'Chocolate Biscuits have not sold a single unit in the last 30 days (Mock Fallback).',
+      icon: 'TrendingDown',
+      color: 'text-rose-500 bg-rose-50 dark:bg-rose-950/30'
+    },
+    {
+      id: 4,
+      type: 'info',
+      message: 'Mustard Cooking Oil generated the highest profit margin ($4.50 per unit) this month (Mock Fallback).',
+      icon: 'DollarSign',
+      color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/30'
+    }
+  ];
+
+  const mockRecommendations = [
+    {
+      id: 1,
+      product: 'Jasmine Rice 5kg (Mock Fallback)',
+      currentStock: 15,
+      predictedDemand: 40,
+      suggestion: 'Current stock is insufficient for next week. Recommended ordering 25 more bags.',
+    },
+    {
+      id: 2,
+      product: 'Organic Honey 500g (Mock Fallback)',
+      currentStock: 3,
+      predictedDemand: 10,
+      suggestion: 'Stock is critically low. Recommended placing a reorder of 8 jars immediately.',
+    }
+  ];
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -42,7 +93,6 @@ const Dashboard = () => {
           if (saleDate === todayStr) {
             todaySum += sale.totalAmount;
           }
-          // Assuming simple monthly filter for current month
           const currentMonth = new Date().getMonth();
           const saleMonth = new Date(sale.createdAt).getMonth();
           if (saleMonth === currentMonth) {
@@ -52,10 +102,28 @@ const Dashboard = () => {
 
         setStats({
           todaySales: todaySum,
-          monthlyRevenue: monthlySum || todaySum, // fallback to today sum if no other sales
+          monthlyRevenue: monthlySum || todaySum,
           totalProducts: productsRes.data.length,
           lowStockCount: lowStockRes.data.length,
         });
+
+        // Try to fetch AI dynamic insights & recommendations from Express routes
+        try {
+          const recsRes = await API.get('/ai/recommendations');
+          setAiRecommendations(recsRes.data);
+        } catch (recErr) {
+          console.warn('AI recommendations service offline, using fallback mock data.');
+          setAiRecommendations(mockRecommendations);
+        }
+
+        try {
+          const insightsRes = await API.get('/ai/insights');
+          setAiInsights(insightsRes.data);
+        } catch (insightErr) {
+          console.warn('AI insights service offline, using fallback mock data.');
+          setAiInsights(mockInsights);
+        }
+
       } catch (err) {
         console.error('Failed to load dashboard data:', err);
       } finally {
@@ -65,55 +133,6 @@ const Dashboard = () => {
 
     fetchDashboardData();
   }, []);
-
-  // Standard static AI insights representing SIBIS smart assistant core highlights
-  const aiInsights = [
-    {
-      id: 1,
-      type: 'positive',
-      message: 'Jasmine Rice sales increased by 15% compared to last week.',
-      icon: TrendingUp,
-      color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30'
-    },
-    {
-      id: 2,
-      type: 'warning',
-      message: 'Fresh Milk is running low and will run out within 3 days based on purchase history velocity.',
-      icon: AlertTriangle,
-      color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/30'
-    },
-    {
-      id: 3,
-      type: 'negative',
-      message: 'Chocolate Biscuits have not sold a single unit in the last 30 days. Consider moving them or introducing a promotion.',
-      icon: TrendingDown,
-      color: 'text-rose-500 bg-rose-50 dark:bg-rose-950/30'
-    },
-    {
-      id: 4,
-      type: 'info',
-      message: 'Mustard Cooking Oil generated the highest profit margin ($4.50 per unit) this month.',
-      icon: DollarSign,
-      color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/30'
-    }
-  ];
-
-  const aiRecommendations = [
-    {
-      id: 1,
-      product: 'Jasmine Rice 5kg',
-      currentStock: 15,
-      predictedDemand: 40,
-      suggestion: 'Current stock is insufficient for next week. Recommended ordering 25 more bags from Superb Wholesale Distributors.',
-    },
-    {
-      id: 2,
-      product: 'Organic Honey 500g',
-      currentStock: 3,
-      predictedDemand: 10,
-      suggestion: 'Stock is critically low. Recommended placing a reorder of 8 jars immediately.',
-    }
-  ];
 
   if (loading) {
     return (
@@ -211,7 +230,14 @@ const Dashboard = () => {
           </div>
           <div className="space-y-4">
             {aiInsights.map((insight) => {
-              const IconComponent = insight.icon;
+              const iconMap = {
+                TrendingUp,
+                TrendingDown,
+                AlertTriangle,
+                DollarSign,
+                Lightbulb
+              };
+              const IconComponent = iconMap[insight.icon] || Lightbulb;
               return (
                 <div key={insight.id} className="flex items-start space-x-4 p-4 rounded-xl border border-slate-100 dark:border-slate-850">
                   <div className={`p-2.5 rounded-lg flex-shrink-0 ${insight.color}`}>

@@ -40,11 +40,13 @@ const backendFiles = [
   'backend/src/controllers/saleController.js',
   'backend/src/controllers/purchaseController.js',
   'backend/src/controllers/userController.js',
+  'backend/src/controllers/aiController.js',
   'backend/src/routes/productRoutes.js',
   'backend/src/routes/supplierRoutes.js',
   'backend/src/routes/saleRoutes.js',
   'backend/src/routes/purchaseRoutes.js',
   'backend/src/routes/userRoutes.js',
+  'backend/src/routes/aiRoutes.js',
 ];
 backendFiles.forEach(checkFile);
 console.log('');
@@ -72,6 +74,20 @@ const frontendFiles = [
   'frontend/src/pages/NotAuthorized.jsx',
 ];
 frontendFiles.forEach(checkFile);
+console.log('');
+
+// 2b. Verify AI Python File Integrity
+console.log('--- 🤖 Checking AI Decision Service Integrity ---');
+const aiFiles = [
+  'ai/requirements.txt',
+  'ai/src/config.py',
+  'ai/src/database.py',
+  'ai/src/forecasting.py',
+  'ai/src/insights.py',
+  'ai/src/main.py',
+  'ai/.env',
+];
+aiFiles.forEach(checkFile);
 console.log('');
 
 // 3. Compile & Run local tests
