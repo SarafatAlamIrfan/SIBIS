@@ -2,6 +2,8 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const http = require('http');
 const app = require('./src/app');
+const User = require('./src/models/User');
+const InventoryLog = require('./src/models/InventoryLog');
 
 const PORT = 5001;
 let server;
@@ -148,8 +150,80 @@ async function runTests() {
       }
       console.log('✅ Product stock refill successfully removed it from low-stock list.\n');
 
-      // Test G: Delete / Deactivate Supplier
-      console.log('Test 7: DELETE /api/suppliers/:id (Deactivate Supplier)');
+      // Test G: POS Checkout (Valid transaction)
+      console.log('Test 7: POST /api/sales (POS Checkout - Valid transaction)');
+      
+      // Create a cashier user
+      const cashier = await User.create({
+        firebaseUid: 'cashier-fb-uid-99',
+        name: 'Jane Smith Cashier',
+        email: 'jane.cashier@sibis.com',
+        role: 'Cashier',
+      });
+      const cashierId = cashier._id;
+
+      const salePayload = {
+        cashierId: cashierId,
+        items: [
+          {
+            productId: productId,
+            quantity: 5,
+          }
+        ],
+        paymentMethod: 'Cash',
+        paymentStatus: 'Paid',
+      };
+      
+      const createSaleRes = await makeRequest('POST', '/api/sales', salePayload);
+      if (createSaleRes.status !== 201 || !createSaleRes.body._id) {
+        throw new Error(`Failed to checkout sale: ${JSON.stringify(createSaleRes)}`);
+      }
+      const saleId = createSaleRes.body._id;
+      console.log(`✅ POS checkout completed successfully (Sale ID: ${saleId}).`);
+
+      // Verify product stock decremented
+      const checkProductRes = await makeRequest('GET', `/api/products/${productId}`);
+      if (checkProductRes.status !== 200 || checkProductRes.body.currentStock !== 20) {
+        throw new Error(`Product stock did not decrement correctly: ${JSON.stringify(checkProductRes)}`);
+      }
+      console.log('✅ Product stock level successfully decremented to 20.');
+
+      // Verify InventoryLog created
+      const logs = await InventoryLog.find({ referenceId: saleId });
+      if (logs.length !== 1 || logs[0].quantityChanged !== -5) {
+        throw new Error(`InventoryLog not recorded correctly: ${JSON.stringify(logs)}`);
+      }
+      console.log('✅ Inventory log audit entry verified.\n');
+
+      // Test H: POS Checkout (Insufficient stock)
+      console.log('Test 8: POST /api/sales (POS Checkout - Insufficient stock)');
+      const invalidSalePayload = {
+        cashierId: cashierId,
+        items: [
+          {
+            productId: productId,
+            quantity: 30, // Exceeds available stock (20)
+          }
+        ],
+        paymentMethod: 'Card',
+        paymentStatus: 'Paid',
+      };
+      const invalidSaleRes = await makeRequest('POST', '/api/sales', invalidSalePayload);
+      if (invalidSaleRes.status !== 400 || !invalidSaleRes.body.error) {
+        throw new Error(`POS checkout did not reject insufficient stock: ${JSON.stringify(invalidSaleRes)}`);
+      }
+      console.log('✅ POS checkout successfully rejected due to insufficient stock.\n');
+
+      // Test I: Get Sales List
+      console.log('Test 9: GET /api/sales (List all sales transactions)');
+      const getSalesRes = await makeRequest('GET', '/api/sales');
+      if (getSalesRes.status !== 200 || !Array.isArray(getSalesRes.body) || getSalesRes.body.length !== 1) {
+        throw new Error(`Failed to retrieve sales list: ${JSON.stringify(getSalesRes)}`);
+      }
+      console.log('✅ Sales listing retrieve verified.\n');
+
+      // Test J: Delete / Deactivate Supplier
+      console.log('Test 10: DELETE /api/suppliers/:id (Deactivate Supplier)');
       const deleteSupplierRes = await makeRequest('DELETE', `/api/suppliers/${supplierId}`);
       if (deleteSupplierRes.status !== 200 || deleteSupplierRes.body.supplier.status !== 'Inactive') {
         throw new Error(`Failed to deactivate supplier: ${JSON.stringify(deleteSupplierRes)}`);

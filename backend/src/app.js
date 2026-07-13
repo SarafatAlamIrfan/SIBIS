@@ -34,10 +34,12 @@ app.get('/', (req, res) => {
 // Import Routes
 const supplierRoutes = require('./routes/supplierRoutes');
 const productRoutes = require('./routes/productRoutes');
+const saleRoutes = require('./routes/saleRoutes');
 
 // Mount Routes
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/sales', saleRoutes);
 
 // Catch-all route (404)
 app.use((req, res, next) => {
