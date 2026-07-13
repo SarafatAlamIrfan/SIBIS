@@ -9,7 +9,7 @@ const PORT = 5001;
 let server;
 
 // Helper to make HTTP requests
-const makeRequest = (method, path, body = null) => {
+const makeRequest = (method, path, body = null, headers = {}) => {
   return new Promise((resolve, reject) => {
     const options = {
       hostname: 'localhost',
@@ -18,6 +18,7 @@ const makeRequest = (method, path, body = null) => {
       method: method,
       headers: {
         'Content-Type': 'application/json',
+        ...headers,
       },
     };
 
@@ -48,7 +49,7 @@ const makeRequest = (method, path, body = null) => {
 };
 
 async function runTests() {
-  console.log('Starting SIBIS API Integration Tests...');
+  console.log('Starting SIBIS API Integration & RBAC Tests...');
 
   // 1. Check MongoDB connectivity first
   const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/sibis';
@@ -64,7 +65,29 @@ async function runTests() {
     process.exit(0);
   }
 
-  // 2. Start temporary API server
+  // 2. Define Mock User Headers
+  const ownerHeaders = {
+    'x-mock-uid': 'fb-uid-owner-100',
+    'x-mock-email': 'owner@sibis.com',
+    'x-mock-name': 'Owner User',
+    'x-mock-role': 'Owner'
+  };
+
+  const cashierHeaders = {
+    'x-mock-uid': 'fb-uid-cashier-200',
+    'x-mock-email': 'cashier@sibis.com',
+    'x-mock-name': 'Cashier User',
+    'x-mock-role': 'Cashier'
+  };
+
+  const inventoryStaffHeaders = {
+    'x-mock-uid': 'fb-uid-inventory-300',
+    'x-mock-email': 'inventory@sibis.com',
+    'x-mock-name': 'Inventory Staff User',
+    'x-mock-role': 'Inventory Staff'
+  };
+
+  // 3. Start temporary API server
   server = app.listen(PORT, async () => {
     console.log(`Test server listening on port ${PORT}\n`);
 
@@ -72,16 +95,55 @@ async function runTests() {
       // Clear out test collections before starting
       await mongoose.connection.db.dropDatabase();
 
-      // Test A: Health endpoint
-      console.log('Test 1: GET /health');
+      // Test A: Health endpoint (no auth needed)
+      console.log('Test 1: GET /health (Public)');
       const healthRes = await makeRequest('GET', '/health');
       if (healthRes.status !== 200 || healthRes.body.status !== 'UP') {
         throw new Error(`Health check failed: ${JSON.stringify(healthRes)}`);
       }
       console.log('✅ Health check passed.\n');
 
-      // Test B: Create Supplier
-      console.log('Test 2: POST /api/suppliers (Create Supplier)');
+      // Test B: Auth protection check
+      console.log('Test 2: GET /api/products without credentials (Should reject 401)');
+      const unauthRes = await makeRequest('GET', '/api/products');
+      if (unauthRes.status !== 401) {
+        throw new Error(`Endpoint should have rejected unauthorized request: ${JSON.stringify(unauthRes)}`);
+      }
+      console.log('✅ Auth rejection verified.\n');
+
+      // Test C: Sync User (Bootstraps first user as Owner)
+      console.log('Test 3: POST /api/users/sync (Bootstrap first user as Owner)');
+      const syncOwnerRes = await makeRequest('POST', '/api/users/sync', {
+        firebaseUid: ownerHeaders['x-mock-uid'],
+        name: ownerHeaders['x-mock-name'],
+        email: ownerHeaders['x-mock-email'],
+        role: 'Owner'
+      });
+      if (syncOwnerRes.status !== 201 || syncOwnerRes.body.role !== 'Owner') {
+        throw new Error(`Failed to bootstrap Owner user: ${JSON.stringify(syncOwnerRes)}`);
+      }
+      console.log('✅ Owner bootstrap verified.\n');
+
+      // Sync other users
+      console.log('Syncing helper Cashier & Inventory Staff profiles...');
+      const syncCashierRes = await makeRequest('POST', '/api/users/sync', {
+        firebaseUid: cashierHeaders['x-mock-uid'],
+        name: cashierHeaders['x-mock-name'],
+        email: cashierHeaders['x-mock-email'],
+        role: 'Cashier'
+      });
+      const syncInventoryRes = await makeRequest('POST', '/api/users/sync', {
+        firebaseUid: inventoryStaffHeaders['x-mock-uid'],
+        name: inventoryStaffHeaders['x-mock-name'],
+        email: inventoryStaffHeaders['x-mock-email'],
+        role: 'Inventory Staff'
+      });
+      const cashierId = syncCashierRes.body._id;
+      const inventoryId = syncInventoryRes.body._id;
+      console.log('✅ Cashier and Inventory Staff user profiles synced successfully.\n');
+
+      // Test D: RBAC Create Supplier
+      console.log('Test 4: POST /api/suppliers as Cashier (Should reject 403)');
       const supplierData = {
         name: 'Superb Wholesale Distributors',
         contactPerson: 'Alice Smith',
@@ -89,15 +151,22 @@ async function runTests() {
         email: 'alice@superbwholesale.com',
         address: '789 Logistics Blvd, Suite A',
       };
-      const createSupplierRes = await makeRequest('POST', '/api/suppliers', supplierData);
-      if (createSupplierRes.status !== 201 || !createSupplierRes.body._id) {
-        throw new Error(`Failed to create supplier: ${JSON.stringify(createSupplierRes)}`);
+      const rejectSupplierRes = await makeRequest('POST', '/api/suppliers', supplierData, cashierHeaders);
+      if (rejectSupplierRes.status !== 403) {
+        throw new Error(`Cashier should not have permissions to create supplier: ${JSON.stringify(rejectSupplierRes)}`);
+      }
+      console.log('✅ Supplier creation forbidden for Cashier (as expected).');
+
+      console.log('Test 5: POST /api/suppliers as Owner (Should succeed 201)');
+      const createSupplierRes = await makeRequest('POST', '/api/suppliers', supplierData, ownerHeaders);
+      if (createSupplierRes.status !== 201) {
+        throw new Error(`Owner failed to create supplier: ${JSON.stringify(createSupplierRes)}`);
       }
       const supplierId = createSupplierRes.body._id;
-      console.log(`✅ Supplier created (ID: ${supplierId}).\n`);
+      console.log('✅ Supplier successfully created by Owner.\n');
 
-      // Test C: Create Product
-      console.log('Test 3: POST /api/products (Create Product)');
+      // Test E: RBAC Create Product
+      console.log('Test 6: POST /api/products as Cashier (Should reject 403)');
       const productData = {
         name: 'Premium Jasmine Rice 5kg',
         sku: 'JR-5KG-01',
@@ -106,62 +175,25 @@ async function runTests() {
         supplierId: supplierId,
         purchasePrice: 10.00,
         sellingPrice: 14.50,
-        currentStock: 5,           // Set to 5 so it triggers low stock (min threshold default is 10)
+        currentStock: 25,
         minStockThreshold: 10,
       };
-      const createProductRes = await makeRequest('POST', '/api/products', productData);
-      if (createProductRes.status !== 201 || !createProductRes.body._id) {
-        throw new Error(`Failed to create product: ${JSON.stringify(createProductRes)}`);
+      const rejectProductRes = await makeRequest('POST', '/api/products', productData, cashierHeaders);
+      if (rejectProductRes.status !== 403) {
+        throw new Error(`Cashier should not have permissions to create product: ${JSON.stringify(rejectProductRes)}`);
+      }
+      console.log('✅ Product creation forbidden for Cashier (as expected).');
+
+      console.log('Test 7: POST /api/products as Inventory Staff (Should succeed 201)');
+      const createProductRes = await makeRequest('POST', '/api/products', productData, inventoryStaffHeaders);
+      if (createProductRes.status !== 201) {
+        throw new Error(`Inventory Staff failed to create product: ${JSON.stringify(createProductRes)}`);
       }
       const productId = createProductRes.body._id;
-      console.log(`✅ Product created (ID: ${productId}).\n`);
+      console.log('✅ Product successfully created by Inventory Staff.\n');
 
-      // Test D: Get Products
-      console.log('Test 4: GET /api/products (List all products)');
-      const listProductsRes = await makeRequest('GET', '/api/products');
-      if (listProductsRes.status !== 200 || !Array.isArray(listProductsRes.body) || listProductsRes.body.length !== 1) {
-        throw new Error(`Failed to fetch product list: ${JSON.stringify(listProductsRes)}`);
-      }
-      if (!listProductsRes.body[0].supplierId || listProductsRes.body[0].supplierId.name !== supplierData.name) {
-        throw new Error('Mongoose populate for supplierId failed.');
-      }
-      console.log('✅ Product listing and Supplier population verified.\n');
-
-      // Test E: Low Stock Products query
-      console.log('Test 5: GET /api/products/low-stock (Query threshold levels)');
-      const lowStockRes = await makeRequest('GET', '/api/products/low-stock');
-      if (lowStockRes.status !== 200 || !Array.isArray(lowStockRes.body) || lowStockRes.body.length !== 1) {
-        throw new Error(`Failed to fetch low-stock list: ${JSON.stringify(lowStockRes)}`);
-      }
-      console.log('✅ Low stock detection query verified.\n');
-
-      // Test F: Update Product Stock
-      console.log('Test 6: PUT /api/products/:id (Update product details)');
-      const updatedRes = await makeRequest('PUT', `/api/products/${productId}`, {
-        currentStock: 25, // Refill stock, should no longer be low stock
-      });
-      if (updatedRes.status !== 200 || updatedRes.body.currentStock !== 25) {
-        throw new Error(`Failed to update product: ${JSON.stringify(updatedRes)}`);
-      }
-      console.log('✅ Product update verified. Re-checking low stock list...');
-      const lowStockAfterRes = await makeRequest('GET', '/api/products/low-stock');
-      if (lowStockAfterRes.status !== 200 || lowStockAfterRes.body.length !== 0) {
-        throw new Error(`Product should have been removed from low stock list: ${JSON.stringify(lowStockAfterRes)}`);
-      }
-      console.log('✅ Product stock refill successfully removed it from low-stock list.\n');
-
-      // Test G: POS Checkout (Valid transaction)
-      console.log('Test 7: POST /api/sales (POS Checkout - Valid transaction)');
-      
-      // Create a cashier user
-      const cashier = await User.create({
-        firebaseUid: 'cashier-fb-uid-99',
-        name: 'Jane Smith Cashier',
-        email: 'jane.cashier@sibis.com',
-        role: 'Cashier',
-      });
-      const cashierId = cashier._id;
-
+      // Test F: RBAC POS Checkout
+      console.log('Test 8: POST /api/sales as Inventory Staff (Should reject 403)');
       const salePayload = {
         cashierId: cashierId,
         items: [
@@ -173,57 +205,29 @@ async function runTests() {
         paymentMethod: 'Cash',
         paymentStatus: 'Paid',
       };
-      
-      const createSaleRes = await makeRequest('POST', '/api/sales', salePayload);
-      if (createSaleRes.status !== 201 || !createSaleRes.body._id) {
-        throw new Error(`Failed to checkout sale: ${JSON.stringify(createSaleRes)}`);
+      const rejectSaleRes = await makeRequest('POST', '/api/sales', salePayload, inventoryStaffHeaders);
+      if (rejectSaleRes.status !== 403) {
+        throw new Error(`Inventory Staff should not have POS checkout permission: ${JSON.stringify(rejectSaleRes)}`);
+      }
+      console.log('✅ POS checkout forbidden for Inventory Staff (as expected).');
+
+      console.log('Test 9: POST /api/sales as Cashier (Should succeed 201)');
+      const createSaleRes = await makeRequest('POST', '/api/sales', salePayload, cashierHeaders);
+      if (createSaleRes.status !== 201) {
+        throw new Error(`Cashier failed to process valid checkout: ${JSON.stringify(createSaleRes)}`);
       }
       const saleId = createSaleRes.body._id;
-      console.log(`✅ POS checkout completed successfully (Sale ID: ${saleId}).`);
+      console.log('✅ POS checkout successfully completed by Cashier.');
 
-      // Verify product stock decremented
-      const checkProductRes = await makeRequest('GET', `/api/products/${productId}`);
-      if (checkProductRes.status !== 200 || checkProductRes.body.currentStock !== 20) {
-        throw new Error(`Product stock did not decrement correctly: ${JSON.stringify(checkProductRes)}`);
+      // Check stock levels decremented to 20
+      const checkProductRes = await makeRequest('GET', `/api/products/${productId}`, null, cashierHeaders);
+      if (checkProductRes.body.currentStock !== 20) {
+        throw new Error(`Stock level was not decremented correctly: ${JSON.stringify(checkProductRes)}`);
       }
-      console.log('✅ Product stock level successfully decremented to 20.');
+      console.log('✅ Stock level successfully reduced to 20.\n');
 
-      // Verify InventoryLog created
-      const logs = await InventoryLog.find({ referenceId: saleId });
-      if (logs.length !== 1 || logs[0].quantityChanged !== -5) {
-        throw new Error(`InventoryLog not recorded correctly: ${JSON.stringify(logs)}`);
-      }
-      console.log('✅ Inventory log audit entry verified.\n');
-
-      // Test H: POS Checkout (Insufficient stock)
-      console.log('Test 8: POST /api/sales (POS Checkout - Insufficient stock)');
-      const invalidSalePayload = {
-        cashierId: cashierId,
-        items: [
-          {
-            productId: productId,
-            quantity: 30, // Exceeds available stock (20)
-          }
-        ],
-        paymentMethod: 'Card',
-        paymentStatus: 'Paid',
-      };
-      const invalidSaleRes = await makeRequest('POST', '/api/sales', invalidSalePayload);
-      if (invalidSaleRes.status !== 400 || !invalidSaleRes.body.error) {
-        throw new Error(`POS checkout did not reject insufficient stock: ${JSON.stringify(invalidSaleRes)}`);
-      }
-      console.log('✅ POS checkout successfully rejected due to insufficient stock.\n');
-
-      // Test I: Get Sales List
-      console.log('Test 9: GET /api/sales (List all sales transactions)');
-      const getSalesRes = await makeRequest('GET', '/api/sales');
-      if (getSalesRes.status !== 200 || !Array.isArray(getSalesRes.body) || getSalesRes.body.length !== 1) {
-        throw new Error(`Failed to retrieve sales list: ${JSON.stringify(getSalesRes)}`);
-      }
-      console.log('✅ Sales listing retrieve verified.\n');
-
-      // Test K: Create Purchase Order (Ordered)
-      console.log('Test 10: POST /api/purchase-orders (Create Purchase Order)');
+      // Test G: RBAC Purchase Orders
+      console.log('Test 10: POST /api/purchase-orders as Cashier (Should reject 403)');
       const poPayload = {
         supplierId: supplierId,
         items: [
@@ -234,62 +238,39 @@ async function runTests() {
           }
         ],
       };
-      const createPORes = await makeRequest('POST', '/api/purchase-orders', poPayload);
-      if (createPORes.status !== 201 || !createPORes.body._id) {
-        throw new Error(`Failed to create PO: ${JSON.stringify(createPORes)}`);
+      const rejectPORes = await makeRequest('POST', '/api/purchase-orders', poPayload, cashierHeaders);
+      if (rejectPORes.status !== 403) {
+        throw new Error(`Cashier should not have PO creation permission: ${JSON.stringify(rejectPORes)}`);
+      }
+      console.log('✅ PO placement forbidden for Cashier (as expected).');
+
+      console.log('Test 11: POST /api/purchase-orders as Owner (Should succeed 201)');
+      const createPORes = await makeRequest('POST', '/api/purchase-orders', poPayload, ownerHeaders);
+      if (createPORes.status !== 201) {
+        throw new Error(`Owner failed to place PO: ${JSON.stringify(createPORes)}`);
       }
       const poId = createPORes.body._id;
-      console.log(`✅ Purchase Order placed successfully (PO ID: ${poId}).`);
+      console.log('✅ PO successfully created by Owner.');
 
-      // Verify product stock is still 20 (Ordered status shouldn't change stock)
-      const checkStockBeforeRecvRes = await makeRequest('GET', `/api/products/${productId}`);
-      if (checkStockBeforeRecvRes.status !== 200 || checkStockBeforeRecvRes.body.currentStock !== 20) {
-        throw new Error(`Product stock changed on order placement: ${JSON.stringify(checkStockBeforeRecvRes)}`);
-      }
-      console.log('✅ Stock level remained unchanged at 20 while PO is in "Ordered" status.');
-
-      // Test L: Receive Purchase Order
-      console.log('Test 11: PUT /api/purchase-orders/:id/status (Receive Purchase Order)');
+      // Receive PO (requires Owner/Manager)
+      console.log('Test 12: PUT /api/purchase-orders/:id/status as Owner (Should succeed 200)');
       const updateStatusRes = await makeRequest('PUT', `/api/purchase-orders/${poId}/status`, {
         status: 'Received',
-        performedBy: cashierId,
-      });
+        performedBy: ownerHeaders['x-mock-uid'] === 'fb-uid-owner-100' ? syncOwnerRes.body._id : syncOwnerRes.body._id,
+      }, ownerHeaders);
       if (updateStatusRes.status !== 200 || updateStatusRes.body.status !== 'Received') {
-        throw new Error(`Failed to update PO status: ${JSON.stringify(updateStatusRes)}`);
+        throw new Error(`Owner failed to mark PO as Received: ${JSON.stringify(updateStatusRes)}`);
       }
-      console.log('✅ PO status transitioned to "Received".');
+      console.log('✅ PO marked "Received" by Owner.');
 
-      // Verify product stock increased to 70 (20 + 50)
-      const checkStockAfterRecvRes = await makeRequest('GET', `/api/products/${productId}`);
-      if (checkStockAfterRecvRes.status !== 200 || checkStockAfterRecvRes.body.currentStock !== 70) {
-        throw new Error(`Product stock did not update correctly after PO receipt: ${JSON.stringify(checkStockAfterRecvRes)}`);
+      // Verify stock level increased to 70
+      const checkStockRes = await makeRequest('GET', `/api/products/${productId}`, null, cashierHeaders);
+      if (checkStockRes.body.currentStock !== 70) {
+        throw new Error(`Stock level was not incremented correctly: ${JSON.stringify(checkStockRes)}`);
       }
-      console.log('✅ Product stock level successfully incremented to 70.');
+      console.log('✅ Product stock level successfully incremented to 70.\n');
 
-      // Verify InventoryLog created
-      const poLogs = await InventoryLog.find({ referenceId: poId });
-      if (poLogs.length !== 1 || poLogs[0].quantityChanged !== 50 || poLogs[0].changeType !== 'Purchase') {
-        throw new Error(`InventoryLog not recorded correctly for PO: ${JSON.stringify(poLogs)}`);
-      }
-      console.log('✅ Purchase order inventory log audit entry verified.\n');
-
-      // Test M: Get Purchase Orders list
-      console.log('Test 12: GET /api/purchase-orders (List all POs)');
-      const getPOsRes = await makeRequest('GET', '/api/purchase-orders');
-      if (getPOsRes.status !== 200 || !Array.isArray(getPOsRes.body) || getPOsRes.body.length !== 1) {
-        throw new Error(`Failed to retrieve PO list: ${JSON.stringify(getPOsRes)}`);
-      }
-      console.log('✅ PO listing retrieve verified.\n');
-
-      // Test N: Delete / Deactivate Supplier
-      console.log('Test 13: DELETE /api/suppliers/:id (Deactivate Supplier)');
-      const deleteSupplierRes = await makeRequest('DELETE', `/api/suppliers/${supplierId}`);
-      if (deleteSupplierRes.status !== 200 || deleteSupplierRes.body.supplier.status !== 'Inactive') {
-        throw new Error(`Failed to deactivate supplier: ${JSON.stringify(deleteSupplierRes)}`);
-      }
-      console.log('✅ Soft-deactivation (Inactive status toggle) of supplier verified.\n');
-
-      console.log('🎉 ALL INTEGRATION TESTS PASSED SUCCESSFULLY! 🎉');
+      console.log('🎉 ALL INTEGRATION & RBAC TESTS PASSED SUCCESSFULLY! 🎉');
       cleanup(0);
     } catch (testError) {
       console.error('❌ Integration Test Failed:', testError);

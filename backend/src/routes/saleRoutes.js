@@ -5,12 +5,16 @@ const {
   getSales,
   getSaleById,
 } = require('../controllers/saleController');
+const { protect, restrictTo } = require('../middleware/authMiddleware');
+
+// Protect all routes
+router.use(protect);
 
 router.route('/')
-  .post(checkoutSale)
-  .get(getSales);
+  .post(restrictTo('Owner', 'Manager', 'Cashier'), checkoutSale)
+  .get(restrictTo('Owner', 'Manager', 'Cashier'), getSales);
 
 router.route('/:id')
-  .get(getSaleById);
+  .get(restrictTo('Owner', 'Manager', 'Cashier'), getSaleById);
 
 module.exports = router;

@@ -8,17 +8,21 @@ const {
   deleteProduct,
   getLowStockProducts,
 } = require('../controllers/productController');
+const { protect, restrictTo } = require('../middleware/authMiddleware');
+
+// Protect all routes
+router.use(protect);
 
 router.route('/')
-  .post(createProduct)
+  .post(restrictTo('Owner', 'Manager', 'Inventory Staff'), createProduct)
   .get(getProducts);
 
 router.route('/low-stock')
-  .get(getLowStockProducts);
+  .get(restrictTo('Owner', 'Manager', 'Inventory Staff'), getLowStockProducts);
 
 router.route('/:id')
   .get(getProductById)
-  .put(updateProduct)
-  .delete(deleteProduct);
+  .put(restrictTo('Owner', 'Manager', 'Inventory Staff'), updateProduct)
+  .delete(restrictTo('Owner', 'Manager'), deleteProduct);
 
 module.exports = router;

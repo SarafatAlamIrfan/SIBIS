@@ -6,6 +6,13 @@ const {
   getPurchaseOrderById,
   updatePurchaseOrderStatus,
 } = require('../controllers/purchaseController');
+const { protect, restrictTo } = require('../middleware/authMiddleware');
+
+// Protect all routes
+router.use(protect);
+
+// Owner/Manager only routes
+router.use(restrictTo('Owner', 'Manager'));
 
 router.route('/')
   .post(createPurchaseOrder)

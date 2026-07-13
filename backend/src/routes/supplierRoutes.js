@@ -7,14 +7,18 @@ const {
   updateSupplier,
   deleteSupplier,
 } = require('../controllers/supplierController');
+const { protect, restrictTo } = require('../middleware/authMiddleware');
+
+// Protect all routes
+router.use(protect);
 
 router.route('/')
-  .post(createSupplier)
+  .post(restrictTo('Owner', 'Manager'), createSupplier)
   .get(getSuppliers);
 
 router.route('/:id')
   .get(getSupplierById)
-  .put(updateSupplier)
-  .delete(deleteSupplier);
+  .put(restrictTo('Owner', 'Manager'), updateSupplier)
+  .delete(restrictTo('Owner', 'Manager'), deleteSupplier);
 
 module.exports = router;
