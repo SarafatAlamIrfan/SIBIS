@@ -1,0 +1,15 @@
+{
+  "name": "sibis-workspace",
+  "version": "1.0.0",
+  "description": "Smart Inventory & Business Insight System Workspace Runner",
+  "main": "index.js",
+  "scripts": {
+    "backend": "npm run dev --prefix backend",
+    "frontend": "npm run dev --prefix frontend",
+    "ai": "cd ai && .venv\\Scripts\\python -m src.main",
+    "dev": "concurrently \"npm:backend\" \"npm:frontend\" \"npm:ai\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
