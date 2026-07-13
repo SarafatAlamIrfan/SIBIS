@@ -222,8 +222,67 @@ async function runTests() {
       }
       console.log('✅ Sales listing retrieve verified.\n');
 
-      // Test J: Delete / Deactivate Supplier
-      console.log('Test 10: DELETE /api/suppliers/:id (Deactivate Supplier)');
+      // Test K: Create Purchase Order (Ordered)
+      console.log('Test 10: POST /api/purchase-orders (Create Purchase Order)');
+      const poPayload = {
+        supplierId: supplierId,
+        items: [
+          {
+            productId: productId,
+            quantityOrdered: 50,
+            purchasePrice: 9.50,
+          }
+        ],
+      };
+      const createPORes = await makeRequest('POST', '/api/purchase-orders', poPayload);
+      if (createPORes.status !== 201 || !createPORes.body._id) {
+        throw new Error(`Failed to create PO: ${JSON.stringify(createPORes)}`);
+      }
+      const poId = createPORes.body._id;
+      console.log(`✅ Purchase Order placed successfully (PO ID: ${poId}).`);
+
+      // Verify product stock is still 20 (Ordered status shouldn't change stock)
+      const checkStockBeforeRecvRes = await makeRequest('GET', `/api/products/${productId}`);
+      if (checkStockBeforeRecvRes.status !== 200 || checkStockBeforeRecvRes.body.currentStock !== 20) {
+        throw new Error(`Product stock changed on order placement: ${JSON.stringify(checkStockBeforeRecvRes)}`);
+      }
+      console.log('✅ Stock level remained unchanged at 20 while PO is in "Ordered" status.');
+
+      // Test L: Receive Purchase Order
+      console.log('Test 11: PUT /api/purchase-orders/:id/status (Receive Purchase Order)');
+      const updateStatusRes = await makeRequest('PUT', `/api/purchase-orders/${poId}/status`, {
+        status: 'Received',
+        performedBy: cashierId,
+      });
+      if (updateStatusRes.status !== 200 || updateStatusRes.body.status !== 'Received') {
+        throw new Error(`Failed to update PO status: ${JSON.stringify(updateStatusRes)}`);
+      }
+      console.log('✅ PO status transitioned to "Received".');
+
+      // Verify product stock increased to 70 (20 + 50)
+      const checkStockAfterRecvRes = await makeRequest('GET', `/api/products/${productId}`);
+      if (checkStockAfterRecvRes.status !== 200 || checkStockAfterRecvRes.body.currentStock !== 70) {
+        throw new Error(`Product stock did not update correctly after PO receipt: ${JSON.stringify(checkStockAfterRecvRes)}`);
+      }
+      console.log('✅ Product stock level successfully incremented to 70.');
+
+      // Verify InventoryLog created
+      const poLogs = await InventoryLog.find({ referenceId: poId });
+      if (poLogs.length !== 1 || poLogs[0].quantityChanged !== 50 || poLogs[0].changeType !== 'Purchase') {
+        throw new Error(`InventoryLog not recorded correctly for PO: ${JSON.stringify(poLogs)}`);
+      }
+      console.log('✅ Purchase order inventory log audit entry verified.\n');
+
+      // Test M: Get Purchase Orders list
+      console.log('Test 12: GET /api/purchase-orders (List all POs)');
+      const getPOsRes = await makeRequest('GET', '/api/purchase-orders');
+      if (getPOsRes.status !== 200 || !Array.isArray(getPOsRes.body) || getPOsRes.body.length !== 1) {
+        throw new Error(`Failed to retrieve PO list: ${JSON.stringify(getPOsRes)}`);
+      }
+      console.log('✅ PO listing retrieve verified.\n');
+
+      // Test N: Delete / Deactivate Supplier
+      console.log('Test 13: DELETE /api/suppliers/:id (Deactivate Supplier)');
       const deleteSupplierRes = await makeRequest('DELETE', `/api/suppliers/${supplierId}`);
       if (deleteSupplierRes.status !== 200 || deleteSupplierRes.body.supplier.status !== 'Inactive') {
         throw new Error(`Failed to deactivate supplier: ${JSON.stringify(deleteSupplierRes)}`);
