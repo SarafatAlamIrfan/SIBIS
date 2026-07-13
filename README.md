@@ -1,4 +1,4 @@
-# Smart Inventory & Business Insight System (SIBIS)
+# Smart Inventory & Business Inventory System (SIBIS)
 
 A smart, AI-powered web-based Inventory Management and Business Decision Support System designed for small grocery stores, pharmacies, minimarts, and local retail shops.
 
