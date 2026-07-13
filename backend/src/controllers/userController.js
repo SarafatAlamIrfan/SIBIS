@@ -11,9 +11,20 @@ exports.syncUser = async (req, res, next) => {
       return res.status(400).json({ error: 'firebaseUid, name, and email are required.' });
     }
 
-    // Check if user already exists
-    let user = await User.findOne({ firebaseUid });
+    // Check if user already exists by firebaseUid or email
+    let user = await User.findOne({
+      $or: [
+        { firebaseUid },
+        { email: email.toLowerCase() }
+      ]
+    });
+
     if (user) {
+      // If Firebase UID has changed (e.g. switching between mock dev profiles or resetting accounts), sync it
+      if (user.firebaseUid !== firebaseUid) {
+        user.firebaseUid = firebaseUid;
+        await user.save();
+      }
       return res.status(200).json(user);
     }
 
