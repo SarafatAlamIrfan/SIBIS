@@ -112,7 +112,7 @@ def generate_business_insights():
         insights.append({
             "id": insight_id,
             "type": "info",
-            "message": f"{max_margin_prod} generates the highest profit margin (${max_margin:.2f} per unit) in your current catalog.",
+            "message": f"{max_margin_prod} generates the highest profit margin (৳{max_margin:.2f} per unit) in your current catalog.",
             "icon": "DollarSign",
             "color": "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/30"
         })

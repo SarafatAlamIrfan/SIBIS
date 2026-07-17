@@ -166,7 +166,7 @@ const POS = () => {
                 </div>
                 <div className="flex items-center justify-between mt-2 w-full">
                   <span className="font-bold text-indigo-600 dark:text-indigo-400">
-                    ${product.sellingPrice.toFixed(2)}
+                    ৳{product.sellingPrice.toFixed(2)}
                   </span>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${product.currentStock <= product.minStockThreshold ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}>
                     Stock: {product.currentStock}
@@ -200,7 +200,7 @@ const POS = () => {
                     {item.product.name}
                   </h4>
                   <span className="text-xs text-slate-400">
-                    ${item.product.sellingPrice.toFixed(2)} / unit
+                    ৳{item.product.sellingPrice.toFixed(2)} / unit
                   </span>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -264,7 +264,7 @@ const POS = () => {
             <div className="flex justify-between items-center">
               <span className="text-slate-500 font-semibold">Total Amount</span>
               <span className="text-2xl font-black text-slate-800 dark:text-white">
-                ${total.toFixed(2)}
+                ৳{total.toFixed(2)}
               </span>
             </div>
 
@@ -314,14 +314,14 @@ const POS = () => {
                       {products.find(p => p._id === item.productId)?.name || 'Product'} x{item.quantity}
                     </span>
                     <span className="font-semibold text-slate-700 dark:text-slate-350">
-                      ${(item.priceAtSale * item.quantity).toFixed(2)}
+                      ৳{(item.priceAtSale * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}
               </div>
               <div className="flex justify-between border-t border-slate-200 pt-3 text-base font-bold dark:border-slate-800">
                 <span className="text-slate-800 dark:text-white">Total:</span>
-                <span className="text-indigo-600 dark:text-indigo-400">${invoice.totalAmount.toFixed(2)}</span>
+                <span className="text-indigo-600 dark:text-indigo-400">৳{invoice.totalAmount.toFixed(2)}</span>
               </div>
             </div>
 

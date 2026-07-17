@@ -203,7 +203,7 @@ const Products = () => {
                       <td className="px-6 py-4 font-mono text-xs text-slate-500 dark:text-slate-400">{product.sku}</td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-350">{product.category}</td>
                       <td className="px-6 py-4 font-semibold text-slate-850 dark:text-slate-200">
-                        ${product.purchasePrice.toFixed(2)} / ${product.sellingPrice.toFixed(2)}
+                        ৳{product.purchasePrice.toFixed(2)} / ৳{product.sellingPrice.toFixed(2)}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`font-bold ${isLowStock ? 'text-red-500' : 'text-slate-700 dark:text-slate-300'}`}>
@@ -321,7 +321,7 @@ const Products = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold mb-1.5">Purchase Cost ($) *</label>
+                  <label className="block font-semibold mb-1.5">Purchase Cost (৳) *</label>
                   <input
                     type="number"
                     step="0.01"
@@ -333,7 +333,7 @@ const Products = () => {
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold mb-1.5">Selling Price ($) *</label>
+                  <label className="block font-semibold mb-1.5">Selling Price (৳) *</label>
                   <input
                     type="number"
                     step="0.01"

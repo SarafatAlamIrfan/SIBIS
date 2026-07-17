@@ -49,7 +49,7 @@ const Dashboard = () => {
     {
       id: 4,
       type: 'info',
-      message: 'Mustard Cooking Oil generated the highest profit margin ($4.50 per unit) this month (Mock Fallback).',
+      message: 'Mustard Cooking Oil generated the highest profit margin (৳4.50 per unit) this month (Mock Fallback).',
       icon: 'DollarSign',
       color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/30'
     }
@@ -156,7 +156,7 @@ const Dashboard = () => {
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between dark:bg-slate-900 dark:border-slate-800">
           <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Today's Sales</p>
-            <h3 className="text-2xl font-bold text-slate-800 dark:text-white">${stats.todaySales.toFixed(2)}</h3>
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-white">৳{stats.todaySales.toFixed(2)}</h3>
           </div>
           <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
             <DollarSign className="w-6 h-6" />
@@ -166,7 +166,7 @@ const Dashboard = () => {
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between dark:bg-slate-900 dark:border-slate-800">
           <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Monthly Revenue</p>
-            <h3 className="text-2xl font-bold text-slate-800 dark:text-white">${stats.monthlyRevenue.toFixed(2)}</h3>
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-white">৳{stats.monthlyRevenue.toFixed(2)}</h3>
           </div>
           <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
             <TrendingUp className="w-6 h-6" />

@@ -195,7 +195,7 @@ const PurchaseOrders = () => {
                           {new Date(po.orderedDate).toLocaleDateString()}
                         </span>
                       </td>
-                      <td className="px-6 py-4 font-bold text-slate-800 dark:text-white">${po.totalAmount.toFixed(2)}</td>
+                      <td className="px-6 py-4 font-bold text-slate-800 dark:text-white">৳{po.totalAmount.toFixed(2)}</td>
                       <td className="px-6 py-4">
                         <span className={`text-xs px-2.5 py-0.5 rounded-full border font-semibold ${statusBadge}`}>
                           {po.status}
