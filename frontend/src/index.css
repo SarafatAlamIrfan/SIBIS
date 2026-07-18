@@ -1,19 +1,120 @@
 @import "tailwindcss";
 
-/* Base styles / Custom styling tokens if any */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --animate-float-slow: float-slow 8s ease-in-out infinite;
+  --animate-float-delayed: float-delayed 10s ease-in-out infinite;
+  --animate-pulse-subtle: pulse-subtle 3s ease-in-out infinite;
+  --animate-shimmer: shimmer 2.5s linear infinite;
+  
+  --shadow-neon-indigo: 0 0 15px rgba(99, 102, 241, 0.4);
+  --shadow-neon-rose: 0 0 15px rgba(244, 63, 94, 0.4);
+  --shadow-neon-emerald: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(2deg); }
+}
+
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+  50% { transform: translateY(12px) rotate(-2deg) scale(1.03); }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 2px rgba(99,102,241,0.2)); }
+  50% { opacity: 0.7; filter: drop-shadow(0 0 8px rgba(99,102,241,0.5)); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 :root {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: #f9fafb; /* Light slate background default */
-  color: #111827;
+  background-color: #f8fafc;
+  color: #0f172a;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #0b0f19;
-    color: #f9fafb;
-  }
+.dark body {
+  background-color: #080b11;
+  color: #f8fafc;
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.dark .glass-panel {
+  background-color: rgba(13, 18, 30, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(30, 41, 59, 0.6);
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Thermal receipt cut edge */
+.receipt-edge {
+  position: relative;
+}
+
+.receipt-edge::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background-image: linear-gradient(135deg, transparent 50%, #ffffff 50%), linear-gradient(225deg, transparent 50%, #ffffff 50%);
+  background-position: 0 0;
+  background-size: 8px 8px;
+  background-repeat: repeat-x;
+  z-index: 10;
+}
+
+.dark .receipt-edge::after {
+  background-image: linear-gradient(135deg, transparent 50%, #1e293b 50%), linear-gradient(225deg, transparent 50%, #1e293b 50%);
 }

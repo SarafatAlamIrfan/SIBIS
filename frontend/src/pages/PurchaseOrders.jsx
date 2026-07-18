@@ -8,7 +8,8 @@ import {
   Trash2, 
   Calendar, 
   FileText, 
-  Truck 
+  Truck,
+  PlusCircle 
 } from 'lucide-react';
 
 const PurchaseOrders = () => {
@@ -136,22 +137,23 @@ const PurchaseOrders = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex flex-col items-center justify-center h-96 space-y-4">
+        <div className="w-10 h-10 border-4 border-indigo-650 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-slate-400 dark:text-slate-555 font-semibold text-xs tracking-wider animate-pulse">COMPILING LOGS...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 animate-[pulse-subtle_2s_ease-out_1]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Purchase Orders (PO)</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Manage vendor procurement, place orders, and intake product stock.</p>
+          <h1 className="text-3xl font-black tracking-tight text-slate-850 dark:text-white">Purchase Orders</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">Manage vendor procurement, place orders, and intake product stock.</p>
         </div>
         <button
           onClick={openAddModal}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm shadow-md transition-all cursor-pointer flex items-center"
+          className="px-4 py-3 bg-gradient-to-r from-indigo-600 to-violet-605 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl text-xs shadow-md shadow-indigo-650/20 hover:shadow-indigo-650/30 transition-all cursor-pointer flex items-center transform active:scale-97"
         >
           <Plus className="w-4 h-4 mr-2" />
           Create PO
@@ -159,70 +161,75 @@ const PurchaseOrders = () => {
       </div>
 
       {/* PO logs table */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
+      <div className="glass-panel border border-slate-200/40 dark:border-slate-800/40 rounded-3xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-400 uppercase text-xs font-semibold tracking-wider dark:bg-slate-950 dark:border-slate-800">
+          <table className="w-full text-xs text-left">
+            <thead className="bg-slate-50/50 border-b border-slate-200/40 text-slate-405 uppercase font-bold tracking-wider dark:bg-slate-950/40 dark:border-slate-850/40">
               <tr>
-                <th className="px-6 py-4">PO Number</th>
-                <th className="px-6 py-4">Supplier</th>
-                <th className="px-6 py-4">Order Date</th>
-                <th className="px-6 py-4">Total Amount</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-6 py-4.5">PO Number</th>
+                <th className="px-6 py-4.5">Supplier</th>
+                <th className="px-6 py-4.5">Order Date</th>
+                <th className="px-6 py-4.5">Total Amount</th>
+                <th className="px-6 py-4.5">Status</th>
+                <th className="px-6 py-4.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-150 dark:divide-slate-800">
+            <tbody className="divide-y divide-slate-150 dark:divide-slate-855">
               {purchaseOrders.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-12 text-slate-400">
+                  <td colSpan="6" className="text-center py-16 text-slate-400 font-bold uppercase tracking-wider">
                     No purchase orders placed yet. Click "Create PO" to initiate procurement.
                   </td>
                 </tr>
               ) : (
                 purchaseOrders.map((po) => {
-                  let statusBadge = 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:border-slate-700';
-                  if (po.status === 'Received') statusBadge = 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-900';
-                  if (po.status === 'Cancelled') statusBadge = 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950 dark:text-rose-200 dark:border-rose-900';
-                  
+                  let statusBadge = 'bg-slate-105 text-slate-655 border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800';
+                  if (po.status === 'Received') statusBadge = 'bg-emerald-550/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400 shadow-neon-emerald/10';
+                  if (po.status === 'Cancelled') statusBadge = 'bg-rose-550/10 text-rose-600 border-rose-500/20 dark:text-rose-400 shadow-neon-rose/10';
+                  if (po.status === 'Ordered') statusBadge = 'bg-blue-550/10 text-blue-600 border-blue-500/20 dark:text-blue-400 shadow-neon-indigo/10';
+
                   return (
-                    <tr key={po._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/30 transition-colors">
-                      <td className="px-6 py-4 font-mono font-semibold text-xs text-indigo-600 dark:text-indigo-400">{po.poNumber}</td>
-                      <td className="px-6 py-4 font-semibold text-slate-800 dark:text-white">{po.supplierId?.name || 'Unknown'}</td>
-                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400">
-                        <span className="flex items-center text-xs">
-                          <Calendar className="w-3.5 h-3.5 mr-1" />
-                          {new Date(po.orderedDate).toLocaleDateString()}
+                    <tr key={po._id} className="hover:bg-slate-50/30 dark:hover:bg-slate-850/10 transition-colors">
+                      <td className="px-6 py-4">
+                        <span className="font-mono font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 px-2 py-1 rounded-md border border-indigo-200/20 dark:border-indigo-900/30">
+                          {po.poNumber}
                         </span>
                       </td>
-                      <td className="px-6 py-4 font-bold text-slate-800 dark:text-white">৳{po.totalAmount.toFixed(2)}</td>
+                      <td className="px-6 py-4 font-extrabold text-slate-850 dark:text-white text-sm">{po.supplierId?.name || 'Unknown Supplier'}</td>
+                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400">
+                        <span className="flex items-center text-xs font-bold">
+                          <Calendar className="w-3.5 h-3.5 mr-1.5 text-indigo-500" />
+                          {new Date(po.orderedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-black text-slate-805 dark:text-white text-sm">৳{po.totalAmount.toFixed(2)}</td>
                       <td className="px-6 py-4">
-                        <span className={`text-xs px-2.5 py-0.5 rounded-full border font-semibold ${statusBadge}`}>
-                          {po.status}
+                        <span className={`text-[10px] px-2.5 py-1 rounded-lg border font-black tracking-wide ${statusBadge}`}>
+                          {po.status.toUpperCase()}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
                         {po.status === 'Ordered' ? (
-                          <>
+                          <div className="inline-flex space-x-2">
                             <button
                               onClick={() => handleUpdateStatus(po._id, 'Received')}
-                              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all cursor-pointer inline-flex items-center"
+                              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded-xl shadow-md shadow-emerald-500/10 transition-all cursor-pointer inline-flex items-center transform active:scale-97"
                             >
                               <Check className="w-3.5 h-3.5 mr-1" />
                               Receive
                             </button>
                             <button
                               onClick={() => handleUpdateStatus(po._id, 'Cancelled')}
-                              className="px-3 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 text-xs font-semibold rounded-lg transition-all cursor-pointer inline-flex items-center dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-rose-950"
+                              className="px-3.5 py-2 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 text-[10px] font-bold rounded-xl transition-all cursor-pointer inline-flex items-center dark:bg-slate-900 dark:border-slate-805 dark:hover:bg-rose-950/20 transform active:scale-97"
                             >
                               <X className="w-3.5 h-3.5 mr-1" />
                               Cancel
                             </button>
-                          </>
+                          </div>
                         ) : (
-                          <span className="text-xs text-slate-400 flex items-center justify-end">
-                            <FileText className="w-3.5 h-3.5 mr-1" />
-                            Archived {po.receivedDate && `(${new Date(po.receivedDate).toLocaleDateString()})`}
+                          <span className="text-[10px] text-slate-400 font-bold flex items-center justify-end uppercase tracking-wider">
+                            <FileText className="w-3.5 h-3.5 mr-1 text-slate-450" />
+                            Archived {po.receivedDate && `(${new Date(po.receivedDate).toLocaleDateString([], { month: 'short', day: 'numeric' })})`}
                           </span>
                         )}
                       </td>
@@ -237,34 +244,34 @@ const PurchaseOrders = () => {
 
       {/* Modal Dialog Form to Create PO */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-6 shadow-2xl border border-slate-100 dark:bg-slate-900 dark:border-slate-800 overflow-y-auto max-h-[90vh]">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-4 dark:border-slate-800">
-              <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-6 shadow-2xl border border-slate-100 dark:bg-slate-900 dark:border-slate-800 overflow-y-auto max-h-[90vh]">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4 dark:border-slate-850">
+              <h3 className="text-xl font-black text-slate-850 dark:text-white flex items-center">
                 <Truck className="w-5 h-5 mr-2 text-indigo-500" />
-                Place Purchase Order (PO)
+                Place Purchase Order
               </h3>
               <button
                 onClick={() => setModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                className="text-slate-405 hover:text-slate-655 dark:hover:text-slate-202 cursor-pointer p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {formError && (
-              <div className="bg-red-950 border border-red-800 text-red-200 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-rose-950/60 border border-rose-808 text-red-200 px-4 py-3 rounded-2xl text-xs font-bold animate-pulse">
                 {formError}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4 text-sm text-slate-700 dark:text-slate-300">
+            <form onSubmit={handleSubmit} className="space-y-4 text-xs text-slate-705 dark:text-slate-300">
               <div>
-                <label className="block font-semibold mb-1.5">Select Supplier *</label>
+                <label className="block font-bold mb-1.5">Select Supplier *</label>
                 <select
                   value={selectedSupplierId}
                   onChange={(e) => setSelectedSupplierId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 >
                   {suppliers.map((s) => (
                     <option key={s._id} value={s._id}>{s.name}</option>
@@ -273,15 +280,15 @@ const PurchaseOrders = () => {
               </div>
 
               <div className="space-y-3">
-                <label className="block font-semibold">Ordered Items *</label>
+                <label className="block font-bold">Ordered Items *</label>
                 
                 {poItems.map((item, idx) => (
-                  <div key={idx} className="flex items-center space-x-3 bg-slate-50 p-3 rounded-xl dark:bg-slate-950 dark:border dark:border-slate-850">
+                  <div key={idx} className="flex items-center space-x-3 bg-slate-50 dark:bg-slate-950 p-3 rounded-2xl border border-slate-150/50 dark:border-slate-850">
                     <div className="flex-1">
                       <select
                         value={item.productId}
                         onChange={(e) => handleItemChange(idx, 'productId', e.target.value)}
-                        className="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                       >
                         {products.map((p) => (
                           <option key={p._id} value={p._id}>{p.name} (SKU: {p.sku})</option>
@@ -295,7 +302,7 @@ const PurchaseOrders = () => {
                         placeholder="Qty"
                         value={item.quantityOrdered}
                         onChange={(e) => handleItemChange(idx, 'quantityOrdered', e.target.value)}
-                        className="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                       />
                     </div>
                     <div className="w-28">
@@ -306,14 +313,14 @@ const PurchaseOrders = () => {
                         placeholder="Cost"
                         value={item.purchasePrice}
                         onChange={(e) => handleItemChange(idx, 'purchasePrice', e.target.value)}
-                        className="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                       />
                     </div>
                     {poItems.length > 1 && (
                       <button
                         type="button"
                         onClick={() => handleRemoveItemRow(idx)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                        className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/5 dark:hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -324,24 +331,24 @@ const PurchaseOrders = () => {
                 <button
                   type="button"
                   onClick={handleAddItemRow}
-                  className="px-3 py-1.5 text-xs text-indigo-600 hover:text-indigo-850 font-bold border border-indigo-200 border-dashed rounded-lg transition-colors cursor-pointer flex items-center"
+                  className="px-3.5 py-2 text-[10px] text-indigo-650 hover:text-indigo-800 font-bold border border-indigo-250 border-dashed rounded-xl transition-colors cursor-pointer flex items-center"
                 >
-                  <Plus className="w-3.5 h-3.5 mr-1" />
+                  <PlusCircle className="w-4 h-4 mr-1.5" />
                   Add Another Item
                 </button>
               </div>
 
-              <div className="flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-850">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-center cursor-pointer dark:bg-slate-800 dark:text-slate-350 dark:hover:bg-slate-750"
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-705 font-bold rounded-xl text-center cursor-pointer dark:bg-slate-800 dark:text-slate-305 dark:hover:bg-slate-750"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-center cursor-pointer shadow-lg shadow-indigo-600/20"
+                  className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white font-bold rounded-xl text-center cursor-pointer shadow-lg shadow-indigo-500/20 active:scale-98 transition-all"
                 >
                   Place Order
                 </button>
