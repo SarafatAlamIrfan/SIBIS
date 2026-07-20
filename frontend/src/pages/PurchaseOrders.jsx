@@ -141,8 +141,8 @@ const PurchaseOrders = () => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-96 space-y-4">
-        <div className="w-10 h-10 border-4 border-indigo-650 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-slate-400 dark:text-slate-555 font-semibold text-xs tracking-wider animate-pulse">COMPILING LOGS...</p>
+        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-slate-400 dark:text-slate-500 font-semibold text-xs tracking-wider animate-pulse">COMPILING LOGS...</p>
       </div>
     );
   }
@@ -151,15 +151,15 @@ const PurchaseOrders = () => {
     <div className="space-y-8 animate-[pulse-subtle_2s_ease-out_1]">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-850 dark:text-white">Purchase Orders</h1>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Purchase Orders</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">Manage vendor procurement, place orders, and intake product stock.</p>
         </div>
         <button
           onClick={openAddModal}
-          className="px-4 py-3 bg-gradient-to-r from-indigo-600 to-violet-605 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl text-xs shadow-md shadow-indigo-650/20 hover:shadow-indigo-650/30 transition-all cursor-pointer flex items-center transform active:scale-97"
+          className="px-5 py-3 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black rounded-2xl text-xs shadow-lg shadow-indigo-600/25 transition-all cursor-pointer flex items-center space-x-2 transform active:scale-97 border border-indigo-400/30"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          Create PO
+          <Plus className="w-4 h-4 stroke-[3]" />
+          <span>Create Purchase Order</span>
         </button>
       </div>
 

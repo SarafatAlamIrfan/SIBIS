@@ -211,7 +211,7 @@ const ReorderList = () => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-96 space-y-4">
-        <div className="w-10 h-10 border-4 border-indigo-650 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-slate-400 dark:text-slate-500 font-semibold text-xs tracking-wider animate-pulse">LOADING REORDER LIST...</p>
       </div>
     );
@@ -221,7 +221,7 @@ const ReorderList = () => {
     <div className="space-y-8 animate-[pulse-subtle_2s_ease-out_1]">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-850 dark:text-white flex items-center space-x-2">
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center space-x-2">
             <span>Reorder List & Planner</span>
             <span className="text-xs bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-extrabold px-3 py-1 rounded-full border border-indigo-200/20">
               {reorderItems.length} queued
@@ -243,7 +243,7 @@ const ReorderList = () => {
           
           <Link
             to="/products"
-            className="px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 font-bold rounded-xl text-xs transition-all cursor-pointer flex items-center"
+            className="px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold rounded-xl text-xs transition-all cursor-pointer flex items-center"
           >
             <Plus className="w-4 h-4 mr-1.5" />
             Browse Products
@@ -439,11 +439,11 @@ const ReorderList = () => {
               <button
                 onClick={handleGeneratePurchaseOrders}
                 disabled={submitting || activeReorderItems.length === 0}
-                className="px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl text-xs tracking-wider shadow-lg shadow-indigo-600/20 active:scale-97 transition-all flex items-center cursor-pointer disabled:opacity-50"
+                className="px-6 py-3.5 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black rounded-2xl text-xs shadow-lg shadow-indigo-600/25 transition-all cursor-pointer flex items-center space-x-2 transform active:scale-97 border border-indigo-400/30 disabled:opacity-50"
               >
-                <Truck className="w-4 h-4 mr-2" />
+                <Truck className="w-4 h-4 stroke-[2.5]" />
                 <span>{submitting ? 'Generating POs...' : 'Create Purchase Orders'}</span>
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>

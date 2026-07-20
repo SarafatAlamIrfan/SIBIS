@@ -320,8 +320,8 @@ const POS = () => {
             </div>
 
             <div className="flex justify-between items-center py-2">
-              <span className="text-slate-450 dark:text-slate-400 font-bold text-xs uppercase tracking-wider">Total Amount</span>
-              <span className="text-3xl font-black text-slate-805 dark:text-white tracking-tight">
+              <span className="text-slate-400 dark:text-slate-400 font-bold text-xs uppercase tracking-wider">Total Amount</span>
+              <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                 ৳{total.toFixed(2)}
               </span>
             </div>
@@ -329,7 +329,7 @@ const POS = () => {
             <button
               onClick={handleCheckout}
               disabled={loading}
-              className="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all cursor-pointer flex items-center justify-center text-sm transform active:scale-98"
+              className="w-full py-4 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black rounded-2xl shadow-lg shadow-indigo-600/25 border border-indigo-400/30 transition-all cursor-pointer flex items-center justify-center text-sm transform active:scale-98"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2.5 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -351,7 +351,7 @@ const POS = () => {
             {/* The Thermal Receipt paper background container */}
             <div className="bg-white text-slate-900 p-6 rounded-[22px] space-y-6 receipt-edge relative">
               <div className="flex flex-col items-center text-center space-y-2 border-b border-slate-200 border-dashed pb-5">
-                <div className="p-3.5 bg-indigo-50 text-indigo-650 rounded-2xl">
+                <div className="p-3.5 bg-indigo-50 text-indigo-600 rounded-2xl">
                   <Receipt className="w-8 h-8" />
                 </div>
                 <h3 className="text-xl font-black tracking-tight text-slate-950">SIBIS RETAIL STORE</h3>
@@ -361,12 +361,11 @@ const POS = () => {
                 </span>
               </div>
 
-              <div className="space-y-4 text-xs font-bold">
-                <div className="grid grid-cols-2 gap-y-1.5 text-slate-650 font-medium">
-                  <span>Cashier:</span>
-                  <span className="text-right text-slate-950 font-bold">{currentUser.name}</span>
-                  <span>Payment Status:</span>
-                  <span className="text-right text-emerald-600 font-bold">PAID</span>
+              {/* Transaction information details */}
+              <div className="space-y-3 text-xs font-medium border-b border-slate-200 border-dashed pb-4">
+                <div className="grid grid-cols-2 gap-1 text-[11px] text-slate-500 font-mono">
+                  <span>Cashier / Staff:</span>
+                  <span className="text-right text-slate-950 font-bold">{invoice.cashierName}</span>
                   <span>Payment Mode:</span>
                   <span className="text-right text-slate-950 font-bold">{invoice.paymentMethod}</span>
                   <span>Timestamp:</span>
@@ -396,7 +395,7 @@ const POS = () => {
                 
                 <div className="flex justify-between text-base font-black pt-2 text-slate-950">
                   <span>TOTAL AMOUNT:</span>
-                  <span className="text-indigo-650 text-lg">৳{invoice.totalAmount.toFixed(2)}</span>
+                  <span className="text-indigo-600 text-lg">৳{invoice.totalAmount.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -412,14 +411,14 @@ const POS = () => {
                 onClick={() => {
                   window.print();
                 }}
-                className="flex-1 py-3 bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white font-bold rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-center border border-slate-700/50"
+                className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-center border border-slate-700/50"
               >
                 <Printer className="w-4 h-4 mr-2" />
                 Print
               </button>
               <button
                 onClick={() => setInvoice(null)}
-                className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white font-bold rounded-xl text-xs transition-all cursor-pointer flex items-center justify-center"
+                className="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl text-xs transition-all cursor-pointer flex items-center justify-center"
               >
                 Done
               </button>

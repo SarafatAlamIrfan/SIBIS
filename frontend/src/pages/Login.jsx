@@ -135,7 +135,7 @@ const Login = () => {
 
       <div className="relative z-10 w-full max-w-md bg-white/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 backdrop-blur-xl p-8 md:p-10 rounded-3xl shadow-2xl transition-all duration-300">
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center p-3.5 bg-gradient-to-br from-indigo-600 to-violet-650 rounded-2xl shadow-lg shadow-indigo-600/20">
+          <div className="inline-flex items-center justify-center p-3.5 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl shadow-lg shadow-indigo-600/20">
             <Store className="h-8 w-8 text-white" />
           </div>
           <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
@@ -147,12 +147,12 @@ const Login = () => {
         </div>
 
         {error && (
-          <div className="mt-6 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-250 px-4 py-3 rounded-2xl text-xs font-bold animate-pulse">
+          <div className="mt-6 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-200 px-4 py-3 rounded-2xl text-xs font-bold animate-pulse">
             {error}
           </div>
         )}
 
-        <form className="mt-8 space-y-6 text-xs text-slate-605 dark:text-slate-400 font-bold" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6 text-xs text-slate-600 dark:text-slate-400 font-bold" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
               <label htmlFor="email-address" className="uppercase tracking-wider block mb-2">
@@ -205,10 +205,10 @@ const Login = () => {
           <div className="pt-2">
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-xs font-bold rounded-xl text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-150 cursor-pointer shadow-lg shadow-indigo-600/20 active:scale-97"
+              className="w-full py-4 px-4 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black rounded-2xl text-xs tracking-wider shadow-lg shadow-indigo-600/25 border border-indigo-400/30 transform active:scale-97 transition-all flex items-center justify-center cursor-pointer"
             >
-              <LogIn className="h-4.5 w-4.5 mr-2 text-indigo-200 group-hover:text-white transition-colors" />
-              Sign In to Dashboard
+              <LogIn className="h-4.5 w-4.5 mr-2 text-white" />
+              <span>Sign In to Dashboard</span>
             </button>
           </div>
         </form>

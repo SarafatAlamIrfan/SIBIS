@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, ShoppingCart, Package, Truck, ClipboardList, BarChart3, ListPlus, Building2 } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, Truck, ClipboardList, BarChart3, ListPlus, Building2, Users, Activity, User } from 'lucide-react';
 
 const Sidebar = () => {
   const { currentUser } = useAuth();
@@ -69,6 +69,24 @@ const Sidebar = () => {
       path: '/purchase-orders',
       icon: ClipboardList,
       roles: ['Owner', 'Manager']
+    },
+    {
+      name: 'Staff & Team',
+      path: '/staff',
+      icon: Users,
+      roles: ['Owner', 'Manager']
+    },
+    {
+      name: 'Store Activity',
+      path: '/activity',
+      icon: Activity,
+      roles: ['Owner', 'Manager', 'System Admin']
+    },
+    {
+      name: 'My Profile',
+      path: '/profile',
+      icon: User,
+      roles: ['System Admin', 'Owner', 'Manager', 'Cashier', 'Inventory Staff']
     }
   ];
 
@@ -76,14 +94,18 @@ const Sidebar = () => {
 
   return (
     <div className="fixed inset-y-0 left-0 z-20 w-64 bg-slate-900 border-r border-slate-800/60 dark:bg-slate-950/80 dark:border-slate-900/50 backdrop-blur-xl flex flex-col transition-all duration-300">
-      <div className="h-16 flex items-center px-6 border-b border-slate-800/40 dark:border-slate-900/50 bg-slate-950/20 backdrop-blur-sm">
-        <div className="p-1.5 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-lg shadow-md shadow-indigo-500/10 mr-3">
+      <Link
+        to="/dashboard"
+        className="h-16 flex items-center px-6 border-b border-slate-800/40 dark:border-slate-900/50 bg-slate-950/20 backdrop-blur-sm hover:bg-slate-800/30 transition-all cursor-pointer group"
+        title="Go to Dashboard Overview"
+      >
+        <div className="p-1.5 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-lg shadow-md shadow-indigo-500/10 mr-3 group-hover:scale-105 transition-transform duration-200">
           <BarChart3 className="w-5 h-5 text-white animate-[pulse-subtle_2s_infinite]" />
         </div>
-        <span className="text-lg font-black tracking-widest bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 bg-clip-text text-transparent">
+        <span className="text-lg font-black tracking-widest bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 bg-clip-text text-transparent group-hover:opacity-90 transition-opacity">
           SIBIS
         </span>
-      </div>
+      </Link>
       <div className="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto">
         {visibleItems.map((item) => {
           const Icon = item.icon;

@@ -17,7 +17,6 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: [true, 'Email is required'],
-      unique: true,
       lowercase: true,
       trim: true,
     },
@@ -37,6 +36,20 @@ const userSchema = new mongoose.Schema(
     storeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Store',
+    },
+    avatar: {
+      type: String,
+      default: '',
+    },
+    phone: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    bio: {
+      type: String,
+      default: '',
+      trim: true,
     },
     isActive: {
       type: Boolean,

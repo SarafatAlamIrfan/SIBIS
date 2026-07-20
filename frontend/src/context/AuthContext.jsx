@@ -66,6 +66,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Update User Profile (Name, Avatar, Phone, Bio)
+  const updateUserProfile = async (profileData) => {
+    try {
+      const response = await API.put('/users/profile', profileData);
+      setCurrentUser(response.data);
+      return response.data;
+    } catch (err) {
+      console.error('Failed to update profile:', err.response?.data?.error || err.message);
+      throw new Error(err.response?.data?.error || 'Profile update failed.');
+    }
+  };
+
   // Logout handler
   const logout = async () => {
     localStorage.removeItem('sibis_token');
@@ -79,6 +91,7 @@ export const AuthProvider = ({ children }) => {
     isFirebaseConfigured: false,
     login,
     registerStore,
+    updateUserProfile,
     logout,
     toggleMockMode: () => {},
   };

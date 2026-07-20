@@ -3,6 +3,7 @@ const Sale = require('../models/Sale');
 const Product = require('../models/Product');
 const InventoryLog = require('../models/InventoryLog');
 const User = require('../models/User');
+const logActivity = require('../utils/activityLogger');
 
 // @desc    Checkout a sale (process POS transaction)
 // @route   POST /api/sales
@@ -75,11 +76,14 @@ exports.checkoutSale = async (req, res, next) => {
     const sale = await Sale.create({
       invoiceNumber,
       cashierId,
+      storeId: cashier.storeId || req.user?.storeId,
       items: saleItems,
       totalAmount,
       paymentMethod,
       paymentStatus,
     });
+
+const logActivity = require('../utils/activityLogger');
 
     // Update stocks and write Inventory Logs
     for (const item of validatedItems) {
@@ -94,6 +98,7 @@ exports.checkoutSale = async (req, res, next) => {
       // Create Inventory Log
       await InventoryLog.create({
         productId: product._id,
+        storeId: storeId || cashier.storeId,
         changeType: 'Sale',
         quantityChanged: -item.quantity,
         previousStock: prevStock,
@@ -104,20 +109,36 @@ exports.checkoutSale = async (req, res, next) => {
       });
     }
 
+    // Record Store Activity Log with member name & role
+    await logActivity({
+      storeId: storeId || cashier.storeId,
+      user: req.user || cashier,
+      actionCategory: 'POS Sale',
+      actionDescription: `Processed POS Sale Invoice #${invoiceNumber} for ৳${totalAmount.toFixed(2)} (${validatedItems.length} items)`,
+      details: { invoiceNumber, totalAmount, paymentMethod },
+    });
+
     res.status(201).json(sale);
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Get all sales transactions
+// @desc    Get all sales transactions for the active store
 // @route   GET /api/sales
-// @access  Public
+// @access  Private
 exports.getSales = async (req, res, next) => {
   try {
-    const sales = await Sale.find()
+    const filter = {};
+    if (req.user && req.user.storeId && req.user.role !== 'System Admin') {
+      filter.storeId = req.user.storeId;
+    }
+
+    const sales = await Sale.find(filter)
       .populate('cashierId', 'name email role')
-      .populate('items.productId', 'name sku category');
+      .populate('items.productId', 'name sku category')
+      .sort({ createdAt: -1 });
+
     res.status(200).json(sales);
   } catch (error) {
     next(error);

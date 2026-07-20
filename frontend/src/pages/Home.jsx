@@ -47,12 +47,12 @@ const Home = () => {
       {/* Header Navigation Bar */}
       <nav className="fixed top-0 left-0 right-0 z-40 bg-white/60 dark:bg-slate-950/60 backdrop-blur-md border-b border-slate-200/55 dark:border-slate-900/55 transition-colors">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3.5">
-            <div className="p-2 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/10">
+          <Link to="/" className="flex items-center space-x-3.5 group cursor-pointer" title="SIBIS Home">
+            <div className="p-2 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/10 group-hover:scale-105 transition-transform">
               <Store className="w-5 h-5" />
             </div>
             <span className="text-xl font-black tracking-tight bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-300 dark:to-pink-400 bg-clip-text text-transparent">SIBIS</span>
-          </div>
+          </Link>
 
           <div className="flex items-center space-x-4">
             {/* Theme Toggle */}
@@ -96,7 +96,7 @@ const Home = () => {
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
-        <div className="inline-flex items-center space-x-2.5 px-3.5 py-1.5 bg-indigo-500/10 dark:bg-indigo-900/20 text-indigo-750 dark:text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-wider mb-6 animate-pulse border border-indigo-500/10">
+        <div className="inline-flex items-center space-x-2.5 px-3.5 py-1.5 bg-indigo-500/10 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-wider mb-6 animate-pulse border border-indigo-500/10">
           <Sparkles className="w-3.5 h-3.5" />
           <span>SIBIS</span>
         </div>
@@ -115,14 +115,14 @@ const Home = () => {
         <div className="mt-8 flex flex-col sm:flex-row items-center gap-4">
           <Link
             to={currentUser ? "/dashboard" : "/register"}
-            className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl text-xs tracking-wider shadow-lg shadow-indigo-600/20 active:scale-97 transition-all flex items-center justify-center cursor-pointer"
+            className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black rounded-2xl text-xs tracking-wider shadow-lg shadow-indigo-600/25 border border-indigo-400/30 transform active:scale-97 transition-all flex items-center justify-center cursor-pointer"
           >
             {currentUser ? 'Explore Dashboard' : 'Get Started & Register Shop'}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Link>
           <a
             href="#features"
-            className="w-full sm:w-auto px-6 py-3.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-305 font-bold rounded-xl text-xs tracking-wider border border-slate-200 dark:border-slate-800 transition-colors flex items-center justify-center cursor-pointer"
+            className="w-full sm:w-auto px-6 py-3.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl text-xs tracking-wider border border-slate-200 dark:border-slate-800 transition-colors flex items-center justify-center cursor-pointer"
           >
             Learn Core Features
           </a>

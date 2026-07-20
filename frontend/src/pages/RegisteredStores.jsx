@@ -150,9 +150,9 @@ const RegisteredStores = () => {
 
           <button
             onClick={() => setModalOpen(true)}
-            className="px-4 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl text-xs tracking-wider shadow-lg shadow-indigo-600/20 active:scale-97 transition-all flex items-center space-x-2 cursor-pointer"
+            className="px-5 py-3 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black rounded-2xl text-xs shadow-lg shadow-indigo-600/25 transition-all cursor-pointer flex items-center space-x-2 transform active:scale-97 border border-indigo-400/30"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 stroke-[3]" />
             <span>Register New Store</span>
           </button>
         </div>
@@ -160,12 +160,12 @@ const RegisteredStores = () => {
 
       {/* Global SaaS Platform Summary Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-850 p-5 rounded-3xl shadow-sm space-y-2">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm space-y-2">
           <div className="flex justify-between items-center text-slate-400">
             <span className="text-[10px] font-extrabold uppercase tracking-wider">Total Registered Stores</span>
             <StoreIcon className="w-4 h-4 text-indigo-500" />
           </div>
-          <p className="text-2xl font-black text-slate-850 dark:text-white">{stats.totalStores}</p>
+          <p className="text-2xl font-black text-slate-900 dark:text-white">{stats.totalStores}</p>
           <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-500/20">
             {stats.activeStores} Active Tenants
           </span>

@@ -33,55 +33,6 @@ const Dashboard = () => {
   const [categoryData, setCategoryData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Static mock fallbacks if backend AI services are unreachable
-  const mockInsights = [
-    {
-      id: 1,
-      type: 'positive',
-      message: 'Basmati Rice sales increased by 15% compared to last week (AI Recommendation).',
-      icon: 'TrendingUp',
-      color: 'text-emerald-500 bg-emerald-500/10 dark:text-emerald-450 dark:bg-emerald-950/30'
-    },
-    {
-      id: 2,
-      type: 'warning',
-      message: 'Fresh Milk is running low and will run out within 3 days based on velocity.',
-      icon: 'AlertTriangle',
-      color: 'text-amber-500 bg-amber-500/10 dark:text-amber-450 dark:bg-amber-950/30'
-    },
-    {
-      id: 3,
-      type: 'negative',
-      message: 'Chocolate Biscuits have not sold a single unit in the last 30 days.',
-      icon: 'TrendingDown',
-      color: 'text-rose-500 bg-rose-500/10 dark:text-rose-450 dark:bg-rose-950/30'
-    },
-    {
-      id: 4,
-      type: 'info',
-      message: 'Mustard Cooking Oil generated the highest profit margin (৳50.00 per unit) this month.',
-      icon: 'DollarSign',
-      color: 'text-indigo-500 bg-indigo-500/10 dark:text-indigo-450 dark:bg-indigo-950/30'
-    }
-  ];
-
-  const mockRecommendations = [
-    {
-      id: 1,
-      product: 'Basmati Rice 5kg',
-      currentStock: 15,
-      predictedDemand: 40,
-      suggestion: 'Current stock is insufficient for next week. Recommended ordering 25 more bags.',
-    },
-    {
-      id: 2,
-      product: 'Organic Honey 500g',
-      currentStock: 3,
-      predictedDemand: 10,
-      suggestion: 'Stock is critically low. Recommended placing a reorder of 8 jars immediately.',
-    }
-  ];
-
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -95,28 +46,65 @@ const Dashboard = () => {
         const salesRes = await API.get('/sales');
         setSales(salesRes.data);
 
-        // Calculate stats
-        const todayStr = new Date().toISOString().slice(0, 10);
-        let todaySum = 0;
-        let monthlySum = 0;
+        // Calculate 100% REAL stats and REAL percentage comparisons
+        const now = new Date();
+        const todayStr = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10);
 
-        salesRes.data.forEach((sale) => {
-          const saleDate = new Date(sale.createdAt).toISOString().slice(0, 10);
-          if (saleDate === todayStr) {
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()).toISOString().slice(0, 10);
+
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        const lastMonthDate = new Date(now);
+        lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
+        const lastMonth = lastMonthDate.getMonth();
+        const lastMonthYear = lastMonthDate.getFullYear();
+
+        let todaySum = 0;
+        let yesterdaySum = 0;
+        let monthlySum = 0;
+        let lastMonthSum = 0;
+
+        (salesRes.data || []).forEach((sale) => {
+          const sDate = new Date(sale.createdAt);
+          const saleDateStr = new Date(sDate.getFullYear(), sDate.getMonth(), sDate.getDate()).toISOString().slice(0, 10);
+
+          if (saleDateStr === todayStr) {
             todaySum += sale.totalAmount;
           }
-          const currentMonth = new Date().getMonth();
-          const saleMonth = new Date(sale.createdAt).getMonth();
-          if (saleMonth === currentMonth) {
+          if (saleDateStr === yesterdayStr) {
+            yesterdaySum += sale.totalAmount;
+          }
+
+          if (sDate.getMonth() === currentMonth && sDate.getFullYear() === currentYear) {
             monthlySum += sale.totalAmount;
+          }
+          if (sDate.getMonth() === lastMonth && sDate.getFullYear() === lastMonthYear) {
+            lastMonthSum += sale.totalAmount;
           }
         });
 
+        let todayPct = null;
+        if (yesterdaySum > 0) {
+          todayPct = ((todaySum - yesterdaySum) / yesterdaySum) * 100;
+        }
+
+        let monthlyPct = null;
+        if (lastMonthSum > 0) {
+          monthlyPct = ((monthlySum - lastMonthSum) / lastMonthSum) * 100;
+        }
+
         setStats({
           todaySales: todaySum,
-          monthlyRevenue: monthlySum || todaySum,
-          totalProducts: productsRes.data.length,
-          lowStockCount: lowStockRes.data.length,
+          yesterdaySales: yesterdaySum,
+          todayPct,
+          monthlyRevenue: monthlySum,
+          lastMonthRevenue: lastMonthSum,
+          monthlyPct,
+          totalProducts: Array.isArray(productsRes.data) ? productsRes.data.length : 0,
+          lowStockCount: Array.isArray(lowStockRes.data) ? lowStockRes.data.length : 0,
         });
 
         // 1. Process 7-day sales trend for SVG Chart
@@ -157,19 +145,19 @@ const Dashboard = () => {
         })).sort((a, b) => b.count - a.count);
         setCategoryData(catList.slice(0, 4));
 
-        // Try to fetch AI dynamic insights & recommendations from Express routes
+        // Fetch 100% REAL dynamic AI insights & recommendations from MongoDB endpoints
         try {
           const recsRes = await API.get('/ai/recommendations');
-          setAiRecommendations(recsRes.data.length ? recsRes.data : mockRecommendations);
+          setAiRecommendations(recsRes.data || []);
         } catch (recErr) {
-          setAiRecommendations(mockRecommendations);
+          setAiRecommendations([]);
         }
 
         try {
           const insightsRes = await API.get('/ai/insights');
-          setAiInsights(insightsRes.data.length ? insightsRes.data : mockInsights);
+          setAiInsights(insightsRes.data || []);
         } catch (insightErr) {
-          setAiInsights(mockInsights);
+          setAiInsights([]);
         }
 
       } catch (err) {
@@ -245,9 +233,16 @@ const Dashboard = () => {
               <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
             </div>
             <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">৳{stats.todaySales.toFixed(2)}</h3>
-            <span className="text-[10px] text-emerald-500 font-bold inline-flex items-center mt-2">
-              <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" /> +12.4% vs yesterday
-            </span>
+            {stats.todayPct !== null ? (
+              <span className={`text-[10px] font-bold inline-flex items-center mt-2 ${stats.todayPct >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {stats.todayPct >= 0 ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />}
+                {stats.todayPct >= 0 ? `+${stats.todayPct.toFixed(1)}%` : `${stats.todayPct.toFixed(1)}%`} vs yesterday
+              </span>
+            ) : (
+              <span className="text-[10px] text-slate-400 font-bold inline-flex items-center mt-2">
+                Live POS sales today
+              </span>
+            )}
           </div>
           <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 rounded-2xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform duration-300">
             <DollarSign className="w-6 h-6" />
@@ -269,9 +264,16 @@ const Dashboard = () => {
               <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
             </div>
             <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">৳{stats.monthlyRevenue.toFixed(2)}</h3>
-            <span className="text-[10px] text-emerald-500 font-bold inline-flex items-center mt-2">
-              <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" /> +8.2% vs last month
-            </span>
+            {stats.monthlyPct !== null ? (
+              <span className={`text-[10px] font-bold inline-flex items-center mt-2 ${stats.monthlyPct >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {stats.monthlyPct >= 0 ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />}
+                {stats.monthlyPct >= 0 ? `+${stats.monthlyPct.toFixed(1)}%` : `${stats.monthlyPct.toFixed(1)}%`} vs last month
+              </span>
+            ) : (
+              <span className="text-[10px] text-slate-400 font-bold inline-flex items-center mt-2">
+                Current month revenue
+              </span>
+            )}
           </div>
           <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
             <TrendingUp className="w-6 h-6" />
@@ -333,7 +335,7 @@ const Dashboard = () => {
           </div>
           <div className={`p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300 ${
             stats.lowStockCount > 0 
-              ? 'bg-rose-500/10 text-rose-600 dark:text-rose-455' 
+              ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400' 
               : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
           }`}>
             <AlertTriangle className="w-6 h-6" />
@@ -345,9 +347,9 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Weekly Revenue Trend Chart */}
         <div className="lg:col-span-7 glass-panel p-6 rounded-3xl shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-850">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
             <div>
-              <h3 className="font-black text-lg text-slate-850 dark:text-white">Sales & Revenue Trend</h3>
+              <h3 className="font-black text-lg text-slate-800 dark:text-white">Sales & Revenue Trend</h3>
               <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Last 7 Days Overview</p>
             </div>
             <span className="text-xs bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-xl font-bold">
@@ -431,7 +433,7 @@ const Dashboard = () => {
                 ))}
               </svg>
             ) : (
-              <div className="h-44 flex items-center justify-center text-slate-450 text-xs">No sales data recorded this week.</div>
+              <div className="h-44 flex items-center justify-center text-slate-400 text-xs">No sales data recorded this week.</div>
             )}
           </div>
         </div>
@@ -439,13 +441,13 @@ const Dashboard = () => {
         {/* Category breakdown bar gauges */}
         <div className="lg:col-span-5 glass-panel p-6 rounded-3xl shadow-sm flex flex-col justify-between">
           <div>
-            <h3 className="font-black text-lg text-slate-850 dark:text-white">Category Distribution</h3>
+            <h3 className="font-black text-lg text-slate-800 dark:text-white">Category Distribution</h3>
             <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Top stock classifications</p>
           </div>
 
           <div className="mt-6 space-y-4">
             {categoryData.length === 0 ? (
-              <div className="py-12 text-center text-slate-450 text-xs">No inventory products registered.</div>
+              <div className="py-12 text-center text-slate-400 text-xs font-semibold">No inventory products registered.</div>
             ) : (
               categoryData.map((cat, idx) => {
                 const colors = [
@@ -458,8 +460,8 @@ const Dashboard = () => {
                 return (
                   <div key={cat.name} className="space-y-1">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-slate-700 dark:text-slate-350">{cat.name}</span>
-                      <span className="font-black text-slate-850 dark:text-white">{cat.count} items ({cat.percentage}%)</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-300">{cat.name}</span>
+                      <span className="font-black text-slate-800 dark:text-white">{cat.count} items ({cat.percentage}%)</span>
                     </div>
                     <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                       <div 
@@ -473,11 +475,23 @@ const Dashboard = () => {
             )}
           </div>
 
-          <div className="border-t border-slate-100 dark:border-slate-850 pt-4 mt-6 flex justify-between items-center text-xs">
+          <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-6 flex justify-between items-center text-xs">
             <span className="font-semibold text-slate-400">Inventory Status:</span>
-            <span className="font-extrabold text-emerald-500 flex items-center">
-              Active & Healthy <ChevronRight className="w-4 h-4 ml-1" />
-            </span>
+            <button
+              onClick={() => navigate(stats.lowStockCount > 0 ? '/products?filter=low-stock' : '/products')}
+              className="font-extrabold text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center cursor-pointer transition-colors group"
+              title="Click to view & manage store inventory products"
+            >
+              {stats.lowStockCount > 0 ? (
+                <span className="text-rose-500 flex items-center font-black animate-pulse">
+                  <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Attention Needed ({stats.lowStockCount} low stock)
+                </span>
+              ) : (
+                <span className="flex items-center">
+                  Active & Healthy <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </div>
@@ -485,87 +499,106 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* AI Recommendations */}
         <div className="glass-panel p-6 rounded-3xl shadow-sm space-y-6">
-          <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-850 pb-4">
+          <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div className="p-2 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl shadow-md shadow-indigo-500/10 text-white">
               <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-850 dark:text-white">Smart Reorder Recommendations</h2>
-              <p className="text-slate-450 text-[10px] font-bold uppercase tracking-wider mt-0.5">AI-assisted supply chain optimizations</p>
+              <h2 className="text-xl font-black text-slate-800 dark:text-white">Smart Reorder Recommendations</h2>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-0.5">AI-assisted supply chain optimizations</p>
             </div>
           </div>
           
           <div className="space-y-4">
-            {aiRecommendations.map((rec) => (
-              <div 
-                key={rec.id} 
-                className="p-4 rounded-2xl border border-slate-100 dark:border-slate-850 bg-slate-50/50 dark:bg-slate-950/20 space-y-3 hover:shadow-sm hover:border-indigo-500/30 transition-all duration-200"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-bold text-slate-800 text-sm dark:text-slate-100">{rec.product}</h4>
-                    <p className="text-[10px] text-slate-400 font-medium mt-0.5">Auto-generated procurement plan</p>
-                  </div>
-                  <span className="text-[10px] bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 font-extrabold px-2.5 py-1 rounded-lg border border-indigo-200/20">
-                    Demand: {rec.predictedDemand} units
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-4 py-2 border-t border-b border-slate-100/60 dark:border-slate-850/60 text-xs">
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Current Stock</p>
-                    <p className="text-sm font-black text-rose-500 mt-0.5">{rec.currentStock} units</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Recommended Order</p>
-                    <p className="text-sm font-black text-indigo-500 mt-0.5">+{rec.predictedDemand - rec.currentStock} units</p>
-                  </div>
-                </div>
-                <p className="text-xs text-slate-650 dark:text-slate-350 italic border-l-2 border-indigo-500 pl-3">
-                  {rec.suggestion}
+            {aiRecommendations.length === 0 ? (
+              <div className="p-8 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-center space-y-1">
+                <p className="font-extrabold text-slate-700 dark:text-slate-300 text-xs">All Stock Levels Healthy</p>
+                <p className="text-[11px] text-slate-400 font-semibold">
+                  All products in your store are currently stocked above minimum threshold levels. No reorder required right now.
                 </p>
               </div>
-            ))}
+            ) : (
+              aiRecommendations.map((rec) => (
+                <div 
+                  key={rec.id} 
+                  className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 space-y-3 hover:shadow-sm hover:border-indigo-500/30 transition-all duration-200"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-slate-800 text-sm dark:text-slate-100">{rec.product}</h4>
+                      <p className="text-[10px] text-slate-400 font-medium mt-0.5 font-mono">Real-time demand analysis</p>
+                    </div>
+                    <span className="text-[10px] bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 font-extrabold px-2.5 py-1 rounded-lg border border-indigo-200/20">
+                      Demand: {rec.predictedDemand} units
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 py-2 border-t border-b border-slate-100/60 dark:border-slate-800/60 text-xs">
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Current Stock</p>
+                      <p className="text-sm font-black text-rose-500 mt-0.5">{rec.currentStock} units</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Recommended Order</p>
+                      <p className="text-sm font-black text-indigo-500 mt-0.5">+{rec.predictedDemand - rec.currentStock} units</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 italic border-l-2 border-indigo-500 pl-3">
+                    {rec.suggestion}
+                  </p>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
         {/* AI Business Insights */}
         <div className="glass-panel p-6 rounded-3xl shadow-sm space-y-6">
-          <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-850 pb-4">
+          <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div className="p-2 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl shadow-md shadow-indigo-500/10 text-white">
               <Lightbulb className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-850 dark:text-white">AI Daily Business Insights</h2>
-              <p className="text-slate-450 text-[10px] font-bold uppercase tracking-wider mt-0.5">Daily intelligence summaries</p>
+              <h2 className="text-xl font-black text-slate-800 dark:text-white">AI Daily Business Insights</h2>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-0.5">Real-time store intelligence summaries</p>
             </div>
           </div>
           
           <div className="space-y-4">
-            {aiInsights.map((insight) => {
-              const iconMap = {
-                TrendingUp,
-                TrendingDown,
-                AlertTriangle,
-                DollarSign,
-                Lightbulb
-              };
-              const IconComponent = iconMap[insight.icon] || Lightbulb;
-              return (
-                <div 
-                  key={insight.id} 
-                  className="flex items-start space-x-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-850 hover:bg-slate-50/30 dark:hover:bg-slate-850/10 transition-colors"
-                >
-                  <div className={`p-2.5 rounded-xl flex-shrink-0 ${insight.color}`}>
-                    <IconComponent className="w-4.5 h-4.5" />
+            {aiInsights.length === 0 ? (
+              <div className="p-8 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-center space-y-1">
+                <p className="font-extrabold text-slate-700 dark:text-slate-300 text-xs">No Insights Available Yet</p>
+                <p className="text-[11px] text-slate-400 font-semibold">
+                  Add inventory products and process sales to generate real-time analytics for your store.
+                </p>
+              </div>
+            ) : (
+              aiInsights.map((insight) => {
+                const iconMap = {
+                  TrendingUp,
+                  TrendingDown,
+                  AlertTriangle,
+                  DollarSign,
+                  Lightbulb,
+                  Package,
+                };
+                const IconComponent = iconMap[insight.icon] || Lightbulb;
+                return (
+                  <div 
+                    key={insight.id} 
+                    className="flex items-start space-x-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50/30 dark:hover:bg-slate-800/10 transition-colors"
+                  >
+                    <div className={`p-2.5 rounded-xl flex-shrink-0 ${insight.color}`}>
+                      <IconComponent className="w-4.5 h-4.5" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-200 leading-relaxed">
+                        {insight.message}
+                      </p>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-xs font-bold text-slate-700 dark:text-slate-205 leading-relaxed">
-                      {insight.message}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </div>

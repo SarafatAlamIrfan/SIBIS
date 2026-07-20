@@ -13,12 +13,12 @@ const { protect, restrictTo } = require('../middleware/authMiddleware');
 // Protect all routes
 router.use(protect);
 
+router.route('/low-stock')
+  .get(getLowStockProducts);
+
 router.route('/')
   .post(restrictTo('Owner', 'Manager', 'Inventory Staff'), createProduct)
   .get(getProducts);
-
-router.route('/low-stock')
-  .get(restrictTo('Owner', 'Manager', 'Inventory Staff'), getLowStockProducts);
 
 router.route('/:id')
   .get(getProductById)

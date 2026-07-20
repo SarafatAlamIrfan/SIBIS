@@ -11,6 +11,9 @@ import ReorderList from './pages/ReorderList';
 import Suppliers from './pages/Suppliers';
 import PurchaseOrders from './pages/PurchaseOrders';
 import RegisteredStores from './pages/RegisteredStores';
+import StaffManagement from './pages/StaffManagement';
+import StoreActivity from './pages/StoreActivity';
+import Profile from './pages/Profile';
 import NotAuthorized from './pages/NotAuthorized';
 
 import RegisterStorePage from './pages/RegisterStorePage';
@@ -22,7 +25,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="w-8 h-8 border-4 border-indigo-650 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -111,6 +114,33 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['Owner', 'Manager']}>
                   <PurchaseOrders />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/staff" 
+              element={
+                <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager']}>
+                  <StaffManagement />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/activity" 
+              element={
+                <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager']}>
+                  <StoreActivity />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager', 'Cashier', 'Inventory Staff']}>
+                  <Profile />
                 </ProtectedRoute>
               } 
             />
