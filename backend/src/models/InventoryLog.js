@@ -7,6 +7,11 @@ const inventoryLogSchema = new mongoose.Schema(
       ref: 'Product',
       required: [true, 'Product reference is required'],
     },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Store',
+      required: [true, 'Store reference is required'],
+    },
     changeType: {
       type: String,
       required: [true, 'Change type is required'],

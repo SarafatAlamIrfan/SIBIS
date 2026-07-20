@@ -5,18 +5,20 @@ const path = require('path');
 // Load environment configurations
 dotenv.config({ path: path.join(__dirname, '../../../.env') });
 
+const Store = require('../models/Store');
 const Supplier = require('../models/Supplier');
 const Product = require('../models/Product');
 const Sale = require('../models/Sale');
 const User = require('../models/User');
 const InventoryLog = require('../models/InventoryLog');
+const PurchaseOrder = require('../models/PurchaseOrder');
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/sibis';
 
 // Helper to generate dates over the last 30 days
 const getRandomDateInPast30Days = () => {
   const today = new Date();
-  const pastDays = Math.floor(Math.random() * 30); // 0 to 29 days ago
+  const pastDays = Math.floor(Math.random() * 30);
   const hours = Math.floor(Math.random() * 24);
   const minutes = Math.floor(Math.random() * 60);
   
@@ -35,30 +37,111 @@ const seed = async () => {
     // Clear existing development collections
     console.log('Clearing existing collections...');
     await Promise.all([
+      Store.deleteMany({}),
       Supplier.deleteMany({}),
       Product.deleteMany({}),
       Sale.deleteMany({}),
       InventoryLog.deleteMany({}),
+      PurchaseOrder.deleteMany({}),
+      User.deleteMany({}),
     ]);
     console.log('Collections cleared.');
 
-    // 1. Create Default Owner User if not present
-    let owner = await User.findOne({ role: 'Owner' });
-    if (!owner) {
-      console.log('Creating default Owner account...');
-      owner = await User.create({
-        firebaseUid: 'mock-uid-owner-sibis-com',
-        name: 'OWNER DEMO',
-        email: 'owner@sibis.com',
-        role: 'Owner',
-      });
-    }
+    // 1. Create Default Stores
+    console.log('Seeding Stores...');
+    const apexStore = await Store.create({
+      name: 'Apex Supermarket',
+      code: 'STR-APEX-101',
+      email: 'contact@apexsupermarket.com',
+      phone: '+880 1711-000111',
+      address: 'Plot 12, Gulshan Avenue, Dhaka',
+      businessType: 'Supermarket & Grocery',
+      status: 'Active',
+      subscriptionPlan: 'Enterprise',
+    });
 
-    // 2. Create Suppliers
+    const metroStore = await Store.create({
+      name: 'Metro Electronics & Gadgets',
+      code: 'STR-METR-202',
+      email: 'sales@metroelectronics.com',
+      phone: '+880 1819-222333',
+      address: 'Level 4, Jamuna Future Park, Dhaka',
+      businessType: 'Consumer Electronics',
+      status: 'Active',
+      subscriptionPlan: 'Pro',
+    });
+
+    console.log('Seeded Stores: Apex Supermarket and Metro Electronics.');
+
+    // 2. Create Users (System Admin, Store Owners, Staff)
+    console.log('Seeding Users...');
+    const sysAdmin = await User.create({
+      firebaseUid: 'mock-uid-admin-sibis-com',
+      name: 'SYSTEM ADMIN',
+      email: 'admin@sibis.com',
+      role: 'System Admin',
+      password: 'admin123',
+    });
+
+    const owner = await User.create({
+      firebaseUid: 'mock-uid-owner-sibis-com',
+      name: 'OWNER DEMO',
+      email: 'owner@sibis.com',
+      role: 'Owner',
+      storeId: apexStore._id,
+      password: 'password123',
+    });
+
+    const manager = await User.create({
+      firebaseUid: 'mock-uid-manager-sibis-com',
+      name: 'MANAGER DEMO',
+      email: 'manager@sibis.com',
+      role: 'Manager',
+      storeId: apexStore._id,
+      password: 'password123',
+    });
+
+    const cashier = await User.create({
+      firebaseUid: 'mock-uid-cashier-sibis-com',
+      name: 'CASHIER DEMO',
+      email: 'cashier@sibis.com',
+      role: 'Cashier',
+      storeId: apexStore._id,
+      password: 'password123',
+    });
+
+    await User.create({
+      firebaseUid: 'mock-uid-inventory-sibis-com',
+      name: 'INVENTORY DEMO',
+      email: 'inventory@sibis.com',
+      role: 'Inventory Staff',
+      storeId: apexStore._id,
+      password: 'password123',
+    });
+
+    // Metro Store Owner
+    const metroOwner = await User.create({
+      firebaseUid: 'mock-uid-metro-owner',
+      name: 'METRO OWNER',
+      email: 'metro.owner@sibis.com',
+      role: 'Owner',
+      storeId: metroStore._id,
+      password: 'password123',
+    });
+
+    // Link ownerId to stores
+    apexStore.ownerId = owner._id;
+    await apexStore.save();
+
+    metroStore.ownerId = metroOwner._id;
+    await metroStore.save();
+
+    // 3. Create Suppliers for Apex Store
     console.log('Seeding Suppliers...');
     const suppliers = await Supplier.insertMany([
       {
         name: 'Pran-RFL Distributor Dhaka',
+        storeId: apexStore._id,
         contactPerson: 'Mahbubur Rahman',
         phone: '+880 1711-234567',
         email: 'mahbub@pranrfl.com',
@@ -67,6 +150,7 @@ const seed = async () => {
       },
       {
         name: 'Aarong Dairy Supply',
+        storeId: apexStore._id,
         contactPerson: 'Sarafat Alam',
         phone: '+880 1819-987654',
         email: 'supply@aarongdairy.com',
@@ -75,31 +159,31 @@ const seed = async () => {
       },
       {
         name: 'Akij Food & Beverage Ltd',
+        storeId: apexStore._id,
         contactPerson: 'Imtiaz Hossain',
         phone: '+880 1911-456789',
         email: 'imtiaz@akij.net',
-        address: 'Akij House, 198 Bir Uttam Mir Shawkat Sarak, Gulshan-Link Road, Tejgaon, Dhaka 1208',
+        address: 'Akij House, Tejgaon, Dhaka 1208',
         status: 'Active',
       },
       {
         name: 'Chashi Rice & Grain Mills',
+        storeId: apexStore._id,
         contactPerson: 'Rashedul Islam',
         phone: '+880 1511-321765',
         email: 'sales@chashirice.com',
-        address: 'House 42, Road 11, Banani, Dhaka 1213',
+        address: 'Banani, Dhaka 1213',
         status: 'Active',
       },
     ]);
-    console.log(`Seeded ${suppliers.length} suppliers.`);
 
-    // Map supplier IDs
     const superbId = suppliers[0]._id;
     const dairyId = suppliers[1]._id;
     const snackId = suppliers[2]._id;
     const grainId = suppliers[3]._id;
 
-    // 3. Create Products
-    console.log('Seeding Products...');
+    // 4. Create Products for Apex Store
+    console.log('Seeding Products for Apex Supermarket...');
     const productsData = [
       {
         name: 'Basmati Rice 5kg',
@@ -107,201 +191,125 @@ const seed = async () => {
         description: 'Premium long grain aged fragrant Basmati Rice.',
         category: 'Grains',
         brand: 'Golden Harvest',
+        storeId: apexStore._id,
         supplierId: grainId,
         purchasePrice: 480.00,
         sellingPrice: 550.00,
         currentStock: 12,
-        minStockThreshold: 15, // Below threshold
+        minStockThreshold: 15,
       },
       {
-        name: 'Organic Honey 500g',
-        sku: 'HONEY-ORG-500G',
-        description: '100% pure organic wildflower honey.',
-        category: 'Grocery',
-        brand: 'Nature Choice',
-        supplierId: superbId,
-        purchasePrice: 400.00,
-        sellingPrice: 520.00,
-        currentStock: 4,
-        minStockThreshold: 8, // Below threshold
-      },
-      {
-        name: 'Fresh Whole Milk 1L',
-        sku: 'MILK-WHL-1L',
-        description: 'Pasteurized homogenized whole cow milk.',
+        name: 'Full Cream Milk Powder 1kg',
+        sku: 'DAIRY-MILK-1KG',
+        description: 'Rich pasteurized full cream milk powder.',
         category: 'Dairy',
-        brand: 'Green pasture',
+        brand: 'Aarong Dairy',
+        storeId: apexStore._id,
         supplierId: dairyId,
-        purchasePrice: 75.00,
-        sellingPrice: 90.00,
-        currentStock: 3,
-        minStockThreshold: 15, // Critically low!
+        purchasePrice: 650.00,
+        sellingPrice: 720.00,
+        currentStock: 45,
+        minStockThreshold: 10,
       },
       {
-        name: 'Greek Yogurt 500g',
-        sku: 'YOG-GRK-500G',
-        description: 'Creamy high-protein plain Greek yogurt.',
-        category: 'Dairy',
-        brand: 'DairyLand',
-        supplierId: dairyId,
-        purchasePrice: 150.00,
-        sellingPrice: 200.00,
-        currentStock: 25,
-        minStockThreshold: 8,
-      },
-      {
-        name: 'Chocolate Chip Cookies 200g',
-        sku: 'COOKIE-CHO-200G',
-        description: 'Double chocolate chip crunchy cookies.',
+        name: 'Chocolate Biscuits 200g',
+        sku: 'SNACK-CHOC-200G',
+        description: 'Crunchy chocolate cream biscuits.',
         category: 'Snacks',
-        brand: 'BakeHouse',
-        supplierId: snackId,
-        purchasePrice: 100.00,
-        sellingPrice: 140.00,
-        currentStock: 32,
-        minStockThreshold: 10,
-      },
-      {
-        name: 'Mustard Cooking Oil 1L',
-        sku: 'OIL-MUS-1L',
-        description: 'Cold-pressed pure mustard seed oil.',
-        category: 'Grocery',
-        brand: 'PureDrop',
+        brand: 'Pran',
+        storeId: apexStore._id,
         supplierId: superbId,
-        purchasePrice: 190.00,
-        sellingPrice: 240.00,
-        currentStock: 18,
-        minStockThreshold: 10,
-      },
-      {
-        name: 'Energy Drink 250ml',
-        sku: 'BEV-ENG-250ML',
-        description: 'Taurine and caffeine infused energy booster.',
-        category: 'Beverages',
-        brand: 'HyperCharge',
-        supplierId: snackId,
-        purchasePrice: 140.00,
-        sellingPrice: 180.00,
-        currentStock: 7,
-        minStockThreshold: 15, // Below threshold
-      },
-      {
-        name: 'Sparkling Water 500ml',
-        sku: 'BEV-SPK-500ML',
-        description: 'Zero calorie unsweetened carbonated water.',
-        category: 'Beverages',
-        brand: 'AquaFizz',
-        supplierId: snackId,
-        purchasePrice: 30.00,
-        sellingPrice: 45.00,
-        currentStock: 65,
+        purchasePrice: 40.00,
+        sellingPrice: 50.00,
+        currentStock: 80,
         minStockThreshold: 20,
       },
       {
-        name: 'Chocolate Biscuits 100g',
-        sku: 'BIS-CHO-100G',
-        description: 'Chocolate cream-filled sweet biscuits.',
-        category: 'Snacks',
-        brand: 'SnackCo',
+        name: 'Mango Juice 1L',
+        sku: 'BEV-MANGO-1L',
+        description: 'Natural fresh mango pulp nectar beverage.',
+        category: 'Beverages',
+        brand: 'Akij Frutika',
+        storeId: apexStore._id,
         supplierId: snackId,
-        purchasePrice: 35.00,
-        sellingPrice: 50.00,
-        currentStock: 40,
-        minStockThreshold: 15, // No sales in past 30 days!
-      }
+        purchasePrice: 90.00,
+        sellingPrice: 110.00,
+        currentStock: 6,
+        minStockThreshold: 12,
+      },
     ];
 
-    const products = await Product.insertMany(productsData);
-    console.log(`Seeded ${products.length} products.`);
+    const createdProducts = await Product.insertMany(productsData);
 
-    // 4. Create Historical Sales (for demand forecasting trends)
-    console.log('Seeding 100+ historical sales logs over past 30 days...');
-    const salesData = [];
-    const logsData = [];
+    // Seed a couple products for Metro Store
+    const metroSupplier = await Supplier.create({
+      name: 'Sony-Smart Bangladesh',
+      storeId: metroStore._id,
+      contactPerson: 'Kazi Nazmul',
+      phone: '+880 1711-998877',
+      email: 'sales@smartbd.com',
+      address: 'IDB Bhaban, Agargaon, Dhaka',
+    });
 
-    // Exclude Chocolate Biscuits from sales to test the slow-moving stock insight!
-    const activeProducts = products.filter(p => p.sku !== 'BIS-CHO-100G');
+    await Product.create({
+      name: 'Smart 55 Inch 4K Android TV',
+      sku: 'TV-55-4K-SMART',
+      description: 'Ultra HD 4K Android Smart TV',
+      category: 'Electronics',
+      brand: 'Smart LED',
+      storeId: metroStore._id,
+      supplierId: metroSupplier._id,
+      purchasePrice: 42000.00,
+      sellingPrice: 49900.00,
+      currentStock: 8,
+      minStockThreshold: 3,
+    });
 
-    for (let i = 0; i < 110; i++) {
-      const saleDate = getRandomDateInPast35Days(i); // helper spreads them chronologically
-      
-      // Determine items in this sale (1 to 3 products)
-      const itemCount = Math.floor(Math.random() * 3) + 1;
-      const shuffled = [...activeProducts].sort(() => 0.5 - Math.random());
-      const selected = shuffled.slice(0, itemCount);
-      
-      let totalAmount = 0;
-      const items = [];
+    // 5. Seed Historical Sales
+    console.log('Seeding Historical Sales...');
+    const salesList = [];
+    for (let i = 1; i <= 25; i++) {
+      const saleDate = getRandomDateInPast30Days();
+      const product = createdProducts[i % createdProducts.length];
+      const qty = Math.floor(Math.random() * 3) + 1;
+      const total = product.sellingPrice * qty;
 
-      selected.forEach(prod => {
-        // Average purchase quantity per transaction
-        const quantity = Math.floor(Math.random() * 3) + 1; // 1 to 3 units
-        const price = prod.sellingPrice;
-        const profit = (prod.sellingPrice - prod.purchasePrice) * quantity;
-        
-        totalAmount += price * quantity;
-        items.push({
-          productId: prod._id,
-          quantity,
-          priceAtSale: price,
-          purchasePriceAtSale: prod.purchasePrice,
-          profitMargin: prod.sellingPrice - prod.purchasePrice,
-        });
-
-        // Add to historical inventory log
-        logsData.push({
-          productId: prod._id,
-          changeType: 'Sale',
-          quantityChanged: -quantity,
-          previousStock: prod.currentStock + quantity,
-          newStock: prod.currentStock,
-          performedBy: owner._id,
-          remarks: `System Seeded Transaction Log ${i}`,
-          createdAt: saleDate,
-        });
-      });
-
-      salesData.push({
-        cashierId: owner._id,
-        items,
-        totalAmount,
-        paymentMethod: ['Cash', 'Card', 'Mobile Pay'][Math.floor(Math.random() * 3)],
-        paymentStatus: 'Paid',
+      salesList.push({
         invoiceNumber: `INV-2026-${1000 + i}`,
+        storeId: apexStore._id,
+        cashierId: cashier._id,
+        items: [
+          {
+            productId: product._id,
+            quantity: qty,
+            priceAtSale: product.sellingPrice,
+            purchasePriceAtSale: product.purchasePrice,
+          },
+        ],
+        totalAmount: total,
+        paymentMethod: i % 2 === 0 ? 'Cash' : 'Card',
+        paymentStatus: 'Paid',
         createdAt: saleDate,
+        updatedAt: saleDate,
       });
     }
 
-    const sales = await Sale.insertMany(salesData);
-    console.log(`Seeded ${sales.length} historical sales.`);
-    
-    const logs = await InventoryLog.insertMany(logsData);
-    console.log(`Seeded ${logs.length} inventory logs.`);
+    await Sale.insertMany(salesList);
+    console.log('Seeded 25 historical sales for Apex Supermarket.');
 
-    console.log('\n==========================================');
-    console.log('🎉 Database seeding completed successfully! 🎉');
-    console.log('==========================================');
+    console.log('=====================================================');
+    console.log('Database Seeding Completed Successfully!');
+    console.log('SYSTEM ADMIN: admin@sibis.com / admin123');
+    console.log('STORE OWNER (Apex): owner@sibis.com / password123');
+    console.log('STORE OWNER (Metro): metro.owner@sibis.com / password123');
+    console.log('=====================================================');
 
-  } catch (error) {
-    console.error('Seeding process failed:', error);
-  } finally {
     await mongoose.connection.close();
-    console.log('Database connection closed.');
+    process.exit(0);
+  } catch (error) {
+    console.error('Database seeding failed:', error);
+    process.exit(1);
   }
-};
-
-// Spread dates chronologically over past 30 days
-const getRandomDateInPast35Days = (index) => {
-  const today = new Date();
-  // Linearly distribute dates based on index to ensure balanced sales trends
-  const dayOffset = Math.floor((110 - index) * 0.3); // spreads up to ~33 days ago
-  const hours = Math.floor(Math.random() * 12) + 8; // Business hours 8 AM - 8 PM
-  const minutes = Math.floor(Math.random() * 60);
-
-  const date = new Date(today);
-  date.setDate(today.getDate() - dayOffset);
-  date.setHours(hours, minutes, 0, 0);
-  return date;
 };
 
 seed();

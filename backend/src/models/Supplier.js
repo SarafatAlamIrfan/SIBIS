@@ -7,6 +7,11 @@ const supplierSchema = new mongoose.Schema(
       required: [true, 'Supplier name is required'],
       trim: true,
     },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Store',
+      required: [true, 'Store reference is required'],
+    },
     contactPerson: {
       type: String,
       trim: true,

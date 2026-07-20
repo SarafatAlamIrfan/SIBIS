@@ -26,6 +26,11 @@ const purchaseOrderSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    storeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Store',
+      required: [true, 'Store reference is required'],
+    },
     supplierId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Supplier',

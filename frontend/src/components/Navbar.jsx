@@ -1,13 +1,22 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogOut, User, Sun, Moon } from 'lucide-react';
 
 const Navbar = ({ darkMode, toggleDarkMode }) => {
   const { currentUser, logout, mockMode } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/', { replace: true });
+  };
 
   if (!currentUser) return null;
 
   const roleBadges = {
+    'System Admin': 'bg-purple-50 text-purple-700 border-purple-250/30 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-900/50',
+    'Site Admin': 'bg-purple-50 text-purple-700 border-purple-250/30 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-900/50',
     Owner: 'bg-rose-50 text-rose-700 border-rose-250/30 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/50',
     Manager: 'bg-blue-50 text-blue-700 border-blue-250/30 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900/50',
     Cashier: 'bg-emerald-50 text-emerald-700 border-emerald-250/30 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/50',
@@ -56,7 +65,7 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
           </div>
           
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="flex items-center text-xs font-bold text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors duration-150 cursor-pointer py-1.5 px-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             <LogOut className="w-3.5 h-3.5 mr-1.5" />

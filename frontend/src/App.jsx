@@ -3,12 +3,17 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import POS from './pages/POS';
 import Products from './pages/Products';
+import ReorderList from './pages/ReorderList';
 import Suppliers from './pages/Suppliers';
 import PurchaseOrders from './pages/PurchaseOrders';
+import RegisteredStores from './pages/RegisteredStores';
 import NotAuthorized from './pages/NotAuthorized';
+
+import RegisterStorePage from './pages/RegisterStorePage';
 
 // Protected Route Guard Wrapper enforcing authentication and role limits
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -38,24 +43,35 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Public routes */}
+          {/* Public landing home */}
+          <Route path="/" element={<Home />} />
+          
+          {/* Public auth routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<RegisterStorePage />} />
 
           {/* Protected routes wrapped in Main Layout */}
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            
+          <Route element={<Layout />}>
             <Route 
-              path="dashboard" 
+              path="/admin/stores" 
               element={
-                <ProtectedRoute allowedRoles={['Owner', 'Manager', 'Cashier', 'Inventory Staff']}>
+                <ProtectedRoute allowedRoles={['System Admin']}>
+                  <RegisteredStores />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager', 'Cashier', 'Inventory Staff']}>
                   <Dashboard />
                 </ProtectedRoute>
               } 
             />
             
             <Route 
-              path="pos" 
+              path="/pos" 
               element={
                 <ProtectedRoute allowedRoles={['Owner', 'Manager', 'Cashier']}>
                   <POS />
@@ -64,7 +80,7 @@ function App() {
             />
 
             <Route 
-              path="products" 
+              path="/products" 
               element={
                 <ProtectedRoute allowedRoles={['Owner', 'Manager', 'Inventory Staff']}>
                   <Products />
@@ -73,7 +89,16 @@ function App() {
             />
 
             <Route 
-              path="suppliers" 
+              path="/reorder-list" 
+              element={
+                <ProtectedRoute allowedRoles={['Owner', 'Manager', 'Inventory Staff']}>
+                  <ReorderList />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/suppliers" 
               element={
                 <ProtectedRoute allowedRoles={['Owner', 'Manager']}>
                   <Suppliers />
@@ -82,7 +107,7 @@ function App() {
             />
 
             <Route 
-              path="purchase-orders" 
+              path="/purchase-orders" 
               element={
                 <ProtectedRoute allowedRoles={['Owner', 'Manager']}>
                   <PurchaseOrders />
@@ -90,7 +115,7 @@ function App() {
               } 
             />
 
-            <Route path="not-authorized" element={<NotAuthorized />} />
+            <Route path="/not-authorized" element={<NotAuthorized />} />
           </Route>
 
           {/* Fallback route */}

@@ -19,7 +19,7 @@ import {
 
 const Login = () => {
   const [email, setEmail] = useState('owner@sibis.com');
-  const [password, setPassword] = useState('••••••••');
+  const [password, setPassword] = useState('password123');
   const [mockRole, setMockRole] = useState('Owner');
   const [devDrawerOpen, setDevDrawerOpen] = useState(false);
   const [error, setError] = useState('');
@@ -46,13 +46,14 @@ const Login = () => {
   const handleRoleSelect = (role) => {
     setMockRole(role);
     const emails = {
+      'Site Admin': 'admin@sibis.com',
       Owner: 'owner@sibis.com',
       Manager: 'manager@sibis.com',
       Cashier: 'cashier@sibis.com',
       'Inventory Staff': 'inventory@sibis.com',
     };
     setEmail(emails[role] || '');
-    setPassword('••••••••');
+    setPassword(role === 'Site Admin' ? 'admin123' : 'password123');
     setDevDrawerOpen(false); // Close drawer to focus main form
   };
 
@@ -66,8 +67,12 @@ const Login = () => {
     }
 
     try {
-      await login(email, password === '••••••••' ? 'admin' : password, mockRole);
-      navigate('/dashboard');
+      const loggedUser = await login(email, password);
+      if (loggedUser?.role === 'System Admin') {
+        navigate('/admin/stores');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       setError(err.message || 'Login failed. Please verify credentials.');
     }
@@ -75,11 +80,18 @@ const Login = () => {
 
   const rolesList = [
     {
-      name: 'Owner',
+      name: 'Site Admin',
       icon: Shield,
+      color: 'hover:border-purple-500/40 text-purple-650 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/10 border-slate-200 dark:border-slate-800',
+      activeColor: 'border-purple-500 ring-2 ring-purple-500/25 bg-purple-100 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400',
+      desc: 'Platform Administrator. Controls all registered stores.',
+    },
+    {
+      name: 'Owner',
+      icon: Store,
       color: 'hover:border-red-500/40 text-red-650 dark:text-red-400 bg-red-50 dark:bg-red-950/10 border-slate-200 dark:border-slate-800',
       activeColor: 'border-red-500 ring-2 ring-red-500/25 bg-red-100 dark:bg-red-950/30 text-red-600 dark:text-red-400',
-      desc: 'Full administrator dashboard control.',
+      desc: 'Full store owner dashboard control.',
     },
     {
       name: 'Manager',

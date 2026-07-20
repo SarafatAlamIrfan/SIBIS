@@ -26,12 +26,19 @@ exports.createProduct = async (req, res, next) => {
       return res.status(404).json({ error: 'Supplier not found. Product must have a valid supplier.' });
     }
 
+    // Determine storeId
+    const storeId = req.user?.storeId || req.body.storeId;
+    if (!storeId) {
+      return res.status(400).json({ error: 'Store reference is required to create a product.' });
+    }
+
     const product = await Product.create({
       name,
       sku,
       description,
       category,
       brand,
+      storeId,
       supplierId,
       purchasePrice,
       sellingPrice,
@@ -51,7 +58,11 @@ exports.createProduct = async (req, res, next) => {
 // @access  Public
 exports.getProducts = async (req, res, next) => {
   try {
-    const products = await Product.find().populate('supplierId', 'name contactPerson phone');
+    const filter = {};
+    if (req.user && req.user.storeId) {
+      filter.storeId = req.user.storeId;
+    }
+    const products = await Product.find(filter).populate('supplierId', 'name contactPerson phone');
     res.status(200).json(products);
   } catch (error) {
     next(error);
@@ -63,10 +74,14 @@ exports.getProducts = async (req, res, next) => {
 // @access  Public
 exports.getLowStockProducts = async (req, res, next) => {
   try {
-    // Finds products where currentStock is less than or equal to minStockThreshold
-    const products = await Product.find({
+    const filter = {
       $expr: { $lte: ['$currentStock', '$minStockThreshold'] },
-    }).populate('supplierId', 'name contactPerson phone');
+    };
+    if (req.user && req.user.storeId) {
+      filter.storeId = req.user.storeId;
+    }
+
+    const products = await Product.find(filter).populate('supplierId', 'name contactPerson phone');
 
     res.status(200).json(products);
   } catch (error) {

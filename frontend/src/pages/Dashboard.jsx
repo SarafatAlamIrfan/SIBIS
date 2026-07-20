@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import API from '../services/api';
 import { 
@@ -17,6 +18,7 @@ import {
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const [aiInsights, setAiInsights] = useState([]);
   const [aiRecommendations, setAiRecommendations] = useState([]);
   const [products, setProducts] = useState([]);
@@ -215,7 +217,7 @@ const Dashboard = () => {
             Dashboard
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium text-sm">
-            Welcome back, {currentUser.name}! Here is your business status at a glance.
+            Welcome back, {currentUser.name}! {currentUser.storeId?.name ? `(${currentUser.storeId.name})` : ''} Here is your store status at a glance.
           </p>
         </div>
         <div className="flex items-center space-x-2 text-xs bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/60 p-2.5 rounded-xl shadow-sm">
@@ -228,9 +230,20 @@ const Dashboard = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="glass-panel p-6 rounded-3xl hover:-translate-y-1 hover:shadow-neon-indigo hover:border-indigo-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group">
+        {/* Today's Sales Card */}
+        <div 
+          onClick={() => navigate('/pos')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/pos')}
+          title="Click to open POS checkout"
+          className="glass-panel p-6 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-indigo hover:border-indigo-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
+        >
           <div className="space-y-1 relative z-10">
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Today's Sales</p>
+            <div className="flex items-center space-x-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Today's Sales</p>
+              <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+            </div>
             <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">৳{stats.todaySales.toFixed(2)}</h3>
             <span className="text-[10px] text-emerald-500 font-bold inline-flex items-center mt-2">
               <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" /> +12.4% vs yesterday
@@ -241,9 +254,20 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="glass-panel p-6 rounded-3xl hover:-translate-y-1 hover:shadow-neon-emerald hover:border-emerald-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group">
+        {/* Monthly Revenue Card */}
+        <div 
+          onClick={() => navigate('/pos')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/pos')}
+          title="Click to open POS sales records"
+          className="glass-panel p-6 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-emerald hover:border-emerald-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
+        >
           <div className="space-y-1 relative z-10">
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Monthly Revenue</p>
+            <div className="flex items-center space-x-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Monthly Revenue</p>
+              <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+            </div>
             <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">৳{stats.monthlyRevenue.toFixed(2)}</h3>
             <span className="text-[10px] text-emerald-500 font-bold inline-flex items-center mt-2">
               <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" /> +8.2% vs last month
@@ -254,9 +278,20 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="glass-panel p-6 rounded-3xl hover:-translate-y-1 hover:shadow-neon-indigo hover:border-indigo-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group">
+        {/* Total Products Card */}
+        <div 
+          onClick={() => navigate('/products')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/products')}
+          title="Click to view product inventory"
+          className="glass-panel p-6 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-indigo hover:border-indigo-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
+        >
           <div className="space-y-1 relative z-10">
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Products</p>
+            <div className="flex items-center space-x-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Products</p>
+              <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+            </div>
             <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">{stats.totalProducts}</h3>
             <span className="text-[10px] text-slate-400 font-bold inline-flex items-center mt-2">
               In stock categories
@@ -267,13 +302,24 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className={`glass-panel p-6 rounded-3xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group ${
-          stats.lowStockCount > 0 
-            ? 'border-rose-500/50 bg-rose-500/[0.03] dark:bg-rose-500/[0.02] shadow-neon-rose animate-[pulse-subtle_4s_ease-in-out_infinite]' 
-            : 'hover:shadow-neon-indigo hover:border-indigo-500/40'
-        }`}>
+        {/* Low Stock Items Card */}
+        <div 
+          onClick={() => navigate('/products?filter=low-stock')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/products?filter=low-stock')}
+          title="Click to view low stock items"
+          className={`glass-panel p-6 rounded-3xl hover:-translate-y-1.5 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none ${
+            stats.lowStockCount > 0 
+              ? 'border-rose-500/50 bg-rose-500/[0.03] dark:bg-rose-500/[0.02] shadow-neon-rose hover:border-rose-500 animate-[pulse-subtle_4s_ease-in-out_infinite]' 
+              : 'hover:shadow-neon-indigo hover:border-indigo-500/40'
+          }`}
+        >
           <div className="space-y-1 relative z-10">
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Low Stock Items</p>
+            <div className="flex items-center space-x-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Low Stock Items</p>
+              <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+            </div>
             <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">{stats.lowStockCount}</h3>
             {stats.lowStockCount > 0 ? (
               <span className="text-[10px] text-rose-500 font-extrabold inline-flex items-center mt-2 animate-pulse">

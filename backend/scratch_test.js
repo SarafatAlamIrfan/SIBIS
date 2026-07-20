@@ -15,6 +15,7 @@ async function runValidationTests() {
       firebaseUid: 'fb-user-123',
       name: 'John Doe',
       email: 'john@example.com',
+      password: 'password123',
       role: 'Cashier'
     });
     await user.validate();

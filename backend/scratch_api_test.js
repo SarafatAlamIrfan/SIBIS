@@ -142,6 +142,36 @@ async function runTests() {
       const inventoryId = syncInventoryRes.body._id;
       console.log('✅ Cashier and Inventory Staff user profiles synced successfully.\n');
 
+      // Login each user to get their JWT tokens
+      console.log('Logging in seeded users via JWT to get session tokens...');
+      const ownerLoginRes = await makeRequest('POST', '/api/users/login', {
+        email: ownerHeaders['x-mock-email'],
+        password: 'password123'
+      });
+      if (ownerLoginRes.status !== 200 || !ownerLoginRes.body.token) {
+        throw new Error(`Owner JWT login failed: ${JSON.stringify(ownerLoginRes)}`);
+      }
+      const ownerTokenHeaders = { 'Authorization': `Bearer ${ownerLoginRes.body.token}` };
+
+      const cashierLoginRes = await makeRequest('POST', '/api/users/login', {
+        email: cashierHeaders['x-mock-email'],
+        password: 'password123'
+      });
+      if (cashierLoginRes.status !== 200 || !cashierLoginRes.body.token) {
+        throw new Error(`Cashier JWT login failed: ${JSON.stringify(cashierLoginRes)}`);
+      }
+      const cashierTokenHeaders = { 'Authorization': `Bearer ${cashierLoginRes.body.token}` };
+
+      const inventoryLoginRes = await makeRequest('POST', '/api/users/login', {
+        email: inventoryStaffHeaders['x-mock-email'],
+        password: 'password123'
+      });
+      if (inventoryLoginRes.status !== 200 || !inventoryLoginRes.body.token) {
+        throw new Error(`Inventory Staff JWT login failed: ${JSON.stringify(inventoryLoginRes)}`);
+      }
+      const inventoryStaffTokenHeaders = { 'Authorization': `Bearer ${inventoryLoginRes.body.token}` };
+      console.log('✅ All users logged in successfully via JWT.\n');
+
       // Test D: RBAC Create Supplier
       console.log('Test 4: POST /api/suppliers as Cashier (Should reject 403)');
       const supplierData = {
@@ -151,14 +181,14 @@ async function runTests() {
         email: 'alice@superbwholesale.com',
         address: '789 Logistics Blvd, Suite A',
       };
-      const rejectSupplierRes = await makeRequest('POST', '/api/suppliers', supplierData, cashierHeaders);
+      const rejectSupplierRes = await makeRequest('POST', '/api/suppliers', supplierData, cashierTokenHeaders);
       if (rejectSupplierRes.status !== 403) {
         throw new Error(`Cashier should not have permissions to create supplier: ${JSON.stringify(rejectSupplierRes)}`);
       }
       console.log('✅ Supplier creation forbidden for Cashier (as expected).');
 
       console.log('Test 5: POST /api/suppliers as Owner (Should succeed 201)');
-      const createSupplierRes = await makeRequest('POST', '/api/suppliers', supplierData, ownerHeaders);
+      const createSupplierRes = await makeRequest('POST', '/api/suppliers', supplierData, ownerTokenHeaders);
       if (createSupplierRes.status !== 201) {
         throw new Error(`Owner failed to create supplier: ${JSON.stringify(createSupplierRes)}`);
       }
@@ -178,14 +208,14 @@ async function runTests() {
         currentStock: 25,
         minStockThreshold: 10,
       };
-      const rejectProductRes = await makeRequest('POST', '/api/products', productData, cashierHeaders);
+      const rejectProductRes = await makeRequest('POST', '/api/products', productData, cashierTokenHeaders);
       if (rejectProductRes.status !== 403) {
         throw new Error(`Cashier should not have permissions to create product: ${JSON.stringify(rejectProductRes)}`);
       }
       console.log('✅ Product creation forbidden for Cashier (as expected).');
 
       console.log('Test 7: POST /api/products as Inventory Staff (Should succeed 201)');
-      const createProductRes = await makeRequest('POST', '/api/products', productData, inventoryStaffHeaders);
+      const createProductRes = await makeRequest('POST', '/api/products', productData, inventoryStaffTokenHeaders);
       if (createProductRes.status !== 201) {
         throw new Error(`Inventory Staff failed to create product: ${JSON.stringify(createProductRes)}`);
       }
@@ -205,14 +235,14 @@ async function runTests() {
         paymentMethod: 'Cash',
         paymentStatus: 'Paid',
       };
-      const rejectSaleRes = await makeRequest('POST', '/api/sales', salePayload, inventoryStaffHeaders);
+      const rejectSaleRes = await makeRequest('POST', '/api/sales', salePayload, inventoryStaffTokenHeaders);
       if (rejectSaleRes.status !== 403) {
         throw new Error(`Inventory Staff should not have POS checkout permission: ${JSON.stringify(rejectSaleRes)}`);
       }
       console.log('✅ POS checkout forbidden for Inventory Staff (as expected).');
 
       console.log('Test 9: POST /api/sales as Cashier (Should succeed 201)');
-      const createSaleRes = await makeRequest('POST', '/api/sales', salePayload, cashierHeaders);
+      const createSaleRes = await makeRequest('POST', '/api/sales', salePayload, cashierTokenHeaders);
       if (createSaleRes.status !== 201) {
         throw new Error(`Cashier failed to process valid checkout: ${JSON.stringify(createSaleRes)}`);
       }
@@ -220,7 +250,7 @@ async function runTests() {
       console.log('✅ POS checkout successfully completed by Cashier.');
 
       // Check stock levels decremented to 20
-      const checkProductRes = await makeRequest('GET', `/api/products/${productId}`, null, cashierHeaders);
+      const checkProductRes = await makeRequest('GET', `/api/products/${productId}`, null, cashierTokenHeaders);
       if (checkProductRes.body.currentStock !== 20) {
         throw new Error(`Stock level was not decremented correctly: ${JSON.stringify(checkProductRes)}`);
       }
@@ -238,14 +268,14 @@ async function runTests() {
           }
         ],
       };
-      const rejectPORes = await makeRequest('POST', '/api/purchase-orders', poPayload, cashierHeaders);
+      const rejectPORes = await makeRequest('POST', '/api/purchase-orders', poPayload, cashierTokenHeaders);
       if (rejectPORes.status !== 403) {
         throw new Error(`Cashier should not have PO creation permission: ${JSON.stringify(rejectPORes)}`);
       }
       console.log('✅ PO placement forbidden for Cashier (as expected).');
 
       console.log('Test 11: POST /api/purchase-orders as Owner (Should succeed 201)');
-      const createPORes = await makeRequest('POST', '/api/purchase-orders', poPayload, ownerHeaders);
+      const createPORes = await makeRequest('POST', '/api/purchase-orders', poPayload, ownerTokenHeaders);
       if (createPORes.status !== 201) {
         throw new Error(`Owner failed to place PO: ${JSON.stringify(createPORes)}`);
       }
@@ -256,15 +286,15 @@ async function runTests() {
       console.log('Test 12: PUT /api/purchase-orders/:id/status as Owner (Should succeed 200)');
       const updateStatusRes = await makeRequest('PUT', `/api/purchase-orders/${poId}/status`, {
         status: 'Received',
-        performedBy: ownerHeaders['x-mock-uid'] === 'fb-uid-owner-100' ? syncOwnerRes.body._id : syncOwnerRes.body._id,
-      }, ownerHeaders);
+        performedBy: syncOwnerRes.body._id,
+      }, ownerTokenHeaders);
       if (updateStatusRes.status !== 200 || updateStatusRes.body.status !== 'Received') {
         throw new Error(`Owner failed to mark PO as Received: ${JSON.stringify(updateStatusRes)}`);
       }
       console.log('✅ PO marked "Received" by Owner.');
 
       // Verify stock level increased to 70
-      const checkStockRes = await makeRequest('GET', `/api/products/${productId}`, null, cashierHeaders);
+      const checkStockRes = await makeRequest('GET', `/api/products/${productId}`, null, cashierTokenHeaders);
       if (checkStockRes.body.currentStock !== 70) {
         throw new Error(`Stock level was not incremented correctly: ${JSON.stringify(checkStockRes)}`);
       }

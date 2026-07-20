@@ -35,9 +35,9 @@ const Layout = () => {
     );
   }
 
-  // Redirect to login if user session does not exist
+  // Redirect to Home landing page if user session does not exist
   if (!currentUser) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return (
