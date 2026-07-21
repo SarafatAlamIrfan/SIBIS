@@ -30,23 +30,14 @@ const RegisterStorePage = () => {
   // Step Control: 1 = Fill Registration Details, 2 = Verify Email OTP
   const [step, setStep] = useState(1);
 
-  // Google Sign In Handler
+  // Google Sign In Handler (Triggers Google Auth Popup Window)
   const handleGoogleSignIn = async () => {
     setError('');
     try {
-      const email = prompt('Enter your Google email address:', 'owner@gmail.com');
-      if (!email) return;
-      const formattedName = email.split('@')[0].replace(/[._]/g, ' ');
-      const name = formattedName.charAt(0).toUpperCase() + formattedName.slice(1);
-
-      await loginWithGoogle({
-        email,
-        name,
-        googleId: `google_${Date.now()}`,
-      });
+      await loginWithGoogle();
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message || 'Google authentication failed.');
+      setError(err.message || 'Google Popup authentication failed.');
     }
   };
 

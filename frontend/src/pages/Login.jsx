@@ -76,20 +76,11 @@ const Login = () => {
     setDevDrawerOpen(false);
   };
 
-  // Google Sign In Handler
+  // Google Sign In Handler (Triggers Google Auth Popup Window)
   const handleGoogleSignIn = async () => {
     setError('');
     try {
-      const emailInput = prompt('Enter your Google email address:', 'owner@gmail.com');
-      if (!emailInput) return;
-      const formattedName = emailInput.split('@')[0].replace(/[._]/g, ' ');
-      const name = formattedName.charAt(0).toUpperCase() + formattedName.slice(1);
-
-      const loggedUser = await loginWithGoogle({
-        email: emailInput,
-        name,
-        googleId: `google_${Date.now()}`,
-      });
+      const loggedUser = await loginWithGoogle();
 
       if (loggedUser?.role === 'System Admin') {
         navigate('/admin/stores');
@@ -97,7 +88,7 @@ const Login = () => {
         navigate('/dashboard');
       }
     } catch (err) {
-      setError(err.message || 'Google authentication failed.');
+      setError(err.message || 'Google Popup authentication failed.');
     }
   };
 
