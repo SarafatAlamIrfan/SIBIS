@@ -11,7 +11,6 @@ import {
   ShoppingBag,
   Sun,
   Moon,
-  Sparkles,
   TrendingUp,
   Package,
   Users
@@ -96,11 +95,6 @@ const Home = () => {
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
-        <div className="inline-flex items-center space-x-2.5 px-3.5 py-1.5 bg-indigo-500/10 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-wider mb-6 animate-pulse border border-indigo-500/10">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>SIBIS</span>
-        </div>
-
         <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.1] max-w-4xl text-slate-900 dark:text-white">
           Smart Inventory & Business{' '}
           <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-300 dark:to-pink-400 bg-clip-text text-transparent">

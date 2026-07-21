@@ -601,3 +601,151 @@ exports.getStoreActivity = async (req, res, next) => {
   }
 };
 
+// @desc    Google Authentication (Login or Auto-Register Store)
+// @route   POST /api/users/google-auth
+// @access  Public
+exports.googleAuth = async (req, res, next) => {
+  try {
+    const { email, name, googleId, avatar } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Google authentication failed: Email is required.' });
+    }
+
+    const emailLower = email.toLowerCase();
+    let user = await User.findOne({ email: emailLower }).populate('storeId', 'name code businessType status');
+
+    if (!user) {
+      // Auto-create Store for new Google user
+      const Store = require('../models/Store');
+      const storeName = name ? `${name}'s Store` : 'My Google Store';
+      const store = new Store({
+        name: storeName,
+        email: emailLower,
+        businessType: 'General Retail',
+        status: 'Active',
+        subscriptionPlan: 'Pro',
+      });
+      await store.save();
+
+      user = new User({
+        name: name || emailLower.split('@')[0],
+        email: emailLower,
+        password: `google_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        role: 'Owner',
+        storeId: store._id,
+        avatar: avatar || '',
+        firebaseUid: googleId || '',
+      });
+      await user.save();
+
+      store.ownerId = user._id;
+      await store.save();
+
+      user = await User.findById(user._id).populate('storeId', 'name code businessType status');
+    }
+
+    const token = generateToken(user._id);
+
+    res.status(200).json({
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        storeId: user.storeId,
+        isActive: user.isActive,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// In-memory store for password reset OTPs
+const resetOtpStore = new Map();
+
+// @desc    Send 6-digit Password Reset OTP
+// @route   POST /api/users/forgot-password
+// @access  Public
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email address is required.' });
+    }
+
+    const emailLower = email.toLowerCase();
+    const user = await User.findOne({ email: emailLower });
+    if (!user) {
+      return res.status(404).json({ error: 'No account found with this email address.' });
+    }
+
+    // Generate 6-digit OTP code
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    resetOtpStore.set(emailLower, {
+      code: otpCode,
+      expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+    });
+
+    console.log(`[Forgot Password] OTP generated for ${emailLower}: ${otpCode}`);
+
+    res.status(200).json({
+      message: `Password reset code sent to ${emailLower}`,
+      otp: otpCode, // Included for easy developer/demo testing
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Reset Password with 6-digit OTP Code
+// @route   POST /api/users/reset-password
+// @access  Public
+exports.resetPassword = async (req, res, next) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ error: 'Email, verification code, and new password are required.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+
+    const emailLower = email.toLowerCase();
+    const record = resetOtpStore.get(emailLower);
+
+    if (!record) {
+      return res.status(400).json({ error: 'No reset code found or code expired. Please request a new code.' });
+    }
+
+    if (Date.now() > record.expiresAt) {
+      resetOtpStore.delete(emailLower);
+      return res.status(400).json({ error: 'Verification code has expired. Please request a new code.' });
+    }
+
+    if (record.code !== otp.toString().trim()) {
+      return res.status(400).json({ error: 'Invalid verification code. Please check and try again.' });
+    }
+
+    const user = await User.findOne({ email: emailLower });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    resetOtpStore.delete(emailLower);
+
+    res.status(200).json({
+      message: 'Password reset successfully! You can now sign in with your new password.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+

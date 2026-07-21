@@ -78,6 +78,45 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Google Login / Registration Handler
+  const loginWithGoogle = async (googleUserData) => {
+    setLoading(true);
+    try {
+      const response = await API.post('/users/google-auth', googleUserData);
+      const { token, user } = response.data;
+      localStorage.setItem('sibis_token', token);
+      setCurrentUser(user);
+      return user;
+    } catch (err) {
+      console.error('Failed Google authentication:', err.response?.data?.error || err.message);
+      throw new Error(err.response?.data?.error || 'Google authentication failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Send Password Reset OTP
+  const sendForgotPasswordOtp = async (email) => {
+    try {
+      const response = await API.post('/users/forgot-password', { email });
+      return response.data;
+    } catch (err) {
+      console.error('Failed to send reset code:', err.response?.data?.error || err.message);
+      throw new Error(err.response?.data?.error || 'Failed to send password reset code.');
+    }
+  };
+
+  // Reset Password with OTP Code
+  const resetPasswordWithOtp = async ({ email, otp, newPassword }) => {
+    try {
+      const response = await API.post('/users/reset-password', { email, otp, newPassword });
+      return response.data;
+    } catch (err) {
+      console.error('Failed to reset password:', err.response?.data?.error || err.message);
+      throw new Error(err.response?.data?.error || 'Password reset failed.');
+    }
+  };
+
   // Logout handler
   const logout = async () => {
     localStorage.removeItem('sibis_token');
@@ -91,6 +130,9 @@ export const AuthProvider = ({ children }) => {
     isFirebaseConfigured: false,
     login,
     registerStore,
+    loginWithGoogle,
+    sendForgotPasswordOtp,
+    resetPasswordWithOtp,
     updateUserProfile,
     logout,
     toggleMockMode: () => {},

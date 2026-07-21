@@ -9,6 +9,9 @@ const {
   sendVerificationOtp,
   verifyOtp,
   loginUser,
+  googleAuth,
+  forgotPassword,
+  resetPassword,
   getProfile,
   getStoreStaff,
   createStaff,
@@ -28,6 +31,9 @@ router.post('/check-email', checkEmail);
 router.post('/send-verification-otp', sendVerificationOtp);
 router.post('/verify-otp', verifyOtp);
 router.post('/login', loginUser);
+router.post('/google-auth', googleAuth);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 // Protected endpoints
 router.use(protect);
