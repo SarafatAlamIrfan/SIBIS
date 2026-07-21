@@ -363,7 +363,7 @@ const WireArtBackground = () => {
           <line x1="20" y1="415" x2="1080" y2="415" stroke="#64748b" strokeWidth="2" />
 
           {/* Zebra Crosswalk at store door (x=410 to 475, y=256 to 414) */}
-          <g stroke="#f8fafc" strokeWidth="8" opacity="0.45">
+          <g stroke="#f59e0b" strokeWidth="8" opacity="0.6">
             <line x1="415" y1="258" x2="415" y2="412" />
             <line x1="430" y1="258" x2="430" y2="412" />
             <line x1="445" y1="258" x2="445" y2="412" />
@@ -372,8 +372,8 @@ const WireArtBackground = () => {
           </g>
         </g>
 
-        {/* Traffic Signal Light Post at Crosswalk Edge (x=485) */}
-        <g transform="translate(485, 195)" stroke="#f59e0b" strokeWidth="1.8">
+        {/* Traffic Signal Light Post at Right of Store (x=640) */}
+        <g transform="translate(640, 195)" stroke="#f59e0b" strokeWidth="1.8">
           <line x1="0" y1="55" x2="0" y2="0" />
           <rect x="-6" y="-30" width="12" height="30" rx="3" fill="#0f172a" stroke="#f59e0b" strokeWidth="1.5" />
           <circle cx="0" cy="-22" r="3" fill="#ef4444" />
