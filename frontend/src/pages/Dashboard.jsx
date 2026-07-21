@@ -13,12 +13,36 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   ChevronRight,
-  Calendar
+  Calendar,
+  Building2,
+  Users,
+  ShieldCheck,
+  Activity,
+  CheckCircle2,
+  XCircle,
+  Plus,
+  Search,
+  ArrowRight,
+  Store as StoreIcon
 } from 'lucide-react';
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const isSystemAdmin = currentUser?.role === 'System Admin';
+
+  // System Admin State
+  const [adminStats, setAdminStats] = useState({
+    totalStores: 0,
+    activeStores: 0,
+    totalProducts: 0,
+    totalUsers: 0,
+    totalRevenue: 0,
+    totalSalesCount: 0,
+  });
+  const [adminStores, setAdminStores] = useState([]);
+
+  // Store Staff State
   const [aiInsights, setAiInsights] = useState([]);
   const [aiRecommendations, setAiRecommendations] = useState([]);
   const [products, setProducts] = useState([]);
@@ -37,154 +61,163 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
-        // 1. Fetch Products
-        let productList = [];
-        try {
-          const productsRes = await API.get('/products');
-          productList = Array.isArray(productsRes.data) ? productsRes.data : [];
-        } catch (err) {
-          console.warn('Failed to fetch products:', err.message);
-        }
-        setProducts(productList);
-
-        // 2. Fetch Low Stock
-        let lowStockList = [];
-        try {
-          const lowStockRes = await API.get('/products/low-stock');
-          lowStockList = Array.isArray(lowStockRes.data) ? lowStockRes.data : [];
-        } catch (err) {
-          console.warn('Failed to fetch low stock products:', err.message);
-        }
-
-        // 3. Fetch Sales
-        let salesList = [];
-        try {
-          const salesRes = await API.get('/sales');
-          salesList = Array.isArray(salesRes.data) ? salesRes.data : [];
-        } catch (err) {
-          console.warn('Failed to fetch sales:', err.message);
-        }
-        setSales(salesList);
-
-        // Calculate stats
-        const now = new Date();
-        const todayStr = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10);
-
-        const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()).toISOString().slice(0, 10);
-
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-
-        const lastMonthDate = new Date(now);
-        lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
-        const lastMonth = lastMonthDate.getMonth();
-        const lastMonthYear = lastMonthDate.getFullYear();
-
-        let todaySum = 0;
-        let yesterdaySum = 0;
-        let monthlySum = 0;
-        let lastMonthSum = 0;
-
-        salesList.forEach((sale) => {
-          if (!sale || !sale.createdAt) return;
-          const sDate = new Date(sale.createdAt);
-          const saleDateStr = new Date(sDate.getFullYear(), sDate.getMonth(), sDate.getDate()).toISOString().slice(0, 10);
-
-          if (saleDateStr === todayStr) {
-            todaySum += Number(sale.totalAmount || 0);
+        if (isSystemAdmin) {
+          // System Admin Platform Overview Data
+          try {
+            const [statsRes, storesRes] = await Promise.all([
+              API.get('/admin/stats'),
+              API.get('/admin/stores'),
+            ]);
+            setAdminStats(statsRes.data || {});
+            setAdminStores(Array.isArray(storesRes.data) ? storesRes.data : []);
+          } catch (adminErr) {
+            console.warn('Failed to fetch admin stats:', adminErr.message);
           }
-          if (saleDateStr === yesterdayStr) {
-            yesterdaySum += Number(sale.totalAmount || 0);
+        } else {
+          // Store Staff Dashboard Data
+          let productList = [];
+          try {
+            const productsRes = await API.get('/products');
+            productList = Array.isArray(productsRes.data) ? productsRes.data : [];
+          } catch (err) {
+            console.warn('Failed to fetch products:', err.message);
+          }
+          setProducts(productList);
+
+          let lowStockList = [];
+          try {
+            const lowStockRes = await API.get('/products/low-stock');
+            lowStockList = Array.isArray(lowStockRes.data) ? lowStockRes.data : [];
+          } catch (err) {
+            console.warn('Failed to fetch low stock products:', err.message);
           }
 
-          if (sDate.getMonth() === currentMonth && sDate.getFullYear() === currentYear) {
-            monthlySum += Number(sale.totalAmount || 0);
+          let salesList = [];
+          try {
+            const salesRes = await API.get('/sales');
+            salesList = Array.isArray(salesRes.data) ? salesRes.data : [];
+          } catch (err) {
+            console.warn('Failed to fetch sales:', err.message);
           }
-          if (sDate.getMonth() === lastMonth && sDate.getFullYear() === lastMonthYear) {
-            lastMonthSum += Number(sale.totalAmount || 0);
+          setSales(salesList);
+
+          // Calculate stats
+          const now = new Date();
+          const todayStr = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10);
+
+          const yesterday = new Date(now);
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayStr = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()).toISOString().slice(0, 10);
+
+          const currentMonth = now.getMonth();
+          const currentYear = now.getFullYear();
+
+          const lastMonthDate = new Date(now);
+          lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
+          const lastMonth = lastMonthDate.getMonth();
+          const lastMonthYear = lastMonthDate.getFullYear();
+
+          let todaySum = 0;
+          let yesterdaySum = 0;
+          let monthlySum = 0;
+          let lastMonthSum = 0;
+
+          salesList.forEach((sale) => {
+            if (!sale || !sale.createdAt) return;
+            const sDate = new Date(sale.createdAt);
+            const saleDateStr = new Date(sDate.getFullYear(), sDate.getMonth(), sDate.getDate()).toISOString().slice(0, 10);
+
+            if (saleDateStr === todayStr) {
+              todaySum += Number(sale.totalAmount || 0);
+            }
+            if (saleDateStr === yesterdayStr) {
+              yesterdaySum += Number(sale.totalAmount || 0);
+            }
+
+            if (sDate.getMonth() === currentMonth && sDate.getFullYear() === currentYear) {
+              monthlySum += Number(sale.totalAmount || 0);
+            }
+            if (sDate.getMonth() === lastMonth && sDate.getFullYear() === lastMonthYear) {
+              lastMonthSum += Number(sale.totalAmount || 0);
+            }
+          });
+
+          let todayPct = null;
+          if (yesterdaySum > 0) {
+            todayPct = ((todaySum - yesterdaySum) / yesterdaySum) * 100;
           }
-        });
 
-        let todayPct = null;
-        if (yesterdaySum > 0) {
-          todayPct = ((todaySum - yesterdaySum) / yesterdaySum) * 100;
-        }
-
-        let monthlyPct = null;
-        if (lastMonthSum > 0) {
-          monthlyPct = ((monthlySum - lastMonthSum) / lastMonthSum) * 100;
-        }
-
-        setStats({
-          todaySales: todaySum,
-          yesterdaySales: yesterdaySum,
-          todayPct,
-          monthlyRevenue: monthlySum,
-          lastMonthRevenue: lastMonthSum,
-          monthlyPct,
-          totalProducts: productList.length,
-          lowStockCount: lowStockList.length,
-        });
-
-        // 4. Process 7-day sales trend for SVG Chart
-        const last7Days = Array.from({ length: 7 }, (_, i) => {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          return d.toISOString().slice(0, 10);
-        }).reverse();
-
-        const dailySalesMap = {};
-        last7Days.forEach(date => { dailySalesMap[date] = 0; });
-
-        salesList.forEach(sale => {
-          if (!sale || !sale.createdAt) return;
-          const dateStr = new Date(sale.createdAt).toISOString().slice(0, 10);
-          if (dateStr in dailySalesMap) {
-            dailySalesMap[dateStr] += Number(sale.totalAmount || 0);
+          let monthlyPct = null;
+          if (lastMonthSum > 0) {
+            monthlyPct = ((monthlySum - lastMonthSum) / lastMonthSum) * 100;
           }
-        });
 
-        const trend = last7Days.map(date => {
-          const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
-          return {
-            label: dayName,
-            value: dailySalesMap[date]
-          };
-        });
-        setChartData(trend);
+          setStats({
+            todaySales: todaySum,
+            yesterdaySales: yesterdaySum,
+            todayPct,
+            monthlyRevenue: monthlySum,
+            lastMonthRevenue: lastMonthSum,
+            monthlyPct,
+            totalProducts: productList.length,
+            lowStockCount: lowStockList.length,
+          });
 
-        // 5. Process product categories for gauge bars
-        const categories = {};
-        productList.forEach(p => {
-          if (p && p.category) {
-            categories[p.category] = (categories[p.category] || 0) + 1;
+          // 7-day sales trend for SVG Chart
+          const last7Days = Array.from({ length: 7 }, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            return d.toISOString().slice(0, 10);
+          }).reverse();
+
+          const dailySalesMap = {};
+          last7Days.forEach(date => { dailySalesMap[date] = 0; });
+
+          salesList.forEach(sale => {
+            if (!sale || !sale.createdAt) return;
+            const dateStr = new Date(sale.createdAt).toISOString().slice(0, 10);
+            if (dateStr in dailySalesMap) {
+              dailySalesMap[dateStr] += Number(sale.totalAmount || 0);
+            }
+          });
+
+          const trend = last7Days.map(date => {
+            const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
+            return {
+              label: dayName,
+              value: dailySalesMap[date]
+            };
+          });
+          setChartData(trend);
+
+          // Product categories
+          const categories = {};
+          productList.forEach(p => {
+            if (p && p.category) {
+              categories[p.category] = (categories[p.category] || 0) + 1;
+            }
+          });
+          const catList = Object.keys(categories).map(cat => ({
+            name: cat,
+            count: categories[cat],
+            percentage: productList.length ? Math.round((categories[cat] / productList.length) * 100) : 0
+          })).sort((a, b) => b.count - a.count);
+          setCategoryData(catList.slice(0, 4));
+
+          try {
+            const recsRes = await API.get('/ai/recommendations');
+            setAiRecommendations(Array.isArray(recsRes.data) ? recsRes.data : []);
+          } catch (recErr) {
+            setAiRecommendations([]);
           }
-        });
-        const catList = Object.keys(categories).map(cat => ({
-          name: cat,
-          count: categories[cat],
-          percentage: productList.length ? Math.round((categories[cat] / productList.length) * 100) : 0
-        })).sort((a, b) => b.count - a.count);
-        setCategoryData(catList.slice(0, 4));
 
-        // 6. Fetch AI recommendations
-        try {
-          const recsRes = await API.get('/ai/recommendations');
-          setAiRecommendations(Array.isArray(recsRes.data) ? recsRes.data : []);
-        } catch (recErr) {
-          setAiRecommendations([]);
+          try {
+            const insightsRes = await API.get('/ai/insights');
+            setAiInsights(Array.isArray(insightsRes.data) ? insightsRes.data : []);
+          } catch (insightErr) {
+            setAiInsights([]);
+          }
         }
-
-        // 7. Fetch AI insights
-        try {
-          const insightsRes = await API.get('/ai/insights');
-          setAiInsights(Array.isArray(insightsRes.data) ? insightsRes.data : []);
-        } catch (insightErr) {
-          setAiInsights([]);
-        }
-
       } catch (err) {
         console.error('Failed to load dashboard data:', err);
       } finally {
@@ -193,18 +226,282 @@ const Dashboard = () => {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [isSystemAdmin]);
+
+  const handleToggleStoreStatus = async (storeId, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 'Active' ? 'Suspended' : 'Active';
+      await API.put(`/admin/stores/${storeId}/status`, { status: newStatus });
+      const storesRes = await API.get('/admin/stores');
+      setAdminStores(Array.isArray(storesRes.data) ? storesRes.data : []);
+    } catch (err) {
+      console.error('Failed to update store status:', err);
+      alert('Failed to update store status.');
+    }
+  };
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-96 space-y-4">
         <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-slate-400 dark:text-slate-500 font-semibold text-xs tracking-wider animate-pulse">COMPILING STATS...</p>
+        <p className="text-slate-400 dark:text-slate-500 font-semibold text-xs tracking-wider animate-pulse">
+          {isSystemAdmin ? 'LOADING PLATFORM ANALYTICS...' : 'COMPILING STORE STATS...'}
+        </p>
       </div>
     );
   }
 
-  // Draw chart dimensions safely
+  // =====================================================================
+  // 1. SYSTEM ADMIN CONTROL CENTER OVERVIEW
+  // =====================================================================
+  if (isSystemAdmin) {
+    return (
+      <div className="space-y-8 animate-[pulse-subtle_2s_ease-out_1]">
+        {/* Admin Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-full text-[10px] font-black uppercase tracking-wider mb-2 border border-purple-500/20">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Platform Control Center</span>
+            </div>
+            <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-purple-600 via-indigo-600 to-slate-900 dark:from-purple-400 dark:via-indigo-300 dark:to-white bg-clip-text text-transparent">
+              System Admin Overview
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1 font-semibold text-sm">
+              Global multi-tenant metrics, store subscription management, and system health status.
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => navigate('/admin/stores')}
+              className="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl shadow-md shadow-purple-600/20 transition-all flex items-center cursor-pointer active:scale-95"
+            >
+              <Building2 className="w-4 h-4 mr-2" />
+              <span>Manage Stores</span>
+            </button>
+            <div className="flex items-center space-x-2 text-xs bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/60 p-2.5 rounded-xl shadow-sm font-bold">
+              <Calendar className="w-4 h-4 text-purple-500" />
+              <span>{new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* System Admin Platform Metric Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Card 1: Registered Stores */}
+          <div
+            onClick={() => navigate('/admin/stores')}
+            className="glass-panel p-6 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-purple hover:border-purple-500/40 transition-all duration-300 flex items-center justify-between shadow-sm cursor-pointer select-none"
+          >
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Registered Stores</p>
+              <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">{adminStats.totalStores || 0}</h3>
+              <span className="text-[10px] font-bold text-emerald-500 inline-flex items-center mt-2">
+                <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                {adminStats.activeStores || 0} Active Stores
+              </span>
+            </div>
+            <div className="p-3 bg-purple-50 dark:bg-purple-950/40 rounded-2xl text-purple-600 dark:text-purple-400">
+              <Building2 className="w-6 h-6" />
+            </div>
+          </div>
+
+          {/* Card 2: Platform Users */}
+          <div className="glass-panel p-6 rounded-3xl transition-all duration-300 flex items-center justify-between shadow-sm select-none">
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Platform Users & Staff</p>
+              <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">{adminStats.totalUsers || 0}</h3>
+              <span className="text-[10px] text-slate-400 font-bold inline-flex items-center mt-2">
+                Owners, Managers & Staff
+              </span>
+            </div>
+            <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 rounded-2xl text-indigo-600 dark:text-indigo-400">
+              <Users className="w-6 h-6" />
+            </div>
+          </div>
+
+          {/* Card 3: Global Revenue */}
+          <div className="glass-panel p-6 rounded-3xl transition-all duration-300 flex items-center justify-between shadow-sm select-none">
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Global Platform Revenue</p>
+              <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">
+                ৳{(adminStats.totalRevenue || 0).toFixed(2)}
+              </h3>
+              <span className="text-[10px] text-emerald-500 font-bold inline-flex items-center mt-2">
+                {adminStats.totalSalesCount || 0} Total POS Checkout Invoices
+              </span>
+            </div>
+            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl text-emerald-600 dark:text-emerald-400">
+              <DollarSign className="w-6 h-6" />
+            </div>
+          </div>
+
+          {/* Card 4: Products Tracked */}
+          <div className="glass-panel p-6 rounded-3xl transition-all duration-300 flex items-center justify-between shadow-sm select-none">
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Cataloged Products</p>
+              <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">{adminStats.totalProducts || 0}</h3>
+              <span className="text-[10px] text-slate-400 font-bold inline-flex items-center mt-2">
+                Across all store inventory catalogs
+              </span>
+            </div>
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-2xl text-amber-600 dark:text-amber-400">
+              <Package className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Grid for System Admin */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Registered Stores Table Preview */}
+          <div className="lg:col-span-2 glass-panel p-6 rounded-3xl shadow-sm space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-black text-slate-800 dark:text-white">Tenant Stores Directory</h3>
+                <p className="text-xs text-slate-400 font-semibold">Overview of registered store tenants and status</p>
+              </div>
+              <button
+                onClick={() => navigate('/admin/stores')}
+                className="text-xs text-purple-600 dark:text-purple-400 font-bold hover:underline flex items-center"
+              >
+                <span>View All Stores ({adminStores.length})</span>
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200/50 dark:border-slate-800/60 text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                    <th className="pb-3">Store Name</th>
+                    <th className="pb-3">Owner / Email</th>
+                    <th className="pb-3">Type</th>
+                    <th className="pb-3 text-right">Products</th>
+                    <th className="pb-3 text-right">Sales Volume</th>
+                    <th className="pb-3 text-center">Status</th>
+                    <th className="pb-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-850/60 font-semibold text-slate-700 dark:text-slate-300">
+                  {adminStores.slice(0, 5).map((s) => (
+                    <tr key={s._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-colors">
+                      <td className="py-3 font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                        <StoreIcon className="w-4 h-4 text-purple-500 shrink-0" />
+                        <span>{s.name}</span>
+                      </td>
+                      <td className="py-3">
+                        <div>{s.ownerId?.name || 'Owner'}</div>
+                        <div className="text-[10px] text-slate-400">{s.ownerId?.email || s.email}</div>
+                      </td>
+                      <td className="py-3">
+                        <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md text-[10px]">
+                          {s.businessType || 'Retail'}
+                        </span>
+                      </td>
+                      <td className="py-3 text-right font-mono font-bold">{s.productCount || 0}</td>
+                      <td className="py-3 text-right font-mono font-black text-purple-600 dark:text-purple-400">
+                        ৳{(s.totalVolume || 0).toFixed(2)}
+                      </td>
+                      <td className="py-3 text-center">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                            s.status === 'Active'
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                          }`}
+                        >
+                          {s.status}
+                        </span>
+                      </td>
+                      <td className="py-3 text-right">
+                        <button
+                          onClick={() => handleToggleStoreStatus(s._id, s.status)}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition-colors ${
+                            s.status === 'Active'
+                              ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100'
+                              : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100'
+                          }`}
+                        >
+                          {s.status === 'Active' ? 'Suspend' : 'Activate'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Infrastructure Health & Quick Actions */}
+          <div className="space-y-6">
+            <div className="glass-panel p-6 rounded-3xl shadow-sm space-y-4">
+              <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                System Infrastructure Health
+              </h3>
+              
+              <div className="space-y-3 text-xs font-bold">
+                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-200/40 dark:border-slate-800/40">
+                  <div className="flex items-center space-x-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                    <span>MongoDB Database</span>
+                  </div>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-black">Connected</span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-200/40 dark:border-slate-800/40">
+                  <div className="flex items-center space-x-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <span>Express REST API</span>
+                  </div>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-black">Online</span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-200/40 dark:border-slate-800/40">
+                  <div className="flex items-center space-x-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <span>Firebase Auth SDK</span>
+                  </div>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-black">Active</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="glass-panel p-6 rounded-3xl shadow-sm space-y-4">
+              <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                Quick Platform Actions
+              </h3>
+              <div className="space-y-2">
+                <button
+                  onClick={() => navigate('/admin/stores')}
+                  className="w-full p-3 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 border border-purple-200/50 dark:border-purple-800/40 text-purple-700 dark:text-purple-300 text-xs font-bold rounded-2xl text-left flex items-center justify-between transition-all cursor-pointer"
+                >
+                  <span className="flex items-center">
+                    <Building2 className="w-4 h-4 mr-2" /> Register New Tenant Store
+                  </span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => navigate('/store-activity')}
+                  className="w-full p-3 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200/50 dark:border-indigo-800/40 text-indigo-700 dark:text-indigo-300 text-xs font-bold rounded-2xl text-left flex items-center justify-between transition-all cursor-pointer"
+                >
+                  <span className="flex items-center">
+                    <Activity className="w-4 h-4 mr-2" /> View System Activity Logs
+                  </span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================================
+  // 2. STORE STAFF / OWNER INVENTORY & POS DASHBOARD
+  // =====================================================================
   const chartWidth = 560;
   const chartHeight = 160;
   const maxChartValue = Math.max(...chartData.map(d => d.value), 1000);
