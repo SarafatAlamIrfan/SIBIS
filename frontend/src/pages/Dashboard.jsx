@@ -35,18 +35,38 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        // Fetch products and low-stock count
-        const productsRes = await API.get('/products');
-        setProducts(productsRes.data);
-        const lowStockRes = await API.get('/products/low-stock');
-        
-        // Fetch sales to calculate revenue
-        const salesRes = await API.get('/sales');
-        setSales(salesRes.data);
+        // 1. Fetch Products
+        let productList = [];
+        try {
+          const productsRes = await API.get('/products');
+          productList = Array.isArray(productsRes.data) ? productsRes.data : [];
+        } catch (err) {
+          console.warn('Failed to fetch products:', err.message);
+        }
+        setProducts(productList);
 
-        // Calculate 100% REAL stats and REAL percentage comparisons
+        // 2. Fetch Low Stock
+        let lowStockList = [];
+        try {
+          const lowStockRes = await API.get('/products/low-stock');
+          lowStockList = Array.isArray(lowStockRes.data) ? lowStockRes.data : [];
+        } catch (err) {
+          console.warn('Failed to fetch low stock products:', err.message);
+        }
+
+        // 3. Fetch Sales
+        let salesList = [];
+        try {
+          const salesRes = await API.get('/sales');
+          salesList = Array.isArray(salesRes.data) ? salesRes.data : [];
+        } catch (err) {
+          console.warn('Failed to fetch sales:', err.message);
+        }
+        setSales(salesList);
+
+        // Calculate stats
         const now = new Date();
         const todayStr = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10);
 
@@ -67,22 +87,23 @@ const Dashboard = () => {
         let monthlySum = 0;
         let lastMonthSum = 0;
 
-        (salesRes.data || []).forEach((sale) => {
+        salesList.forEach((sale) => {
+          if (!sale || !sale.createdAt) return;
           const sDate = new Date(sale.createdAt);
           const saleDateStr = new Date(sDate.getFullYear(), sDate.getMonth(), sDate.getDate()).toISOString().slice(0, 10);
 
           if (saleDateStr === todayStr) {
-            todaySum += sale.totalAmount;
+            todaySum += Number(sale.totalAmount || 0);
           }
           if (saleDateStr === yesterdayStr) {
-            yesterdaySum += sale.totalAmount;
+            yesterdaySum += Number(sale.totalAmount || 0);
           }
 
           if (sDate.getMonth() === currentMonth && sDate.getFullYear() === currentYear) {
-            monthlySum += sale.totalAmount;
+            monthlySum += Number(sale.totalAmount || 0);
           }
           if (sDate.getMonth() === lastMonth && sDate.getFullYear() === lastMonthYear) {
-            lastMonthSum += sale.totalAmount;
+            lastMonthSum += Number(sale.totalAmount || 0);
           }
         });
 
@@ -103,11 +124,11 @@ const Dashboard = () => {
           monthlyRevenue: monthlySum,
           lastMonthRevenue: lastMonthSum,
           monthlyPct,
-          totalProducts: Array.isArray(productsRes.data) ? productsRes.data.length : 0,
-          lowStockCount: Array.isArray(lowStockRes.data) ? lowStockRes.data.length : 0,
+          totalProducts: productList.length,
+          lowStockCount: lowStockList.length,
         });
 
-        // 1. Process 7-day sales trend for SVG Chart
+        // 4. Process 7-day sales trend for SVG Chart
         const last7Days = Array.from({ length: 7 }, (_, i) => {
           const d = new Date();
           d.setDate(d.getDate() - i);
@@ -117,10 +138,11 @@ const Dashboard = () => {
         const dailySalesMap = {};
         last7Days.forEach(date => { dailySalesMap[date] = 0; });
 
-        salesRes.data.forEach(sale => {
+        salesList.forEach(sale => {
+          if (!sale || !sale.createdAt) return;
           const dateStr = new Date(sale.createdAt).toISOString().slice(0, 10);
           if (dateStr in dailySalesMap) {
-            dailySalesMap[dateStr] += sale.totalAmount;
+            dailySalesMap[dateStr] += Number(sale.totalAmount || 0);
           }
         });
 
@@ -133,29 +155,32 @@ const Dashboard = () => {
         });
         setChartData(trend);
 
-        // 2. Process product categories for gauge bars
+        // 5. Process product categories for gauge bars
         const categories = {};
-        productsRes.data.forEach(p => {
-          categories[p.category] = (categories[p.category] || 0) + 1;
+        productList.forEach(p => {
+          if (p && p.category) {
+            categories[p.category] = (categories[p.category] || 0) + 1;
+          }
         });
         const catList = Object.keys(categories).map(cat => ({
           name: cat,
           count: categories[cat],
-          percentage: productsRes.data.length ? Math.round((categories[cat] / productsRes.data.length) * 100) : 0
+          percentage: productList.length ? Math.round((categories[cat] / productList.length) * 100) : 0
         })).sort((a, b) => b.count - a.count);
         setCategoryData(catList.slice(0, 4));
 
-        // Fetch 100% REAL dynamic AI insights & recommendations from MongoDB endpoints
+        // 6. Fetch AI recommendations
         try {
           const recsRes = await API.get('/ai/recommendations');
-          setAiRecommendations(recsRes.data || []);
+          setAiRecommendations(Array.isArray(recsRes.data) ? recsRes.data : []);
         } catch (recErr) {
           setAiRecommendations([]);
         }
 
+        // 7. Fetch AI insights
         try {
           const insightsRes = await API.get('/ai/insights');
-          setAiInsights(insightsRes.data || []);
+          setAiInsights(Array.isArray(insightsRes.data) ? insightsRes.data : []);
         } catch (insightErr) {
           setAiInsights([]);
         }
@@ -179,12 +204,14 @@ const Dashboard = () => {
     );
   }
 
-  // Draw chart dimensions
+  // Draw chart dimensions safely
   const chartWidth = 560;
   const chartHeight = 160;
   const maxChartValue = Math.max(...chartData.map(d => d.value), 1000);
+  const denominator = chartData.length > 1 ? chartData.length - 1 : 1;
+
   const chartPoints = chartData.map((d, i) => {
-    const x = (i / (chartData.length - 1)) * (chartWidth - 50) + 25;
+    const x = (i / denominator) * (chartWidth - 50) + 25;
     const y = chartHeight - ((d.value / maxChartValue) * (chartHeight - 40) + 20);
     return { x, y, label: d.label, value: d.value };
   });
@@ -205,7 +232,7 @@ const Dashboard = () => {
             Dashboard
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium text-sm">
-            Welcome back, {currentUser.name}! {currentUser.storeId?.name ? `(${currentUser.storeId.name})` : ''} Here is your store status at a glance.
+            Welcome back, {currentUser?.name || 'User'}! {currentUser?.storeId?.name ? `(${currentUser.storeId.name})` : ''} Here is your store status at a glance.
           </p>
         </div>
         <div className="flex items-center space-x-2 text-xs bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/60 p-2.5 rounded-xl shadow-sm">
