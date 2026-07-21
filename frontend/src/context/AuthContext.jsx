@@ -7,7 +7,7 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [mockMode] = useState(true); // Keep developer options enabled locally
+  const [mockMode] = useState(import.meta.env.DEV); // Only true during local vite dev server, false in production
 
   // Sync user profile from MongoDB backend using the local storage JWT
   const loadProfile = async () => {

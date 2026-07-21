@@ -28,11 +28,6 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
   return (
     <header className="h-16 bg-white/80 border-b border-slate-200/50 backdrop-blur-md fixed top-0 right-0 left-64 z-10 flex items-center justify-between px-8 shadow-sm dark:bg-slate-900/80 dark:border-slate-800/60 transition-all duration-300">
       <div className="flex items-center space-x-2">
-        {mockMode && (
-          <span className="bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 text-[10px] px-2.5 py-1 rounded-full border border-purple-200/40 font-extrabold tracking-wider dark:from-purple-950/30 dark:to-indigo-950/30 dark:text-purple-300 dark:border-purple-900/50 shadow-sm animate-pulse">
-            DEV MOCK ENVIRONMENT
-          </span>
-        )}
       </div>
       <div className="flex items-center space-x-4">
         {/* Light / Dark Toggle Switch */}
