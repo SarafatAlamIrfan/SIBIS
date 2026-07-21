@@ -27,19 +27,19 @@ import { useTheme } from '../context/ThemeContext';
 import ThemeSelector from '../components/ThemeSelector';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [mockRole, setMockRole] = useState('Site Admin');
+  const [email, setEmail] = useState('owner@sibis.com');
+  const [password, setPassword] = useState('password123');
+  const [mockRole, setMockRole] = useState('Owner');
+  const [devDrawerOpen, setDevDrawerOpen] = useState(false);
   const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
-  // Forgot password modal state
-  const [showForgotModal, setShowForgotModal] = useState(false);
-  const [forgotStep, setForgotStep] = useState(1); // 1: request, 2: verify/reset
+  // Forgot Password State
+  const [forgotModalOpen, setForgotModalOpen] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1); // 1 = Enter Email, 2 = Enter OTP & New Password
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotOtp, setForgotOtp] = useState('');
-  const [forgotNewPassword, setForgotNewPassword] = useState('');
-  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [forgotError, setForgotError] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState('');
   const [forgotDemoOtp, setForgotDemoOtp] = useState('');
