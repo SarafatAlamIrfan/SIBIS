@@ -131,9 +131,15 @@ export const AuthProvider = ({ children }) => {
       }
 
       const response = await API.post('/users/google-auth', googleUserData);
+      if (response.data?.isNewUser) {
+        return response.data;
+      }
+
       const { token, user } = response.data;
-      localStorage.setItem('sibis_token', token);
-      setCurrentUser(user);
+      if (token) {
+        localStorage.setItem('sibis_token', token);
+        setCurrentUser(user);
+      }
       return user;
     } catch (err) {
       console.error('Failed Google authentication:', err.message);

@@ -80,9 +80,13 @@ const Login = () => {
   const handleGoogleSignIn = async () => {
     setError('');
     try {
-      const loggedUser = await loginWithGoogle();
+      const res = await loginWithGoogle();
+      if (res?.isNewUser) {
+        navigate('/register');
+        return;
+      }
 
-      if (loggedUser?.role === 'System Admin') {
+      if (res?.role === 'System Admin') {
         navigate('/admin/stores');
       } else {
         navigate('/dashboard');

@@ -601,12 +601,12 @@ exports.getStoreActivity = async (req, res, next) => {
   }
 };
 
-// @desc    Google Authentication (Login or Auto-Register Store)
+// @desc    Google Authentication (Login or Register Store with Store Details)
 // @route   POST /api/users/google-auth
 // @access  Public
 exports.googleAuth = async (req, res, next) => {
   try {
-    const { email, name, googleId, avatar } = req.body;
+    const { email, name, googleId, avatar, storeName, businessType, phone, address } = req.body;
     if (!email) {
       return res.status(400).json({ error: 'Google authentication failed: Email is required.' });
     }
@@ -615,13 +615,26 @@ exports.googleAuth = async (req, res, next) => {
     let user = await User.findOne({ email: emailLower }).populate('storeId', 'name code businessType status');
 
     if (!user) {
-      // Auto-create Store for new Google user
+      // If new Google user and store details are not provided yet, request store details from frontend
+      if (!storeName || !storeName.trim()) {
+        return res.status(200).json({
+          isNewUser: true,
+          email: emailLower,
+          name: name || emailLower.split('@')[0],
+          googleId: googleId || '',
+          avatar: avatar || '',
+          message: 'Google authentication successful. Please enter your store details to complete setup.',
+        });
+      }
+
+      // Create Store with provided details
       const Store = require('../models/Store');
-      const storeName = name ? `${name}'s Store` : 'My Google Store';
       const store = new Store({
-        name: storeName,
+        name: storeName.trim(),
         email: emailLower,
-        businessType: 'General Retail',
+        phone: phone ? phone.trim() : '',
+        address: address ? address.trim() : '',
+        businessType: businessType || 'General Retail',
         status: 'Active',
         subscriptionPlan: 'Pro',
       });

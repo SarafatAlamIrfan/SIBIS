@@ -29,13 +29,29 @@ const RegisterStorePage = () => {
 
   // Step Control: 1 = Fill Registration Details, 2 = Verify Email OTP
   const [step, setStep] = useState(1);
+  const [googleVerifiedUser, setGoogleVerifiedUser] = useState(null);
 
   // Google Sign In Handler (Triggers Google Auth Popup Window)
   const handleGoogleSignIn = async () => {
     setError('');
     try {
-      await loginWithGoogle();
-      navigate('/dashboard');
+      const res = await loginWithGoogle();
+      if (res?.isNewUser) {
+        setGoogleVerifiedUser({
+          email: res.email,
+          name: res.name,
+          googleId: res.googleId,
+          avatar: res.avatar,
+        });
+        setFormData((prev) => ({
+          ...prev,
+          ownerName: res.name || prev.ownerName,
+          ownerEmail: res.email || prev.ownerEmail,
+        }));
+        setStep(1);
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       setError(err.message || 'Google Popup authentication failed.');
     }
@@ -126,12 +142,47 @@ const RegisterStorePage = () => {
     }
   };
 
-  // Step 1: Handle Send OTP and proceed to Verification Step
+  // Step 1: Handle Send OTP and proceed to Verification Step (or Create Store for Google User)
   const handleProceedToVerification = async (e) => {
     e.preventDefault();
     setError('');
 
-    // 1. Check required fields
+    // If user authenticated with Google and is completing store details:
+    if (googleVerifiedUser) {
+      if (!formData.storeName || !formData.storeName.trim()) {
+        setError('Please enter your Store / Business Name.');
+        return;
+      }
+      if (formData.businessType === 'Others' && !formData.customBusinessType.trim()) {
+        setError('Please specify your custom business type.');
+        return;
+      }
+
+      const finalBusinessType =
+        formData.businessType === 'Others' ? formData.customBusinessType.trim() : formData.businessType;
+
+      setSubmitting(true);
+      try {
+        await loginWithGoogle({
+          email: googleVerifiedUser.email,
+          name: formData.ownerName || googleVerifiedUser.name,
+          googleId: googleVerifiedUser.googleId,
+          avatar: googleVerifiedUser.avatar,
+          storeName: formData.storeName.trim(),
+          businessType: finalBusinessType,
+          phone: formData.phone,
+          address: formData.address,
+        });
+        navigate('/dashboard');
+      } catch (err) {
+        setError(err.message || 'Failed to complete store registration.');
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
+    // Standard Email Registration Flow
     if (!formData.storeName || !formData.ownerName || !formData.ownerEmail || !formData.ownerPassword) {
       setError('Please fill in all required fields marked with *.');
       return;
@@ -309,6 +360,24 @@ const RegisterStorePage = () => {
             </div>
 
             <form onSubmit={handleProceedToVerification} className="space-y-4 text-xs font-semibold">
+              {/* Google Account Verified Banner */}
+              {googleVerifiedUser && (
+                <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-300 font-bold">
+                  <div className="flex items-center space-x-2.5">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                    <div>
+                      <span className="block font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider text-[10px]">
+                        Google Account Verified ✓
+                      </span>
+                      <span>{googleVerifiedUser.email}</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-lg">
+                    Enter Store Details
+                  </span>
+                </div>
+              )}
+
               {/* Store Info Group */}
               <div className="space-y-3">
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. Store Details</p>
@@ -451,73 +520,83 @@ const RegisterStorePage = () => {
                 </div>
               </div>
 
-              {/* Password & Password Confirmation */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-slate-700 dark:text-slate-300 font-bold">Password *</label>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="password"
-                      required
-                      placeholder="••••••••"
-                      value={formData.ownerPassword}
-                      onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold"
-                    />
+              {/* Password & Password Confirmation (Hidden for Google Verified Accounts) */}
+              {!googleVerifiedUser && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-slate-700 dark:text-slate-300 font-bold">Password *</label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        required
+                        placeholder="••••••••"
+                        value={formData.ownerPassword}
+                        onChange={(e) => setFormData({ ...formData, ownerPassword: e.target.value })}
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <label className="text-slate-700 dark:text-slate-300 font-bold">Confirm Password *</label>
-                    {formData.confirmPassword && (
-                      <span
-                        className={`text-[10px] font-extrabold flex items-center ${
-                          formData.ownerPassword === formData.confirmPassword
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : 'text-rose-600 dark:text-rose-400'
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-slate-700 dark:text-slate-300 font-bold">Confirm Password *</label>
+                      {formData.confirmPassword && (
+                        <span
+                          className={`text-[10px] font-extrabold flex items-center ${
+                            formData.ownerPassword === formData.confirmPassword
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : 'text-rose-600 dark:text-rose-400'
+                          }`}
+                        >
+                          {formData.ownerPassword === formData.confirmPassword ? (
+                            <>
+                              <CheckCircle2 className="w-3 h-3 mr-1" /> Match
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-3 h-3 mr-1" /> Mismatch
+                            </>
+                          )}
+                        </span>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        required
+                        placeholder="••••••••"
+                        value={formData.confirmPassword}
+                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                        className={`w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border rounded-xl focus:ring-2 font-semibold ${
+                          formData.confirmPassword
+                            ? formData.ownerPassword === formData.confirmPassword
+                              ? 'border-emerald-400 focus:ring-emerald-500'
+                              : 'border-rose-400 focus:ring-rose-500'
+                            : 'border-slate-200 dark:border-slate-800 focus:ring-indigo-500'
                         }`}
-                      >
-                        {formData.ownerPassword === formData.confirmPassword ? (
-                          <>
-                            <CheckCircle2 className="w-3 h-3 mr-1" /> Match
-                          </>
-                        ) : (
-                          <>
-                            <XCircle className="w-3 h-3 mr-1" /> Mismatch
-                          </>
-                        )}
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="password"
-                      required
-                      placeholder="••••••••"
-                      value={formData.confirmPassword}
-                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                      className={`w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border rounded-xl focus:ring-2 font-semibold ${
-                        formData.confirmPassword
-                          ? formData.ownerPassword === formData.confirmPassword
-                            ? 'border-emerald-400 focus:ring-emerald-500'
-                            : 'border-rose-400 focus:ring-rose-500'
-                          : 'border-slate-200 dark:border-slate-800 focus:ring-indigo-500'
-                      }`}
-                    />
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <button
               type="submit"
-              disabled={otpSending}
+              disabled={otpSending || submitting}
               className="w-full py-4 mt-4 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black rounded-2xl text-xs tracking-wider shadow-lg shadow-indigo-600/25 border border-indigo-400/30 transform active:scale-98 transition-all flex items-center justify-center cursor-pointer"
             >
-              <span>{otpSending ? 'Sending Verification Code...' : 'Verify Email & Continue'}</span>
+              <span>
+                {googleVerifiedUser
+                  ? submitting
+                    ? 'Creating Store...'
+                    : 'Create Store & Launch Dashboard'
+                  : otpSending
+                  ? 'Sending Verification Code...'
+                  : 'Verify Email & Continue'}
+              </span>
               <ArrowRight className="w-4 h-4 ml-2" />
             </button>
           </form>
