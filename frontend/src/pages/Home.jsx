@@ -16,26 +16,13 @@ import {
   Users
 } from 'lucide-react';
 
+import { useTheme } from '../context/ThemeContext';
+import ThemeSelector from '../components/ThemeSelector';
+
 const Home = () => {
   const { currentUser } = useAuth();
+  const { darkMode, toggleMode } = useTheme();
   const navigate = useNavigate();
-
-  // Theme support
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('sibis_theme');
-    if (saved) return saved === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('sibis_theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('sibis_theme', 'light');
-    }
-  }, [darkMode]);
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 font-sans">
@@ -53,10 +40,12 @@ const Home = () => {
             <span className="text-xl font-black tracking-tight bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-300 dark:to-pink-400 bg-clip-text text-transparent">SIBIS</span>
           </Link>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <ThemeSelector />
+
             {/* Theme Toggle */}
             <button
-              onClick={() => setDarkMode(!darkMode)}
+              onClick={toggleMode}
               className="p-2.5 bg-white/40 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-600 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
               title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >

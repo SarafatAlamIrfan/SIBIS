@@ -18,6 +18,8 @@ import NotAuthorized from './pages/NotAuthorized';
 
 import RegisterStorePage from './pages/RegisterStorePage';
 
+import { ThemeProvider } from './context/ThemeContext';
+
 // Protected Route Guard Wrapper enforcing authentication and role limits
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { currentUser, loading } = useAuth();
@@ -43,116 +45,118 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public landing home */}
-          <Route path="/" element={<Home />} />
-          
-          {/* Public auth routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<RegisterStorePage />} />
-
-          {/* Protected routes wrapped in Main Layout */}
-          <Route element={<Layout />}>
-            <Route 
-              path="/admin/stores" 
-              element={
-                <ProtectedRoute allowedRoles={['System Admin']}>
-                  <RegisteredStores />
-                </ProtectedRoute>
-              } 
-            />
-
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager', 'Cashier', 'Inventory Staff']}>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            {/* Public landing home */}
+            <Route path="/" element={<Home />} />
             
-            <Route 
-              path="/pos" 
-              element={
-                <ProtectedRoute allowedRoles={['Owner', 'Manager', 'Cashier']}>
-                  <POS />
-                </ProtectedRoute>
-              } 
-            />
+            {/* Public auth routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<RegisterStorePage />} />
 
-            <Route 
-              path="/products" 
-              element={
-                <ProtectedRoute allowedRoles={['Owner', 'Manager', 'Inventory Staff']}>
-                  <Products />
-                </ProtectedRoute>
-              } 
-            />
+            {/* Protected routes wrapped in Main Layout */}
+            <Route element={<Layout />}>
+              <Route 
+                path="/admin/stores" 
+                element={
+                  <ProtectedRoute allowedRoles={['System Admin']}>
+                    <RegisteredStores />
+                  </ProtectedRoute>
+                } 
+              />
 
-            <Route 
-              path="/reorder-list" 
-              element={
-                <ProtectedRoute allowedRoles={['Owner', 'Manager', 'Inventory Staff']}>
-                  <ReorderList />
-                </ProtectedRoute>
-              } 
-            />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager', 'Cashier', 'Inventory Staff']}>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/pos" 
+                element={
+                  <ProtectedRoute allowedRoles={['Owner', 'Manager', 'Cashier']}>
+                    <POS />
+                  </ProtectedRoute>
+                } 
+              />
 
-            <Route 
-              path="/suppliers" 
-              element={
-                <ProtectedRoute allowedRoles={['Owner', 'Manager']}>
-                  <Suppliers />
-                </ProtectedRoute>
-              } 
-            />
+              <Route 
+                path="/products" 
+                element={
+                  <ProtectedRoute allowedRoles={['Owner', 'Manager', 'Inventory Staff']}>
+                    <Products />
+                  </ProtectedRoute>
+                } 
+              />
 
-            <Route 
-              path="/purchase-orders" 
-              element={
-                <ProtectedRoute allowedRoles={['Owner', 'Manager']}>
-                  <PurchaseOrders />
-                </ProtectedRoute>
-              } 
-            />
+              <Route 
+                path="/reorder-list" 
+                element={
+                  <ProtectedRoute allowedRoles={['Owner', 'Manager', 'Inventory Staff']}>
+                    <ReorderList />
+                  </ProtectedRoute>
+                } 
+              />
 
-            <Route 
-              path="/staff" 
-              element={
-                <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager']}>
-                  <StaffManagement />
-                </ProtectedRoute>
-              } 
-            />
+              <Route 
+                path="/suppliers" 
+                element={
+                  <ProtectedRoute allowedRoles={['Owner', 'Manager']}>
+                    <Suppliers />
+                  </ProtectedRoute>
+                } 
+              />
 
-            <Route 
-              path="/activity" 
-              element={
-                <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager']}>
-                  <StoreActivity />
-                </ProtectedRoute>
-              } 
-            />
+              <Route 
+                path="/purchase-orders" 
+                element={
+                  <ProtectedRoute allowedRoles={['Owner', 'Manager']}>
+                    <PurchaseOrders />
+                  </ProtectedRoute>
+                } 
+              />
 
-            <Route 
-              path="/profile" 
-              element={
-                <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager', 'Cashier', 'Inventory Staff']}>
-                  <Profile />
-                </ProtectedRoute>
-              } 
-            />
+              <Route 
+                path="/staff" 
+                element={
+                  <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager']}>
+                    <StaffManagement />
+                  </ProtectedRoute>
+                } 
+              />
 
-            <Route path="/not-authorized" element={<NotAuthorized />} />
-          </Route>
+              <Route 
+                path="/activity" 
+                element={
+                  <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager']}>
+                    <StoreActivity />
+                  </ProtectedRoute>
+                } 
+              />
 
-          {/* Fallback route */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager', 'Cashier', 'Inventory Staff']}>
+                    <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route path="/not-authorized" element={<NotAuthorized />} />
+            </Route>
+
+            {/* Fallback route */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

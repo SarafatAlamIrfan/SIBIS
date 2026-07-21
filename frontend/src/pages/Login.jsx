@@ -23,44 +23,31 @@ import {
   RefreshCw
 } from 'lucide-react';
 
+import { useTheme } from '../context/ThemeContext';
+import ThemeSelector from '../components/ThemeSelector';
+
 const Login = () => {
-  const [email, setEmail] = useState('owner@sibis.com');
-  const [password, setPassword] = useState('password123');
-  const [mockRole, setMockRole] = useState('Owner');
-  const [devDrawerOpen, setDevDrawerOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [mockRole, setMockRole] = useState('Site Admin');
   const [error, setError] = useState('');
-  
-  // Forgot Password State
-  const [forgotModalOpen, setForgotModalOpen] = useState(false);
-  const [forgotStep, setForgotStep] = useState(1); // 1 = Enter Email, 2 = Enter OTP & New Password
+  const [submitting, setSubmitting] = useState(false);
+
+  // Forgot password modal state
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1); // 1: request, 2: verify/reset
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotOtp, setForgotOtp] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
   const [forgotError, setForgotError] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState('');
   const [forgotDemoOtp, setForgotDemoOtp] = useState('');
   const [forgotSubmitting, setForgotSubmitting] = useState(false);
 
   const { login, loginWithGoogle, sendForgotPasswordOtp, resetPasswordWithOtp, mockMode } = useAuth();
+  const { darkMode, toggleMode } = useTheme();
   const navigate = useNavigate();
-
-  // Theme support
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('sibis_theme');
-    if (saved) return saved === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('sibis_theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('sibis_theme', 'light');
-    }
-  }, [darkMode]);
 
   const handleRoleSelect = (role) => {
     setMockRole(role);
@@ -229,11 +216,12 @@ const Login = () => {
       <div className="absolute top-1/6 left-1/6 w-[40rem] h-[40rem] bg-indigo-500/5 dark:bg-indigo-900/10 rounded-full blur-[120px] animate-float-slow pointer-events-none"></div>
       <div className="absolute bottom-1/6 right-1/6 w-[35rem] h-[35rem] bg-purple-500/5 dark:bg-purple-900/10 rounded-full blur-[100px] animate-float-delayed pointer-events-none"></div>
 
-      {/* Theme Toggle in Top-Right Corner */}
-      <div className="absolute top-6 right-6 z-25">
+      {/* Theme Controls in Top-Right Corner */}
+      <div className="absolute top-6 right-6 z-25 flex items-center space-x-3">
+        <ThemeSelector />
         <button
-          onClick={() => setDarkMode(!darkMode)}
-          className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-all active:scale-95"
+          onClick={toggleMode}
+          className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-all active:scale-95"
           title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
           {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}

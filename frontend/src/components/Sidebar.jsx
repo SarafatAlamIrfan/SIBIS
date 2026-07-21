@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, ShoppingCart, Package, Truck, ClipboardList, BarChart3, ListPlus, Building2, Users, Activity, User } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { LayoutDashboard, ShoppingCart, Package, Truck, ClipboardList, ListPlus, Building2, Users, Activity, User, BarChart3, Palette } from 'lucide-react';
 
 const Sidebar = () => {
   const { currentUser } = useAuth();
+  const { currentThemeObj } = useTheme();
   const location = useLocation();
   const [reorderCount, setReorderCount] = useState(0);
 
@@ -99,13 +101,19 @@ const Sidebar = () => {
         className="h-16 flex items-center px-6 border-b border-slate-800/40 dark:border-slate-900/50 bg-slate-950/20 backdrop-blur-sm hover:bg-slate-800/30 transition-all cursor-pointer group"
         title="Go to Dashboard Overview"
       >
-        <div className="p-1.5 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-lg shadow-md shadow-indigo-500/10 mr-3 group-hover:scale-105 transition-transform duration-200">
+        <div
+          className="p-1.5 rounded-lg shadow-md mr-3 group-hover:scale-105 transition-transform duration-200"
+          style={{ backgroundColor: currentThemeObj.primaryColor }}
+        >
           <BarChart3 className="w-5 h-5 text-white animate-[pulse-subtle_2s_infinite]" />
         </div>
-        <span className="text-lg font-black tracking-widest bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 bg-clip-text text-transparent group-hover:opacity-90 transition-opacity">
+        <span
+          className={`text-lg font-black tracking-widest bg-gradient-to-r ${currentThemeObj.darkGradient} bg-clip-text text-transparent group-hover:opacity-90 transition-opacity`}
+        >
           SIBIS
         </span>
       </Link>
+
       <div className="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto">
         {visibleItems.map((item) => {
           const Icon = item.icon;
@@ -116,9 +124,14 @@ const Sidebar = () => {
               to={item.path}
               className={`flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all duration-300 transform active:scale-97 ${
                 isActive
-                  ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/25 border border-indigo-500/40 dark:from-indigo-500 dark:to-violet-650'
+                  ? 'text-white shadow-lg border border-white/20'
                   : 'text-slate-400 hover:bg-slate-800/20 hover:text-slate-100 hover:translate-x-1.5 border border-transparent'
               }`}
+              style={
+                isActive
+                  ? { backgroundColor: currentThemeObj.primaryColor }
+                  : {}
+              }
             >
               <div className="flex items-center">
                 <Icon className={`w-4.5 h-4.5 mr-3 transition-colors ${isActive ? 'text-white' : 'text-slate-400'}`} />
@@ -126,7 +139,7 @@ const Sidebar = () => {
               </div>
               {item.badge && (
                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
-                  isActive ? 'bg-white text-indigo-600' : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+                  isActive ? 'bg-white text-slate-900' : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
                 }`}>
                   {item.badge}
                 </span>
@@ -136,15 +149,25 @@ const Sidebar = () => {
         })}
       </div>
 
-      {currentUser.storeId?.name && (
-        <div className="p-4 border-t border-slate-800/40 bg-slate-950/40 text-xs">
-          <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Active Tenant Store</p>
-          <p className="font-extrabold text-white text-xs truncate flex items-center mt-1">
-            <Building2 className="w-3.5 h-3.5 mr-1.5 text-indigo-400" />
-            {currentUser.storeId.name}
-          </p>
+      <div className="p-4 border-t border-slate-800/40 bg-slate-950/40 text-xs space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Active Theme</span>
+          <span className="flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300">
+            <Palette className="w-3 h-3 mr-1" style={{ color: currentThemeObj.primaryColor }} />
+            {currentThemeObj.name.split(' ')[0]}
+          </span>
         </div>
-      )}
+
+        {currentUser.storeId?.name && (
+          <div>
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Active Tenant Store</p>
+            <p className="font-extrabold text-white text-xs truncate flex items-center mt-0.5">
+              <Building2 className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+              {currentUser.storeId.name}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

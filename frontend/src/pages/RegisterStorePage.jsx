@@ -22,9 +22,12 @@ import {
   Edit3,
   ShieldCheck
 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import ThemeSelector from '../components/ThemeSelector';
 
 const RegisterStorePage = () => {
   const { registerStore, loginWithGoogle } = useAuth();
+  const { darkMode, toggleMode } = useTheme();
   const navigate = useNavigate();
 
   // Step Control: 1 = Fill Registration Details, 2 = Verify Email OTP
@@ -86,23 +89,6 @@ const RegisterStorePage = () => {
 
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-  // Theme support
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('sibis_theme');
-    if (saved) return saved === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('sibis_theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('sibis_theme', 'light');
-    }
-  }, [darkMode]);
 
   // Resend Countdown Timer
   useEffect(() => {
@@ -285,11 +271,12 @@ const RegisterStorePage = () => {
       <div className="absolute top-1/6 left-1/6 w-[40rem] h-[40rem] bg-indigo-500/5 dark:bg-indigo-900/10 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-1/6 right-1/6 w-[35rem] h-[35rem] bg-purple-500/5 dark:bg-purple-900/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-      {/* Theme Toggle Button */}
-      <div className="absolute top-6 right-6 z-25">
+      {/* Theme Controls in Top-Right Corner */}
+      <div className="absolute top-6 right-6 z-25 flex items-center space-x-3">
+        <ThemeSelector />
         <button
-          onClick={() => setDarkMode(!darkMode)}
-          className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-all active:scale-95"
+          onClick={toggleMode}
+          className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-all active:scale-95"
           title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
           {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}

@@ -1,11 +1,17 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import ThemeSelector from './ThemeSelector';
 import { LogOut, User, Sun, Moon } from 'lucide-react';
 
-const Navbar = ({ darkMode, toggleDarkMode }) => {
-  const { currentUser, logout, mockMode } = useAuth();
+const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode }) => {
+  const { currentUser, logout } = useAuth();
+  const { darkMode: ctxDarkMode, toggleMode } = useTheme();
   const navigate = useNavigate();
+
+  const darkMode = propsDarkMode !== undefined ? propsDarkMode : ctxDarkMode;
+  const handleToggle = propsToggleDarkMode || toggleMode;
 
   const handleLogout = async () => {
     await logout();
@@ -26,13 +32,17 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
   const badgeClass = roleBadges[currentUser.role] || 'bg-slate-100 text-slate-800 border-slate-200';
 
   return (
-    <header className="h-16 bg-white/80 border-b border-slate-200/50 backdrop-blur-md fixed top-0 right-0 left-64 z-10 flex items-center justify-between px-8 shadow-sm dark:bg-slate-900/80 dark:border-slate-800/60 transition-all duration-300">
+    <header className="h-16 bg-white/80 border-b border-slate-200/50 backdrop-blur-md fixed top-0 right-0 left-64 z-10 flex items-center justify-between px-8 shadow-xs dark:bg-slate-900/80 dark:border-slate-800/60 transition-all duration-300">
       <div className="flex items-center space-x-2">
       </div>
-      <div className="flex items-center space-x-4">
-        {/* Light / Dark Toggle Switch */}
+
+      <div className="flex items-center space-x-3 sm:space-x-4">
+        {/* Interactive Theme Palette Selector Dropdown */}
+        <ThemeSelector />
+
+        {/* Light / Dark Mode Toggle Switch */}
         <button
-          onClick={toggleDarkMode}
+          onClick={handleToggle}
           className="p-2 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-indigo-400 dark:hover:bg-slate-800 transition-all duration-200 cursor-pointer border border-transparent hover:border-slate-200/50 dark:hover:border-slate-700/50"
           title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
@@ -45,7 +55,7 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
 
         <div className="h-6 w-px bg-slate-200 dark:bg-slate-800"></div>
 
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center space-x-4">
           {/* Clickable Profile Pill */}
           <Link
             to="/profile"
@@ -67,7 +77,7 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                 {currentUser.email}
               </span>
             </div>
-            <span className={`text-[10px] px-2.5 py-0.5 rounded-full border font-bold ml-2 shadow-sm ${badgeClass}`}>
+            <span className={`text-[10px] px-2.5 py-0.5 rounded-full border font-bold ml-2 shadow-xs ${badgeClass}`}>
               {currentUser.role}
             </span>
           </Link>

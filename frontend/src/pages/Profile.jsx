@@ -1,29 +1,30 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import API from '../services/api';
 import {
   User,
   Mail,
   Phone,
   Building2,
-  Shield,
   KeyRound,
   Lock,
   Camera,
   Save,
   CheckCircle2,
   AlertOctagon,
-  Sparkles,
-  FileText,
-  UserCheck,
-  CreditCard,
-  Package
+  Palette,
+  Sun,
+  Moon,
+  Check,
+  Sparkles
 } from 'lucide-react';
 
 const Profile = () => {
   const { currentUser, updateUserProfile } = useAuth();
+  const { theme, mode, setTheme, setMode, themes, currentThemeObj } = useTheme();
 
-  const [activeTab, setActiveTab] = useState('details'); // 'details' | 'security'
+  const [activeTab, setActiveTab] = useState('details'); // 'details' | 'security' | 'appearance'
 
   // Profile Edit Form State
   const [profileData, setFormData] = useState({
@@ -144,8 +145,11 @@ const Profile = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-[fade-in_0.3s_ease-out]">
       {/* Profile Header Banner */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 md:p-8 rounded-3xl shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 dark:bg-indigo-900/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 md:p-8 rounded-3xl shadow-xs relative overflow-hidden">
+        <div
+          className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl pointer-events-none opacity-20"
+          style={{ backgroundColor: currentThemeObj.primaryColor }}
+        ></div>
 
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10">
           {/* Avatar Display & Upload Trigger */}
@@ -154,7 +158,10 @@ const Profile = () => {
               {avatarPreview ? (
                 <img src={avatarPreview} alt={currentUser?.name} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-3xl font-black">
+                <div
+                  className="w-full h-full flex items-center justify-center text-white text-3xl font-black"
+                  style={{ backgroundColor: currentThemeObj.primaryColor }}
+                >
                   {currentUser?.name?.charAt(0).toUpperCase()}
                 </div>
               )}
@@ -162,7 +169,8 @@ const Profile = () => {
 
             <label
               htmlFor="avatar-upload"
-              className="absolute -bottom-2 -right-2 p-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl shadow-lg cursor-pointer transition-all transform active:scale-95 flex items-center justify-center"
+              className="absolute -bottom-2 -right-2 p-2.5 text-white rounded-2xl shadow-lg cursor-pointer transition-all transform active:scale-95 flex items-center justify-center"
+              style={{ backgroundColor: currentThemeObj.primaryColor }}
               title="Upload Profile Image"
             >
               <Camera className="w-4 h-4" />
@@ -197,7 +205,7 @@ const Profile = () => {
 
                 {currentUser?.storeId?.name && (
                   <span className="text-xs px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-extrabold flex items-center border border-slate-200 dark:border-slate-800">
-                    <Building2 className="w-3.5 h-3.5 mr-1.5 text-indigo-500" />
+                    <Building2 className="w-3.5 h-3.5 mr-1.5" style={{ color: currentThemeObj.primaryColor }} />
                     {currentUser.storeId.name}
                   </span>
                 )}
@@ -238,7 +246,7 @@ const Profile = () => {
       </div>
 
       {/* Tabs Navigation */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-6">
         <div className="flex border-b border-slate-100 dark:border-slate-800 space-x-6">
           <button
             onClick={() => setActiveTab('details')}
@@ -253,6 +261,18 @@ const Profile = () => {
           </button>
 
           <button
+            onClick={() => setActiveTab('appearance')}
+            className={`pb-3 text-xs font-black tracking-wider transition-all cursor-pointer flex items-center border-b-2 ${
+              activeTab === 'appearance'
+                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
+                : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+            }`}
+          >
+            <Palette className="w-4 h-4 mr-2" />
+            Appearance & Themes
+          </button>
+
+          <button
             onClick={() => setActiveTab('security')}
             className={`pb-3 text-xs font-black tracking-wider transition-all cursor-pointer flex items-center border-b-2 ${
               activeTab === 'security'
@@ -261,7 +281,7 @@ const Profile = () => {
             }`}
           >
             <KeyRound className="w-4 h-4 mr-2" />
-            Security & Change Password
+            Security & Password
           </button>
         </div>
 
@@ -302,67 +322,50 @@ const Profile = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-slate-700 dark:text-slate-300 font-bold">Contact Phone Number</label>
+                <label className="text-slate-700 dark:text-slate-300 font-bold">Phone Number</label>
                 <div className="relative">
                   <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="+880 17..."
+                    placeholder="+880 1700-000000"
                     value={profileData.phone}
                     onChange={(e) => setFormData({ ...profileData, phone: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl font-semibold"
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold"
                   />
                 </div>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-700 dark:text-slate-300 font-bold">Designation / Bio Notes</label>
+              <label className="text-slate-700 dark:text-slate-300 font-bold">Email Address (Read Only)</label>
               <div className="relative">
-                <FileText className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                <textarea
-                  rows={3}
-                  placeholder="e.g. Senior POS Cashier & Shift Manager"
-                  value={profileData.bio}
-                  onChange={(e) => setFormData({ ...profileData, bio: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold resize-none"
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="email"
+                  disabled
+                  value={currentUser?.email || ''}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-500 dark:text-slate-400 cursor-not-allowed font-semibold"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <div className="space-y-1">
-                <label className="text-slate-500 dark:text-slate-400 font-bold">Email Address (Read-only)</label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    disabled
-                    value={currentUser?.email || ''}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-slate-500 cursor-not-allowed"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-slate-500 dark:text-slate-400 font-bold">Assigned Role & Scope</label>
-                <div className="relative">
-                  <Shield className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    disabled
-                    value={`${currentUser?.role} ${currentUser?.storeId?.name ? `(${currentUser.storeId.name})` : ''}`}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-500 cursor-not-allowed"
-                  />
-                </div>
-              </div>
+            <div className="space-y-1">
+              <label className="text-slate-700 dark:text-slate-300 font-bold">Bio / Role Note</label>
+              <textarea
+                rows={3}
+                placeholder="Short description or store responsibilities..."
+                value={profileData.bio}
+                onChange={(e) => setFormData({ ...profileData, bio: e.target.value })}
+                className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold resize-none"
+              />
             </div>
 
             <div className="pt-4 flex justify-end">
               <button
                 type="submit"
                 disabled={savingProfile}
-                className="px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold rounded-xl text-xs tracking-wider shadow-lg shadow-indigo-600/20 active:scale-98 transition-all flex items-center cursor-pointer"
+                className="px-6 py-3.5 text-white font-extrabold rounded-xl text-xs tracking-wider shadow-lg active:scale-98 transition-all flex items-center cursor-pointer"
+                style={{ backgroundColor: currentThemeObj.primaryColor }}
               >
                 <Save className="w-4 h-4 mr-2" />
                 <span>{savingProfile ? 'Saving Changes...' : 'Save Profile Changes'}</span>
@@ -371,9 +374,121 @@ const Profile = () => {
           </form>
         )}
 
-        {/* TAB 2: Security & Change Password */}
+        {/* TAB 2: Appearance & Themes */}
+        {activeTab === 'appearance' && (
+          <div className="space-y-6 animate-[fade-in_0.2s_ease-out]">
+            {/* Mode Selection */}
+            <div>
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 mb-3 flex items-center">
+                <Sparkles className="w-4 h-4 mr-2 text-indigo-500" />
+                Select Appearance Mode
+              </h3>
+
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setMode('light')}
+                  className={`p-4 rounded-2xl border flex items-center space-x-4 transition-all cursor-pointer ${
+                    mode === 'light'
+                      ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/40 ring-2 ring-indigo-500/30'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-white dark:hover:bg-slate-800/80'
+                  }`}
+                >
+                  <div className="p-3 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600">
+                    <Sun className="w-6 h-6" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100">Light Mode</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Clean, high contrast daylight view</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMode('dark')}
+                  className={`p-4 rounded-2xl border flex items-center space-x-4 transition-all cursor-pointer ${
+                    mode === 'dark'
+                      ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/40 ring-2 ring-indigo-500/30'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-white dark:hover:bg-slate-800/80'
+                  }`}
+                >
+                  <div className="p-3 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600">
+                    <Moon className="w-6 h-6" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100">Dark Mode</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Modern sleek dark background</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Theme Presets Selection */}
+            <div>
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 mb-3 flex items-center">
+                <Palette className="w-4 h-4 mr-2 text-indigo-500" />
+                Color Theme Palette Presets
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {themes.map((t) => {
+                  const isSelected = theme === t.id;
+                  return (
+                    <div
+                      key={t.id}
+                      onClick={() => setTheme(t.id)}
+                      className={`p-4 rounded-2xl border transition-all duration-200 cursor-pointer relative flex flex-col justify-between group ${
+                        isSelected
+                          ? 'border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 shadow-md ring-2 ring-indigo-500/30'
+                          : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800/60'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center">
+                            {t.name}
+                          </h4>
+                          {isSelected && (
+                            <span className="p-1 rounded-full bg-indigo-600 text-white shadow-xs">
+                              <Check className="w-3.5 h-3.5" />
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold mb-2">{t.tagline}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">{t.description}</p>
+                      </div>
+
+                      {/* Swatch & Live Gradient Pill */}
+                      <div className="pt-3 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          {t.swatch.map((c, i) => (
+                            <span key={i} className="w-5 h-5 rounded-full border border-black/10 shadow-xs" style={{ backgroundColor: c }} />
+                          ))}
+                        </div>
+
+                        <button
+                          type="button"
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-indigo-600 text-white shadow-sm'
+                              : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-slate-300 dark:group-hover:bg-slate-700'
+                          }`}
+                        >
+                          {isSelected ? 'Active' : 'Apply Theme'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: Security & Password */}
         {activeTab === 'security' && (
-          <form onSubmit={handleSavePassword} className="space-y-5 text-xs font-semibold max-w-lg animate-[fade-in_0.2s_ease-out]">
+          <form onSubmit={handleSavePassword} className="space-y-5 text-xs font-semibold animate-[fade-in_0.2s_ease-out]">
             {passMessage.text && (
               <div
                 className={`p-3.5 rounded-2xl text-xs font-bold flex items-center border ${
