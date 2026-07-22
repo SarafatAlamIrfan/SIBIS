@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const http = require('http');
 const app = require('./src/app');
 const User = require('./src/models/User');
+const Store = require('./src/models/Store');
 const InventoryLog = require('./src/models/InventoryLog');
 
 const PORT = 5001;
@@ -95,6 +96,15 @@ async function runTests() {
       // Clear out test collections before starting
       await mongoose.connection.db.dropDatabase();
 
+      // Create a mock store for users
+      const store = await Store.create({
+        name: 'Test Retail Store',
+        email: 'teststore@sibis.com',
+        phone: '12345678',
+        address: '123 Test St',
+      });
+      const storeId = store._id;
+
       // Test A: Health endpoint (no auth needed)
       console.log('Test 1: GET /health (Public)');
       const healthRes = await makeRequest('GET', '/health');
@@ -122,6 +132,7 @@ async function runTests() {
       if (syncOwnerRes.status !== 201 || syncOwnerRes.body.role !== 'Owner') {
         throw new Error(`Failed to bootstrap Owner user: ${JSON.stringify(syncOwnerRes)}`);
       }
+      await User.findByIdAndUpdate(syncOwnerRes.body._id, { storeId });
       console.log('✅ Owner bootstrap verified.\n');
 
       // Sync other users
@@ -132,12 +143,16 @@ async function runTests() {
         email: cashierHeaders['x-mock-email'],
         role: 'Cashier'
       });
+      await User.findByIdAndUpdate(syncCashierRes.body._id, { storeId });
+
       const syncInventoryRes = await makeRequest('POST', '/api/users/sync', {
         firebaseUid: inventoryStaffHeaders['x-mock-uid'],
         name: inventoryStaffHeaders['x-mock-name'],
         email: inventoryStaffHeaders['x-mock-email'],
         role: 'Inventory Staff'
       });
+      await User.findByIdAndUpdate(syncInventoryRes.body._id, { storeId });
+
       const cashierId = syncCashierRes.body._id;
       const inventoryId = syncInventoryRes.body._id;
       console.log('✅ Cashier and Inventory Staff user profiles synced successfully.\n');

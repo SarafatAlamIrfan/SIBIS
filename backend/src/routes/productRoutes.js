@@ -7,6 +7,8 @@ const {
   updateProduct,
   deleteProduct,
   getLowStockProducts,
+  getInventoryHistory,
+  getExpiringProducts,
 } = require('../controllers/productController');
 const { protect, restrictTo } = require('../middleware/authMiddleware');
 
@@ -15,6 +17,12 @@ router.use(protect);
 
 router.route('/low-stock')
   .get(getLowStockProducts);
+
+router.route('/inventory-history')
+  .get(getInventoryHistory);
+
+router.route('/expiring')
+  .get(getExpiringProducts);
 
 router.route('/')
   .post(restrictTo('Owner', 'Manager', 'Inventory Staff'), createProduct)

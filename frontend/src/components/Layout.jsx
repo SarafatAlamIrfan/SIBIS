@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
+import AIChatBot from './AIChatBot';
 
 const Layout = () => {
   const { currentUser, loading } = useAuth();
@@ -39,6 +40,7 @@ const Layout = () => {
           </div>
         </main>
       </div>
+      <AIChatBot />
     </div>
   );
 };

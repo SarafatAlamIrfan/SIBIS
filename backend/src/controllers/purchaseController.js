@@ -51,10 +51,17 @@ exports.createPurchaseOrder = async (req, res, next) => {
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const poNumber = `PO-${dateStr}-${randomSuffix}`;
 
+    // Determine storeId
+    const storeId = req.user?.storeId || req.body.storeId;
+    if (!storeId) {
+      return res.status(400).json({ error: 'Store reference is required to create a purchase order.' });
+    }
+
     // 4. Save Purchase Order
     const purchaseOrder = await PurchaseOrder.create({
       poNumber,
       supplierId,
+      storeId,
       items: poItems,
       totalAmount,
       status: 'Ordered',
@@ -149,6 +156,7 @@ exports.updatePurchaseOrderStatus = async (req, res, next) => {
           // Create Inventory Log
           await InventoryLog.create({
             productId: product._id,
+            storeId: purchaseOrder.storeId || product.storeId,
             changeType: 'Purchase',
             quantityChanged: item.quantityOrdered,
             previousStock: prevStock,

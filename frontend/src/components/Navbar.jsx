@@ -1,17 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import ThemeSelector from './ThemeSelector';
-import { LogOut, User, Sun, Moon } from 'lucide-react';
+import API from '../services/api';
+import { LogOut, User, Sun, Moon, Bell } from 'lucide-react';
 
 const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode }) => {
   const { currentUser, logout } = useAuth();
   const { darkMode: ctxDarkMode, toggleMode } = useTheme();
+  const [activeAlertsCount, setActiveAlertsCount] = useState(0);
   const navigate = useNavigate();
 
   const darkMode = propsDarkMode !== undefined ? propsDarkMode : ctxDarkMode;
   const handleToggle = propsToggleDarkMode || toggleMode;
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        if (!currentUser) return;
+        const [lowStockRes, expiringRes] = await Promise.all([
+          API.get('/products/low-stock'),
+          API.get('/products/expiring')
+        ]);
+        const lowStockCount = (lowStockRes.data || []).length;
+        const expiringCount = (expiringRes.data || []).length;
+        setActiveAlertsCount(lowStockCount + expiringCount);
+      } catch (err) {
+        console.warn('Navbar alerts load failed:', err.message);
+      }
+    };
+    fetchAlerts();
+    const interval = setInterval(fetchAlerts, 15000);
+    return () => clearInterval(interval);
+  }, [currentUser]);
 
   const handleLogout = async () => {
     await logout();
@@ -37,6 +59,21 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode }
       </div>
 
       <div className="flex items-center space-x-3 sm:space-x-4">
+        {/* Notifications Bell Icon */}
+        <Link
+          to="/notifications"
+          className="p-2 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-indigo-400 dark:hover:bg-slate-800 transition-all duration-200 cursor-pointer border border-transparent hover:border-slate-200/50 dark:hover:border-slate-700/50 relative mr-1"
+          title="View alert notifications"
+        >
+          <Bell className="w-4.5 h-4.5" />
+          {activeAlertsCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+            </span>
+          )}
+        </Link>
+
         {/* Interactive Theme Palette Selector Dropdown */}
         <ThemeSelector />
 

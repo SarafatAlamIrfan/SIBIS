@@ -16,7 +16,8 @@ import {
   CreditCard,
   DollarSign,
   Smartphone,
-  Info
+  Info,
+  X
 } from 'lucide-react';
 
 const POS = () => {
@@ -28,6 +29,9 @@ const POS = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [invoice, setInvoice] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [cashReceived, setCashReceived] = useState('');
+  const [changeDue, setChangeDue] = useState(0);
 
   // Fetch products on mount
   const fetchProducts = async () => {
@@ -104,6 +108,11 @@ const POS = () => {
   const subtotal = cart.reduce((sum, item) => sum + item.product.sellingPrice * item.quantity, 0);
   const total = subtotal;
 
+  useEffect(() => {
+    const cash = parseFloat(cashReceived) || 0;
+    setChangeDue(Math.max(0, cash - total));
+  }, [cashReceived, total]);
+
   // Checkout submission
   const handleCheckout = async () => {
     if (cart.length === 0) return;
@@ -125,6 +134,8 @@ const POS = () => {
       setInvoice(res.data);
       setMessage({ type: 'success', text: 'Checkout completed successfully!' });
       setCart([]);
+      setCashReceived('');
+      setShowPaymentModal(false);
       fetchProducts(); // Refresh stocks list
     } catch (err) {
       setMessage({
@@ -327,19 +338,96 @@ const POS = () => {
             </div>
 
             <button
-              onClick={handleCheckout}
-              disabled={loading}
+              onClick={() => setShowPaymentModal(true)}
               className="w-full py-4 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black rounded-2xl shadow-lg shadow-indigo-600/25 border border-indigo-400/30 transition-all cursor-pointer flex items-center justify-center text-sm transform active:scale-98"
             >
-              {loading ? (
-                <div className="w-5 h-5 border-2.5 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  <Check className="w-4.5 h-4.5 mr-2" />
-                  Checkout Transaction
-                </>
-              )}
+              <Check className="w-4.5 h-4.5 mr-2" />
+              Checkout Transaction
             </button>
+
+            {/* Payment processing modal */}
+            {showPaymentModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+                <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-6 animate-[fade-in-up_0.2s_ease-out_1]">
+                  <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4">
+                    <h3 className="text-lg font-black text-slate-850 dark:text-white">Process Payment</h3>
+                    <button 
+                      onClick={() => {
+                        setShowPaymentModal(false);
+                        setCashReceived('');
+                      }}
+                      className="p-1.5 rounded-full hover:bg-slate-50 dark:hover:bg-slate-850 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-850">
+                      <span className="text-xs text-slate-400 font-extrabold uppercase">Total Amount Due</span>
+                      <span className="text-2xl font-black text-indigo-650 dark:text-indigo-400">৳{total.toFixed(2)}</span>
+                    </div>
+
+                    {/* Cash Input */}
+                    {paymentMethod === 'Cash' ? (
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Cash Tendered / Received</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-sm">৳</span>
+                          <input
+                            type="number"
+                            placeholder="0.00"
+                            value={cashReceived}
+                            onChange={(e) => setCashReceived(e.target.value)}
+                            className="w-full pl-8 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-black text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                        </div>
+
+                        {/* Shortcuts */}
+                        <div className="grid grid-cols-4 gap-2">
+                          {[50, 100, 500, 1000].map((amount) => (
+                            <button
+                              key={amount}
+                              onClick={() => setCashReceived(amount.toString())}
+                              className="py-2 bg-slate-105 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-350 font-bold rounded-xl text-xs cursor-pointer transition-colors"
+                            >
+                              ৳{amount}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Change calculation */}
+                        <div className="flex justify-between items-center bg-emerald-500/5 dark:bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/10">
+                          <span className="text-xs text-emerald-600 dark:text-emerald-400 font-extrabold uppercase">Change Due</span>
+                          <span className="text-xl font-black text-emerald-500">৳{changeDue.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl text-center space-y-2">
+                        <CreditCard className="w-8 h-8 text-indigo-500 mx-auto animate-pulse" />
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-250">Electronic Payment Selected</p>
+                        <p className="text-[11px] text-slate-400 font-medium">Please swipe the customer's card or process the mobile transaction on the external terminal, then click confirm.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={handleCheckout}
+                    disabled={loading || (paymentMethod === 'Cash' && (!cashReceived || parseFloat(cashReceived) < total))}
+                    className="w-full py-4 bg-gradient-to-r from-indigo-650 to-violet-650 hover:from-indigo-550 hover:to-violet-550 text-white font-black rounded-2xl shadow-lg border border-indigo-400/20 transition-all cursor-pointer flex items-center justify-center text-xs transform active:scale-98 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <div className="w-5 h-5 border-2.5 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <>
+                        <Check className="w-4.5 h-4.5 mr-2" />
+                        Confirm Payment
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

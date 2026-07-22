@@ -64,6 +64,8 @@ exports.checkoutSale = async (req, res, next) => {
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const invoiceNumber = `INV-${dateStr}-${randomSuffix}`;
 
+    const storeId = cashier.storeId || req.user?.storeId;
+
     // 4. Perform updates & logging
     const saleItems = validatedItems.map(item => ({
       productId: item.productId,
@@ -76,7 +78,7 @@ exports.checkoutSale = async (req, res, next) => {
     const sale = await Sale.create({
       invoiceNumber,
       cashierId,
-      storeId: cashier.storeId || req.user?.storeId,
+      storeId,
       items: saleItems,
       totalAmount,
       paymentMethod,

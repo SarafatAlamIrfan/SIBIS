@@ -2,7 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { LayoutDashboard, ShoppingCart, Package, Truck, ClipboardList, ListPlus, Building2, Users, Activity, User, BarChart3, Palette } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  ShoppingCart, 
+  Package, 
+  Truck, 
+  ClipboardList, 
+  ListPlus, 
+  Building2, 
+  Users, 
+  Activity, 
+  User, 
+  BarChart3, 
+  Palette,
+  History,
+  Calendar,
+  FileText,
+  Bell 
+} from 'lucide-react';
 
 const Sidebar = () => {
   const { currentUser } = useAuth();
@@ -54,11 +71,23 @@ const Sidebar = () => {
       roles: ['Owner', 'Manager', 'Inventory Staff']
     },
     {
+      name: 'Inventory History',
+      path: '/products/inventory-history',
+      icon: History,
+      roles: ['Owner', 'Manager', 'Inventory Staff']
+    },
+    {
       name: 'Reorder List',
       path: '/reorder-list',
       icon: ListPlus,
       roles: ['Owner', 'Manager', 'Inventory Staff'],
       badge: reorderCount > 0 ? reorderCount : null
+    },
+    {
+      name: 'Operations Calendar',
+      path: '/calendar',
+      icon: Calendar,
+      roles: ['Owner', 'Manager', 'Inventory Staff']
     },
     {
       name: 'Suppliers',
@@ -73,6 +102,12 @@ const Sidebar = () => {
       roles: ['Owner', 'Manager']
     },
     {
+      name: 'Financial Reports',
+      path: '/reports',
+      icon: FileText,
+      roles: ['Owner', 'Manager']
+    },
+    {
       name: 'Staff & Team',
       path: '/staff',
       icon: Users,
@@ -83,6 +118,12 @@ const Sidebar = () => {
       path: '/activity',
       icon: Activity,
       roles: ['Owner', 'Manager', 'System Admin']
+    },
+    {
+      name: 'Alert Notifications',
+      path: '/notifications',
+      icon: Bell,
+      roles: ['System Admin', 'Owner', 'Manager', 'Cashier', 'Inventory Staff']
     },
     {
       name: 'My Profile',

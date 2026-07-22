@@ -15,6 +15,10 @@ import StaffManagement from './pages/StaffManagement';
 import StoreActivity from './pages/StoreActivity';
 import Profile from './pages/Profile';
 import NotAuthorized from './pages/NotAuthorized';
+import InventoryHistory from './pages/InventoryHistory';
+import SystemReports from './pages/SystemReports';
+import Notifications from './pages/Notifications';
+import StoreCalendar from './pages/StoreCalendar';
 
 import RegisterStorePage from './pages/RegisterStorePage';
 
@@ -144,6 +148,42 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager', 'Cashier', 'Inventory Staff']}>
                     <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route 
+                path="/products/inventory-history" 
+                element={
+                  <ProtectedRoute allowedRoles={['Owner', 'Manager', 'Inventory Staff']}>
+                    <InventoryHistory />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route 
+                path="/reports" 
+                element={
+                  <ProtectedRoute allowedRoles={['Owner', 'Manager']}>
+                    <SystemReports />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route 
+                path="/notifications" 
+                element={
+                  <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager', 'Cashier', 'Inventory Staff']}>
+                    <Notifications />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route 
+                path="/calendar" 
+                element={
+                  <ProtectedRoute allowedRoles={['Owner', 'Manager', 'Inventory Staff']}>
+                    <StoreCalendar />
                   </ProtectedRoute>
                 } 
               />

@@ -31,17 +31,17 @@ app.add_middleware(
 )
 
 @app.get("/ai/forecast", summary="Get demand forecasts and reorder suggestions")
-def get_forecast():
+def get_forecast(store_id: str = None):
     try:
-        recommendations = generate_demand_forecast()
+        recommendations = generate_demand_forecast(store_id=store_id)
         return recommendations
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/ai/insights", summary="Get business insights and velocity warnings")
-def get_insights():
+def get_insights(store_id: str = None):
     try:
-        insights = generate_business_insights()
+        insights = generate_business_insights(store_id=store_id)
         return insights
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

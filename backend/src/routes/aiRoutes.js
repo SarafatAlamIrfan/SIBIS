@@ -6,5 +6,6 @@ const { protect } = require('../middleware/authMiddleware');
 // Mount protected routes
 router.get('/recommendations', protect, aiController.getRecommendations);
 router.get('/insights', protect, aiController.getInsights);
+router.post('/chat', protect, aiController.chatWithAi);
 
 module.exports = router;

@@ -7,19 +7,34 @@ import logging
 
 logger = logging.getLogger("sibis-ai-forecasting")
 
-def generate_demand_forecast():
+def generate_demand_forecast(store_id: str = None):
     """
     Connects to MongoDB, gathers sales records, fits Linear Regression demand models
     for each product, and outputs smart reordering suggestions.
     """
     db = get_db()
     
+    product_filter = {}
+    sales_filter = {}
+    supplier_filter = {}
+    if store_id:
+        from bson import ObjectId
+        try:
+            store_obj_id = ObjectId(store_id)
+            product_filter["storeId"] = store_obj_id
+            sales_filter["storeId"] = store_obj_id
+            supplier_filter["storeId"] = store_obj_id
+        except Exception:
+            product_filter["storeId"] = store_id
+            sales_filter["storeId"] = store_id
+            supplier_filter["storeId"] = store_id
+
     # 1. Fetch all collections
-    products = list(db.products.find())
-    suppliers = {str(s["_id"]): s for s in db.suppliers.find()}
+    products = list(db.products.find(product_filter))
+    suppliers = {str(s["_id"]): s for s in db.suppliers.find(supplier_filter)}
     
     # Load all sales records to compute velocity and fit ML models
-    sales = list(db.sales.find())
+    sales = list(db.sales.find(sales_filter))
     
     # Flatten sale items for analysis
     sales_flat = []
@@ -120,7 +135,7 @@ def generate_demand_forecast():
                 suggested_order = min_threshold
                 
             recommendations.append({
-                "id": len(recommendations) + 1,
+                "id": prod_id,
                 "product": prod_name,
                 "sku": sku,
                 "currentStock": current_stock,

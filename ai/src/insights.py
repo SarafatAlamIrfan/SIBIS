@@ -2,12 +2,24 @@ import pandas as pd
 from datetime import datetime, timedelta
 from src.database import get_db
 
-def generate_business_insights():
+def generate_business_insights(store_id: str = None):
     db = get_db()
     
+    product_filter = {}
+    sales_filter = {}
+    if store_id:
+        from bson import ObjectId
+        try:
+            store_obj_id = ObjectId(store_id)
+            product_filter["storeId"] = store_obj_id
+            sales_filter["storeId"] = store_obj_id
+        except Exception:
+            product_filter["storeId"] = store_id
+            sales_filter["storeId"] = store_id
+
     # 1. Fetch collections
-    products = list(db.products.find())
-    sales = list(db.sales.find())
+    products = list(db.products.find(product_filter))
+    sales = list(db.sales.find(sales_filter))
     
     # Compute today's reference point
     now = datetime.now()

@@ -23,7 +23,8 @@ import {
   Plus,
   Search,
   ArrowRight,
-  Store as StoreIcon
+  Store as StoreIcon,
+  Clock
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -47,11 +48,15 @@ const Dashboard = () => {
   const [aiRecommendations, setAiRecommendations] = useState([]);
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
+  const [expiringProducts, setExpiringProducts] = useState([]);
+  const [topSelling, setTopSelling] = useState([]);
   const [stats, setStats] = useState({
     todaySales: 0,
     monthlyRevenue: 0,
     totalProducts: 0,
     lowStockCount: 0,
+    weeklyRevenue: 0,
+    weeklyPct: null
   });
   const [chartData, setChartData] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
@@ -101,6 +106,15 @@ const Dashboard = () => {
           }
           setSales(salesList);
 
+          let expiringList = [];
+          try {
+            const expiringRes = await API.get('/products/expiring');
+            expiringList = Array.isArray(expiringRes.data) ? expiringRes.data : [];
+          } catch (err) {
+            console.warn('Failed to fetch expiring products:', err.message);
+          }
+          setExpiringProducts(expiringList);
+
           // Calculate stats
           const now = new Date();
           const todayStr = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10);
@@ -119,8 +133,15 @@ const Dashboard = () => {
 
           let todaySum = 0;
           let yesterdaySum = 0;
+          let weeklySum = 0;
+          let lastWeeklySum = 0;
           let monthlySum = 0;
           let lastMonthSum = 0;
+
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          const fourteenDaysAgo = new Date();
+          fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
           salesList.forEach((sale) => {
             if (!sale || !sale.createdAt) return;
@@ -132,6 +153,12 @@ const Dashboard = () => {
             }
             if (saleDateStr === yesterdayStr) {
               yesterdaySum += Number(sale.totalAmount || 0);
+            }
+
+            if (sDate >= sevenDaysAgo) {
+              weeklySum += Number(sale.totalAmount || 0);
+            } else if (sDate >= fourteenDaysAgo && sDate < sevenDaysAgo) {
+              lastWeeklySum += Number(sale.totalAmount || 0);
             }
 
             if (sDate.getMonth() === currentMonth && sDate.getFullYear() === currentYear) {
@@ -147,6 +174,11 @@ const Dashboard = () => {
             todayPct = ((todaySum - yesterdaySum) / yesterdaySum) * 100;
           }
 
+          let weeklyPct = null;
+          if (lastWeeklySum > 0) {
+            weeklyPct = ((weeklySum - lastWeeklySum) / lastWeeklySum) * 100;
+          }
+
           let monthlyPct = null;
           if (lastMonthSum > 0) {
             monthlyPct = ((monthlySum - lastMonthSum) / lastMonthSum) * 100;
@@ -156,12 +188,37 @@ const Dashboard = () => {
             todaySales: todaySum,
             yesterdaySales: yesterdaySum,
             todayPct,
+            weeklyRevenue: weeklySum,
+            weeklyPct,
             monthlyRevenue: monthlySum,
             lastMonthRevenue: lastMonthSum,
             monthlyPct,
             totalProducts: productList.length,
             lowStockCount: lowStockList.length,
           });
+
+          // Calculate Top Selling
+          const productQtyMap = {};
+          salesList.forEach(sale => {
+            sale.items.forEach(item => {
+              const pId = item.productId?.toString();
+              if (pId) {
+                productQtyMap[pId] = (productQtyMap[pId] || 0) + item.quantity;
+              }
+            });
+          });
+
+          const topSellers = productList.map(p => ({
+            name: p.name,
+            sku: p.sku,
+            currentStock: p.currentStock,
+            soldCount: productQtyMap[p._id.toString()] || 0
+          }))
+          .filter(p => p.soldCount > 0)
+          .sort((a, b) => b.soldCount - a.soldCount)
+          .slice(0, 5);
+
+          setTopSelling(topSellers);
 
           // 7-day sales trend for SVG Chart
           const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -541,7 +598,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
         {/* Today's Sales Card */}
         <div 
           onClick={() => navigate('/pos')}
@@ -549,27 +606,58 @@ const Dashboard = () => {
           tabIndex={0}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/pos')}
           title="Click to open POS checkout"
-          className="glass-panel p-6 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-indigo hover:border-indigo-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
+          className="glass-panel p-5 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-indigo hover:border-indigo-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
         >
           <div className="space-y-1 relative z-10">
             <div className="flex items-center space-x-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Today's Sales</p>
               <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
             </div>
-            <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">৳{stats.todaySales.toFixed(2)}</h3>
+            <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-none">৳{stats.todaySales.toFixed(2)}</h3>
             {stats.todayPct !== null ? (
-              <span className={`text-[10px] font-bold inline-flex items-center mt-2 ${stats.todayPct >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {stats.todayPct >= 0 ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />}
+              <span className={`text-[9px] font-bold inline-flex items-center mt-2 ${stats.todayPct >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {stats.todayPct >= 0 ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
                 {stats.todayPct >= 0 ? `+${stats.todayPct.toFixed(1)}%` : `${stats.todayPct.toFixed(1)}%`} vs yesterday
               </span>
             ) : (
-              <span className="text-[10px] text-slate-400 font-bold inline-flex items-center mt-2">
+              <span className="text-[9px] text-slate-400 font-bold inline-flex items-center mt-2">
                 Live POS sales today
               </span>
             )}
           </div>
-          <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 rounded-2xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform duration-300">
-            <DollarSign className="w-6 h-6" />
+          <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform duration-300">
+            <DollarSign className="w-5 h-5" />
+          </div>
+        </div>
+
+        {/* Weekly Revenue Card */}
+        <div 
+          onClick={() => navigate('/pos')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/pos')}
+          title="Click to view weekly revenue"
+          className="glass-panel p-5 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-indigo hover:border-indigo-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
+        >
+          <div className="space-y-1 relative z-10">
+            <div className="flex items-center space-x-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Weekly Sales</p>
+              <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+            </div>
+            <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-none">৳{stats.weeklyRevenue.toFixed(2)}</h3>
+            {stats.weeklyPct !== null ? (
+              <span className={`text-[9px] font-bold inline-flex items-center mt-2 ${stats.weeklyPct >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {stats.weeklyPct >= 0 ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
+                {stats.weeklyPct >= 0 ? `+${stats.weeklyPct.toFixed(1)}%` : `${stats.weeklyPct.toFixed(1)}%`} vs last week
+              </span>
+            ) : (
+              <span className="text-[9px] text-slate-400 font-bold inline-flex items-center mt-2">
+                Last 7 days revenue
+              </span>
+            )}
+          </div>
+          <div className="p-2.5 bg-violet-50 dark:bg-violet-950/40 rounded-xl text-violet-600 dark:text-violet-400 group-hover:scale-110 transition-transform duration-300">
+            <Calendar className="w-5 h-5" />
           </div>
         </div>
 
@@ -580,27 +668,27 @@ const Dashboard = () => {
           tabIndex={0}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/pos')}
           title="Click to open POS sales records"
-          className="glass-panel p-6 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-emerald hover:border-emerald-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
+          className="glass-panel p-5 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-emerald hover:border-emerald-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
         >
           <div className="space-y-1 relative z-10">
             <div className="flex items-center space-x-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Monthly Revenue</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Monthly Sales</p>
               <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
             </div>
-            <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">৳{stats.monthlyRevenue.toFixed(2)}</h3>
+            <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-none">৳{stats.monthlyRevenue.toFixed(2)}</h3>
             {stats.monthlyPct !== null ? (
-              <span className={`text-[10px] font-bold inline-flex items-center mt-2 ${stats.monthlyPct >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+              <span className={`text-[9px] font-bold inline-flex items-center mt-2 ${stats.monthlyPct >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
                 {stats.monthlyPct >= 0 ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />}
                 {stats.monthlyPct >= 0 ? `+${stats.monthlyPct.toFixed(1)}%` : `${stats.monthlyPct.toFixed(1)}%`} vs last month
               </span>
             ) : (
-              <span className="text-[10px] text-slate-400 font-bold inline-flex items-center mt-2">
+              <span className="text-[9px] text-slate-400 font-bold inline-flex items-center mt-2">
                 Current month revenue
               </span>
             )}
           </div>
-          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
-            <TrendingUp className="w-6 h-6" />
+          <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
+            <TrendingUp className="w-5 h-5" />
           </div>
         </div>
 
@@ -816,6 +904,85 @@ const Dashboard = () => {
                 </span>
               )}
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Top Selling and Expiring Products Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Top Selling Products */}
+        <div className="glass-panel p-6 rounded-3xl shadow-sm space-y-6">
+          <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div className="p-2 bg-gradient-to-br from-indigo-500 to-violet-650 rounded-xl text-white shadow-md">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-slate-850 dark:text-white">Top Selling Products</h3>
+              <p className="text-slate-450 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Top 5 items by units sold</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {topSelling.length === 0 ? (
+              <div className="py-8 text-center text-slate-400 text-xs font-semibold">No sales recorded yet.</div>
+            ) : (
+              topSelling.map((p, idx) => {
+                const maxSold = topSelling[0]?.soldCount || 1;
+                const percentage = Math.round((p.soldCount / maxSold) * 100);
+                return (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex justify-between items-center text-xs font-semibold">
+                      <span className="font-extrabold text-slate-800 dark:text-slate-200">{p.name}</span>
+                      <span className="font-black text-indigo-500">{p.soldCount} sold <span className="text-[10px] text-slate-400 font-bold">({p.currentStock} left)</span></span>
+                    </div>
+                    <div className="h-2 w-full bg-slate-100 dark:bg-slate-800/45 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full transition-all duration-1000"
+                        style={{ width: `${percentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Expiring Products Alert */}
+        <div className="glass-panel p-6 rounded-3xl shadow-sm space-y-6">
+          <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div className="p-2 bg-gradient-to-br from-rose-500 to-amber-600 rounded-xl text-white shadow-md">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-slate-855 dark:text-white">Expiring Soon</h3>
+              <p className="text-slate-450 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Products expiring in less than 30 days</p>
+            </div>
+          </div>
+
+          <div className="space-y-3.5 max-h-60 overflow-y-auto pr-2 divide-y divide-slate-100 dark:divide-slate-800/40">
+            {expiringProducts.length === 0 ? (
+              <div className="py-8 text-center text-slate-400 text-xs font-semibold">No products expiring soon.</div>
+            ) : (
+              expiringProducts.map((p, idx) => {
+                const daysLeft = Math.ceil((new Date(p.expirationDate) - new Date()) / (1000 * 60 * 60 * 24));
+                return (
+                  <div key={idx} className="flex justify-between items-center text-xs py-2.5">
+                    <div>
+                      <p className="font-extrabold text-slate-800 dark:text-slate-200">{p.name}</p>
+                      <p className="text-[10px] text-slate-450 dark:text-slate-500 mt-0.5 font-semibold">Expiry: {new Date(p.expirationDate).toLocaleDateString()}</p>
+                    </div>
+                    <span className={`text-[9px] font-black uppercase px-2.5 py-0.5 rounded-lg border tracking-wider ${
+                      daysLeft <= 7 
+                        ? 'bg-rose-500/10 text-rose-600 border-rose-500/25 dark:text-rose-455' 
+                        : 'bg-amber-500/10 text-amber-600 border-amber-500/25 dark:text-amber-455'
+                    }`}>
+                      {daysLeft <= 0 ? 'Expired' : `${daysLeft} days left`}
+                    </span>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>

@@ -14,7 +14,8 @@ import {
   Archive,
   BarChart2,
   ShoppingBag,
-  ArrowRight
+  ArrowRight,
+  Clock
 } from 'lucide-react';
 
 const Products = () => {
@@ -32,6 +33,7 @@ const Products = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showLowStockOnly, setShowLowStockOnly] = useState(filterParam === 'low-stock');
+  const [showExpiringOnly, setShowExpiringOnly] = useState(filterParam === 'expiring');
 
   // Reorder List state
   const [reorderListIds, setReorderListIds] = useState(() => {
@@ -43,6 +45,9 @@ const Products = () => {
   useEffect(() => {
     if (filterParam === 'low-stock') {
       setShowLowStockOnly(true);
+    }
+    if (filterParam === 'expiring') {
+      setShowExpiringOnly(true);
     }
   }, [filterParam]);
 
@@ -186,14 +191,28 @@ const Products = () => {
   const categories = ['All', 'Grocery', 'Dairy', 'Pharmacy', 'Beverages', 'Snacks', 'Grains'];
   const lowStockCount = products.filter(p => p.currentStock <= p.minStockThreshold).length;
 
-  // Filter products by category, low stock toggle, AND search query
+  const expiringCount = products.filter(p => {
+    if (!p.expirationDate) return false;
+    const daysLeft = Math.ceil((new Date(p.expirationDate) - new Date()) / (1000 * 60 * 60 * 24));
+    return daysLeft > 0 && daysLeft <= 30;
+  }).length;
+
+  // Filter products by category, low stock toggle, expiring soon toggle, AND search query
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.sku.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
     const isLowStock = p.currentStock <= p.minStockThreshold;
     const matchesLowStock = !showLowStockOnly || isLowStock;
-    return matchesSearch && matchesCategory && matchesLowStock;
+
+    let isExpiringSoon = false;
+    if (p.expirationDate) {
+      const daysLeft = Math.ceil((new Date(p.expirationDate) - new Date()) / (1000 * 60 * 60 * 24));
+      isExpiringSoon = daysLeft > 0 && daysLeft <= 30;
+    }
+    const matchesExpiring = !showExpiringOnly || isExpiringSoon;
+
+    return matchesSearch && matchesCategory && matchesLowStock && matchesExpiring;
   });
 
   const getCategoryCount = (cat) => {
@@ -285,6 +304,27 @@ const Products = () => {
             <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-black ${showLowStockOnly ? 'bg-rose-700 text-white' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
               }`}>
               {lowStockCount}
+            </span>
+          </button>
+
+          <button
+            onClick={() => {
+              const nextState = !showExpiringOnly;
+              setShowExpiringOnly(nextState);
+              if (!nextState && filterParam === 'expiring') {
+                setSearchParams({});
+              }
+            }}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 transform active:scale-97 border ${showExpiringOnly
+                ? 'bg-amber-600 text-white border-amber-600 shadow-sm dark:bg-amber-500 dark:border-amber-500'
+                : 'bg-white text-slate-700 border-slate-200/50 hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:border-slate-800 hover:border-slate-300'
+              }`}
+          >
+            <Clock className={`w-3.5 h-3.5 ${showExpiringOnly ? 'text-white' : 'text-amber-500'}`} />
+            <span>Expiring Soon</span>
+            <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-black ${showExpiringOnly ? 'bg-amber-700 text-white' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+              }`}>
+              {expiringCount}
             </span>
           </button>
 

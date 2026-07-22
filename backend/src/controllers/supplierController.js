@@ -11,12 +11,19 @@ exports.createSupplier = async (req, res, next) => {
       return res.status(400).json({ error: 'Supplier name and phone are required' });
     }
 
+    // Determine storeId
+    const storeId = req.user?.storeId || req.body.storeId;
+    if (!storeId) {
+      return res.status(400).json({ error: 'Store reference is required to create a supplier.' });
+    }
+
     const supplier = await Supplier.create({
       name,
       contactPerson,
       phone,
       email,
       address,
+      storeId,
     });
 
     res.status(201).json(supplier);

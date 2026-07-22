@@ -21,6 +21,8 @@ async function runValidationTests() {
     await user.validate();
     console.log('✅ User schema validation passed.');
 
+    const storeId = new mongoose.Types.ObjectId();
+
     // 2. Test Supplier Schema
     const supplierId = new mongoose.Types.ObjectId();
     const supplier = new Supplier({
@@ -29,7 +31,8 @@ async function runValidationTests() {
       phone: '+1234567890',
       email: 'contact@acme.com',
       address: '123 Supply St, City',
-      status: 'Active'
+      status: 'Active',
+      storeId: storeId
     });
     await supplier.validate();
     console.log('✅ Supplier schema validation passed.');
@@ -45,7 +48,8 @@ async function runValidationTests() {
       purchasePrice: 12.50,
       sellingPrice: 15.99,
       currentStock: 100,
-      minStockThreshold: 15
+      minStockThreshold: 15,
+      storeId: storeId
     });
     await product.validate();
     console.log('✅ Product schema validation passed.');
@@ -65,7 +69,8 @@ async function runValidationTests() {
       ],
       totalAmount: 31.98,
       paymentMethod: 'Cash',
-      paymentStatus: 'Paid'
+      paymentStatus: 'Paid',
+      storeId: storeId
     });
     await sale.validate();
     console.log('✅ Sale schema validation passed.');
@@ -82,7 +87,8 @@ async function runValidationTests() {
         }
       ],
       totalAmount: 600.00,
-      status: 'Ordered'
+      status: 'Ordered',
+      storeId: storeId
     });
     await purchaseOrder.validate();
     console.log('✅ PurchaseOrder schema validation passed.');
@@ -96,7 +102,8 @@ async function runValidationTests() {
       newStock: 98,
       referenceId: new mongoose.Types.ObjectId(),
       performedBy: cashierId,
-      notes: 'POS Sale transaction'
+      notes: 'POS Sale transaction',
+      storeId: storeId
     });
     await inventoryLog.validate();
     console.log('✅ InventoryLog schema validation passed.');
