@@ -90,7 +90,7 @@ const AIChatBot = () => {
   ];
 
   return (
-    <div className="fixed bottom-6 left-6 z-50 flex flex-col items-start font-sans">
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end font-sans">
       {/* Expanded Chat Dialog window */}
       {isOpen && (
         <div className="mb-4 w-80 sm:w-96 h-[480px] bg-slate-900/95 dark:bg-slate-950/95 border border-slate-800/80 rounded-3xl shadow-2xl backdrop-blur-xl flex flex-col overflow-hidden animate-[fade-in-up_0.25s_ease-out_1]">
