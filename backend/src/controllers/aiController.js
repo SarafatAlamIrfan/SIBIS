@@ -91,13 +91,14 @@ exports.getInsights = async (req, res, next) => {
       : null;
 
     const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+    let insights = [];
 
     try {
       // Try to fetch insights from Python AI service
       const response = await axios.get(`${aiServiceUrl}/ai/insights`, {
         params: storeId ? { store_id: storeId } : {}
       });
-      return res.status(200).json(response.data);
+      insights = response.data;
     } catch (aiError) {
       console.error('Python AI service failed/offline. Falling back to local Node.js insights:', aiError.message);
 
@@ -110,10 +111,8 @@ exports.getInsights = async (req, res, next) => {
       const products = await Product.find(filter);
       const sales = await Sale.find(filter);
 
-      const insights = [];
-
       if (products.length === 0) {
-        return res.status(200).json([
+        insights = [
           {
             id: 'no-products',
             type: 'info',
@@ -121,98 +120,140 @@ exports.getInsights = async (req, res, next) => {
             icon: 'Package',
             color: 'text-indigo-500 bg-indigo-500/10 dark:text-indigo-400 dark:bg-indigo-950/30',
           },
-        ]);
-      }
+        ];
+      } else {
+        // Calculate sales revenue & volume per product
+        const productSalesMap = {};
+        let totalStoreRevenue = 0;
 
-      // Calculate sales revenue & volume per product
-      const productSalesMap = {};
-      let totalStoreRevenue = 0;
-
-      sales.forEach((sale) => {
-        totalStoreRevenue += sale.totalAmount;
-        sale.items.forEach((item) => {
-          if (item.productId) {
-            const pId = item.productId.toString();
-            if (!productSalesMap[pId]) {
-              productSalesMap[pId] = { qty: 0, revenue: 0 };
+        sales.forEach((sale) => {
+          totalStoreRevenue += sale.totalAmount;
+          sale.items.forEach((item) => {
+            if (item.productId) {
+              const pId = item.productId.toString();
+              if (!productSalesMap[pId]) {
+                productSalesMap[pId] = { qty: 0, revenue: 0 };
+              }
+              productSalesMap[pId].qty += item.quantity;
+              productSalesMap[pId].revenue += item.priceAtSale * item.quantity;
             }
-            productSalesMap[pId].qty += item.quantity;
-            productSalesMap[pId].revenue += item.priceAtSale * item.quantity;
+          });
+        });
+
+        // A. Top performing product
+        let topProduct = null;
+        let maxRev = -1;
+        products.forEach((p) => {
+          const pData = productSalesMap[p._id.toString()] || { revenue: 0, qty: 0 };
+          if (pData.revenue > maxRev && pData.revenue > 0) {
+            maxRev = pData.revenue;
+            topProduct = { product: p, revenue: pData.revenue, qty: pData.qty };
           }
         });
-      });
 
-      // A. Top performing product
-      let topProduct = null;
-      let maxRev = -1;
-      products.forEach((p) => {
-        const pData = productSalesMap[p._id.toString()] || { revenue: 0, qty: 0 };
-        if (pData.revenue > maxRev && pData.revenue > 0) {
-          maxRev = pData.revenue;
-          topProduct = { product: p, revenue: pData.revenue, qty: pData.qty };
+        if (topProduct) {
+          insights.push({
+            id: 'top-product',
+            type: 'positive',
+            message: `"${topProduct.product.name}" is your top performing product generating ৳${topProduct.revenue.toFixed(2)} in total sales revenue (${topProduct.qty} units sold).`,
+            icon: 'TrendingUp',
+            color: 'text-emerald-500 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-950/30',
+          });
         }
-      });
 
-      if (topProduct) {
-        insights.push({
-          id: 'top-product',
-          type: 'positive',
-          message: `"${topProduct.product.name}" is your top performing product generating ৳${topProduct.revenue.toFixed(2)} in total sales revenue (${topProduct.qty} units sold).`,
-          icon: 'TrendingUp',
-          color: 'text-emerald-500 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-950/30',
-        });
-      }
-
-      // B. Low stock alert insight
-      const lowStockProducts = products.filter((p) => p.currentStock <= p.minStockThreshold);
-      if (lowStockProducts.length > 0) {
-        const p = lowStockProducts[0];
-        insights.push({
-          id: 'low-stock-alert',
-          type: 'warning',
-          message: `"${p.name}" stock level (${p.currentStock}) is below minimum threshold (${p.minStockThreshold}). Reorder recommended.`,
-          icon: 'AlertTriangle',
-          color: 'text-amber-500 bg-amber-500/10 dark:text-amber-400 dark:bg-amber-950/30',
-        });
-      }
-
-      // C. Unsold / Slow-moving stock insight
-      const zeroSalesProduct = products.find(
-        (p) => !productSalesMap[p._id.toString()] || productSalesMap[p._id.toString()].qty === 0
-      );
-      if (zeroSalesProduct) {
-        insights.push({
-          id: 'slow-stock-alert',
-          type: 'negative',
-          message: `"${zeroSalesProduct.name}" has recorded zero sales so far. Consider promotional pricing or placement.`,
-          icon: 'TrendingDown',
-          color: 'text-rose-500 bg-rose-500/10 dark:text-rose-400 dark:bg-rose-950/30',
-        });
-      }
-
-      // D. Highest profit margin product
-      let highestMarginProduct = null;
-      let maxMargin = -1;
-      products.forEach((p) => {
-        const margin = p.sellingPrice - p.purchasePrice;
-        if (margin > maxMargin) {
-          maxMargin = margin;
-          highestMarginProduct = { product: p, margin };
+        // B. Low stock alert insight
+        const lowStockProducts = products.filter((p) => p.currentStock <= p.minStockThreshold);
+        if (lowStockProducts.length > 0) {
+          const p = lowStockProducts[0];
+          insights.push({
+            id: 'low-stock-alert',
+            type: 'warning',
+            message: `"${p.name}" stock level (${p.currentStock}) is below minimum threshold (${p.minStockThreshold}). Reorder recommended.`,
+            icon: 'AlertTriangle',
+            color: 'text-amber-500 bg-amber-500/10 dark:text-amber-400 dark:bg-amber-950/30',
+          });
         }
-      });
 
-      if (highestMarginProduct && highestMarginProduct.margin > 0) {
-        insights.push({
-          id: 'high-margin',
-          type: 'info',
-          message: `"${highestMarginProduct.product.name}" offers your highest unit profit margin (৳${highestMarginProduct.margin.toFixed(2)} profit per unit).`,
-          icon: 'DollarSign',
-          color: 'text-indigo-500 bg-indigo-500/10 dark:text-indigo-400 dark:bg-indigo-950/30',
+        // C. Unsold / Slow-moving stock insight
+        const zeroSalesProduct = products.find(
+          (p) => !productSalesMap[p._id.toString()] || productSalesMap[p._id.toString()].qty === 0
+        );
+        if (zeroSalesProduct) {
+          insights.push({
+            id: 'slow-stock-alert',
+            type: 'negative',
+            message: `"${zeroSalesProduct.name}" has recorded zero sales so far. Consider promotional pricing or placement.`,
+            icon: 'TrendingDown',
+            color: 'text-rose-500 bg-rose-500/10 dark:text-rose-400 dark:bg-rose-950/30',
+          });
+        }
+
+        // D. Highest profit margin product
+        let highestMarginProduct = null;
+        let maxMargin = -1;
+        products.forEach((p) => {
+          const margin = p.sellingPrice - p.purchasePrice;
+          if (margin > maxMargin) {
+            maxMargin = margin;
+            highestMarginProduct = { product: p, margin };
+          }
         });
-      }
 
-      return res.status(200).json(insights);
+        if (highestMarginProduct && highestMarginProduct.margin > 0) {
+          insights.push({
+            id: 'high-margin',
+            type: 'info',
+            message: `"${highestMarginProduct.product.name}" offers your highest unit profit margin (৳${highestMarginProduct.margin.toFixed(2)} profit per unit).`,
+            icon: 'DollarSign',
+            color: 'text-indigo-500 bg-indigo-500/10 dark:text-indigo-400 dark:bg-indigo-950/30',
+          });
+        }
+      }
     }
+
+    // Now call Gemini to generate a summary if API key exists and there are insights
+    let summary = '';
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (apiKey && insights.length > 0) {
+      try {
+        const insightsListText = insights.map(i => `- ${i.message}`).join('\n');
+        const storeName = req.user?.storeId?.name || 'the store';
+        
+        const prompt = `
+You are SIBIS AI, the smart retail business advisor for "${storeName}".
+Below is a list of raw daily insights and alerts calculated from the store's inventory and sales:
+${insightsListText}
+
+Write a professional, encouraging, and highly concise daily executive summary (2-3 short sentences max) for the store owner.
+It should feel like a personal business consultant speaking. Highlight the most critical action to take (like restocking, low stock warnings, or key sales milestones) and recommend a clear next step.
+Do not use markdown formatting, bullet points, headers, or quotes. Keep it in plain text.
+        `.trim();
+
+        const response = await axios.post(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+          {
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: prompt }]
+              }
+            ]
+          },
+          {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 6000
+          }
+        );
+
+        if (response.data && response.data.candidates && response.data.candidates[0].content) {
+          summary = response.data.candidates[0].content.parts[0].text.trim();
+        }
+      } catch (geminiError) {
+        console.error('Gemini insights generation failed:', geminiError.message);
+      }
+    }
+
+    return res.status(200).json({ summary, insights });
   } catch (error) {
     next(error);
   }

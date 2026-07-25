@@ -45,6 +45,7 @@ const Dashboard = () => {
 
   // Store Staff State
   const [aiInsights, setAiInsights] = useState([]);
+  const [aiInsightsSummary, setAiInsightsSummary] = useState('');
   const [aiRecommendations, setAiRecommendations] = useState([]);
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
@@ -270,9 +271,17 @@ const Dashboard = () => {
 
           try {
             const insightsRes = await API.get('/ai/insights');
-            setAiInsights(Array.isArray(insightsRes.data) ? insightsRes.data : []);
+            const data = insightsRes.data;
+            if (data && typeof data === 'object' && !Array.isArray(data)) {
+              setAiInsights(Array.isArray(data.insights) ? data.insights : []);
+              setAiInsightsSummary(data.summary || '');
+            } else {
+              setAiInsights(Array.isArray(data) ? data : []);
+              setAiInsightsSummary('');
+            }
           } catch (insightErr) {
             setAiInsights([]);
+            setAiInsightsSummary('');
           }
         }
       } catch (err) {
@@ -1055,6 +1064,29 @@ const Dashboard = () => {
           </div>
           
           <div className="space-y-4">
+            {aiInsightsSummary && (
+              <div className="relative p-5 rounded-2xl bg-gradient-to-r from-indigo-50/40 via-violet-50/40 to-indigo-50/40 dark:from-indigo-950/20 dark:via-violet-950/20 dark:to-indigo-950/20 border border-indigo-100/40 dark:border-indigo-900/20 overflow-hidden shadow-inner flex items-start space-x-4">
+                <div className="absolute top-0 right-0 p-2 opacity-[0.03]">
+                  <Sparkles className="w-24 h-24 text-indigo-600" />
+                </div>
+                <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl text-white shadow-md shadow-indigo-500/20 animate-pulse">
+                  <Sparkles className="w-4.5 h-4.5" />
+                </div>
+                <div className="space-y-1 relative z-10">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[10px] text-indigo-650 dark:text-indigo-400 font-extrabold uppercase tracking-wider">AI Executive Brief</span>
+                    <span className="flex h-1.5 w-1.5 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-450 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                  </div>
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-200 leading-relaxed italic">
+                    "{aiInsightsSummary}"
+                  </p>
+                </div>
+              </div>
+            )}
+
             {aiInsights.length === 0 ? (
               <div className="p-8 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-center space-y-1">
                 <p className="font-extrabold text-slate-700 dark:text-slate-300 text-xs">No Insights Available Yet</p>
