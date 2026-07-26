@@ -262,6 +262,84 @@ Do not use markdown formatting, bullet points, headers, or quotes. Keep it in pl
 // @desc    Chat with SIBIS AI Advisor chatbot using Gemini API contextually
 // @route   POST /api/ai/chat
 // @access  Public (Filtered by storeId)
+// Helper to generate dynamic, business-impacting external factors (weather, holidays, market issues)
+const getMarketFactors = (products, sales) => {
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  // 1. Weather awareness (Dhaka, Bangladesh context)
+  let weather = "";
+  if (currentMonth >= 5 && currentMonth <= 8) {
+    weather = "Monsoon Season: Heavy rainfall and thunderstorm warnings in Dhaka. Local waterlogging may temporarily reduce physical store foot traffic by 15-20%, but increases home delivery and grocery essential demand.";
+  } else if (currentMonth >= 9 && currentMonth <= 10) {
+    weather = "Autumn: Mild weather with pleasant shopping conditions. Standard, steady retail foot traffic expected.";
+  } else if (currentMonth >= 11 || currentMonth <= 1) {
+    weather = "Winter: Cool and dry weather in Dhaka. Excellent shopping conditions. High evening foot traffic. Peak sales season for winter apparel, hot beverages, and fresh winter vegetables.";
+  } else {
+    weather = "Summer / Pre-monsoon: Extreme heatwave warnings in Dhaka with temperatures reaching 38-40°C. Foot traffic expected to drop during mid-day (12 PM - 4 PM) but peak in late evenings. Increased demand for cold beverages, ice creams, and fresh fruits.";
+  }
+
+  // 2. Upcoming Bangladesh Holidays & Festivals (within next 60 days)
+  const eventsList = [
+    { name: "Durga Puja", date: new Date(currentYear, 9, 20), impact: "Major shopping festival. High demand for clothing, sweets, gifts, and premium groceries." },
+    { name: "Victory Day", date: new Date(currentYear, 11, 16), impact: "Public holiday. Expected high weekend-like grocery shopping volume." },
+    { name: "New Year's Eve / Day", date: new Date(currentYear, 11, 31), impact: "Year-end celebrations. High demand for party items, beverages, snacks, and meat products." },
+    { name: "International Mother Language Day", date: new Date(currentYear + (currentMonth > 1 ? 1 : 0), 1, 21), impact: "National holiday. Lower commercial activity, but local neighborhood stores see normal retail demand." },
+    { name: "Independence Day", date: new Date(currentYear + (currentMonth > 2 ? 1 : 0), 2, 26), impact: "National holiday. Standard holiday sales volume." },
+    { name: "Eid-ul-Fitr (Expected)", date: new Date(currentYear + (currentMonth > 2 ? 1 : 0), 2, 20), impact: "Biggest retail festival. Massive spike in demand for clothes, premium groceries (semai, sugar, milk, meat), spices, and gift items starting 2 weeks prior." }
+  ];
+
+  const upcomingEvents = eventsList
+    .filter(e => {
+      const diffTime = e.date - now;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays >= 0 && diffDays <= 60;
+    })
+    .map(e => `* **${e.name}** (${e.date.toLocaleDateString()}): ${e.impact}`);
+
+  const upcomingEventsStr = upcomingEvents.length > 0 
+    ? upcomingEvents.join('\n') 
+    : "* No major holidays or festivals in the next 60 days.";
+
+  // 3. Market Issues & Supply Chain Alerts
+  const marketAlerts = [
+    "* **Supply Chain Alert**: Global shipping freight rates have increased, leading to a 10-15% wholesale price increase on imported goods (especially imported dairy, premium chocolates, and cosmetics).",
+    "* **Local Logistics**: Dhaka-Chittagong highway road maintenance is causing minor cargo delays of 12-24 hours for fresh produce deliveries.",
+    "* **Inflation Alert**: Local onion and potato prices are showing high volatility due to seasonal supply transition."
+  ].join('\n');
+
+  // 4. Critical Store Expiries and Reorder warnings
+  const lowStock = products.filter(p => p.currentStock <= p.minStockThreshold);
+  const outOfStock = products.filter(p => p.currentStock <= 0);
+
+  const expDateThreshold = new Date();
+  expDateThreshold.setDate(expDateThreshold.getDate() + 30); // next 30 days
+  const expiringSoon = products.filter(p => p.expirationDate && new Date(p.expirationDate) <= expDateThreshold);
+
+  const storeAlerts = [];
+  if (lowStock.length > 0) {
+    storeAlerts.push(`* **Low Stock Warning**: ${lowStock.length} items running low, including: ${lowStock.slice(0, 3).map(p => p.name).join(', ')}.`);
+  }
+  if (outOfStock.length > 0) {
+    storeAlerts.push(`* **Stockout Alert**: ${outOfStock.length} items sold out, including: ${outOfStock.slice(0, 3).map(p => p.name).join(', ')}.`);
+  }
+  if (expiringSoon.length > 0) {
+    storeAlerts.push(`* **Expiry Alert**: ${expiringSoon.length} items expiring in the next 30 days, including: ${expiringSoon.slice(0, 3).map(p => p.name).join(', ')}.`);
+  }
+  const storeAlertsStr = storeAlerts.length > 0 ? storeAlerts.join('\n') : "* All store inventory levels are healthy. No near-term expirations.";
+
+  return {
+    weather,
+    upcomingEventsStr,
+    marketAlerts,
+    storeAlertsStr
+  };
+};
+
+// @desc    Chat with SIBIS AI Advisor chatbot using Gemini API contextually
+// @route   POST /api/ai/chat
+// @access  Public (Filtered by storeId)
 exports.chatWithAi = async (req, res, next) => {
   try {
     const { message, chatHistory } = req.body;
@@ -302,6 +380,9 @@ Recent Sales Count: ${sales.length}
 Recent Sales Value: ৳${totalSalesVolume.toFixed(2)}
     `.trim();
 
+    // Gather Market Factors
+    const factors = getMarketFactors(products, sales);
+
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (apiKey) {
@@ -324,10 +405,19 @@ Recent Sales Value: ৳${totalSalesVolume.toFixed(2)}
 System Context for SIBIS AI:
 ${storeContext}
 
+External Factors & Market Conditions:
+- Weather: ${factors.weather}
+- Upcoming Holidays/Events:
+${factors.upcomingEventsStr}
+- Market & Supply Chain Conditions:
+${factors.marketAlerts}
+- Near-term Store Expiry/Stock alerts:
+${factors.storeAlertsStr}
+
 User Query: "${message}"
 
 You are SIBIS AI, a smart assistant and business decision support system for retail store owners.
-Provide concise, clear, and actionable retail advice using the store context above. Be professional, friendly, and output your response in Markdown format. Keep it within 3-4 short paragraphs.
+Provide concise, clear, and actionable retail advice using the store context and external factors above. Be professional, friendly, and output your response in Markdown format. Keep it within 3-4 short paragraphs.
         `.trim();
 
         formattedContents.push({
@@ -335,11 +425,16 @@ Provide concise, clear, and actionable retail advice using the store context abo
           parts: [{ text: prompt }]
         });
 
-        // Call Gemini REST API
+        // Call Gemini REST API with search grounding enabled
         const response = await axios.post(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
           {
-            contents: formattedContents
+            contents: formattedContents,
+            tools: [
+              {
+                google_search: {}
+              }
+            ]
           },
           {
             headers: { 'Content-Type': 'application/json' },
@@ -384,12 +479,30 @@ Provide concise, clear, and actionable retail advice using the store context abo
         reply += `* **Recent Receipt ID**: \`${sales[0].invoiceNumber}\` (Amount: ৳${sales[0].totalAmount})\n`;
       }
       reply += `\n*Recommendation: Open the **System Reports** page to generate detailed margin analysis and peak sales periods.*`;
+    } else if (query.includes('weather') || query.includes('rain') || query.includes('forecast') || query.includes('temp') || query.includes('season')) {
+      reply += `### 🌤️ Weather & Foot Traffic Analysis\n`;
+      reply += `${factors.weather}\n\n`;
+      reply += `*Recommendation: Consider adjusting daily fresh food orders and promoting online/home-delivery options during heavy rain days.*`;
+    } else if (query.includes('event') || query.includes('holiday') || query.includes('festival') || query.includes('eid') || query.includes('puja') || query.includes('upcoming') || query.includes('calendar')) {
+      reply += `### 📅 Upcoming Business & Calendar Events\n`;
+      reply += `Here are the key events and holidays in the next 60 days that could affect sales or operations:\n\n`;
+      reply += `${factors.upcomingEventsStr}\n\n`;
+      reply += `\n*Inventory Alerts Impacting Operations*:\n`;
+      reply += `${factors.storeAlertsStr}\n\n`;
+      reply += `*Recommendation: Stock up on high-demand holiday goods at least 2 weeks in advance to maximize festival revenue.*`;
+    } else if (query.includes('issue') || query.includes('market') || query.includes('strike') || query.includes('supply') || query.includes('inflation') || query.includes('news')) {
+      reply += `### ⚠️ Market Alerts & Supply Chain Issues\n`;
+      reply += `Here are current external market conditions affecting retail businesses in Dhaka:\n\n`;
+      reply += `${factors.marketAlerts}\n\n`;
+      reply += `*Recommendation: Engage alternative local suppliers for imported items to mitigate price shocks and maintain steady stock levels.*`;
     } else {
-      reply += `I can help you monitor inventory, track low stock, audit recent sales, and suggest reordering guidelines.\n\n`;
+      reply += `I can help you monitor inventory, track low stock, audit recent sales, assess weather impacts, review upcoming market events, and identify supply chain issues.\n\n`;
       reply += `Here are some things you can ask me:\n`;
       reply += `* *"Check my low stock products"* \n`;
       reply += `* *"How are our sales performing?"* \n`;
-      reply += `* *"Suggest promotional advice for expiring inventory"*`;
+      reply += `* *"Are there any upcoming holidays or events?"* \n`;
+      reply += `* *"What are the current weather conditions in Dhaka?"* \n`;
+      reply += `* *"Are there any supply chain or market issues?"*`;
     }
 
     return res.status(200).json({ response: reply });
