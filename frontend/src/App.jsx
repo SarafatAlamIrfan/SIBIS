@@ -21,6 +21,7 @@ import Notifications from './pages/Notifications';
 import StoreCalendar from './pages/StoreCalendar';
 
 import RegisterStorePage from './pages/RegisterStorePage';
+import StoreProfile from './pages/StoreProfile';
 
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -148,6 +149,15 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager', 'Cashier', 'Inventory Staff']}>
                     <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route 
+                path="/store-profile" 
+                element={
+                  <ProtectedRoute allowedRoles={['System Admin', 'Owner', 'Manager']}>
+                    <StoreProfile />
                   </ProtectedRoute>
                 } 
               />

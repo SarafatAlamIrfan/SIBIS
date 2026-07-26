@@ -45,10 +45,10 @@ const getAllStores = async (req, res) => {
 // @access  Private (System Admin)
 const createStore = async (req, res) => {
   try {
-    const { name, ownerName, ownerEmail, ownerPassword, phone, address, businessType, subscriptionPlan } = req.body;
+    const { name, ownerName, ownerEmail, ownerPassword, phone, address, city, country, businessType, subscriptionPlan } = req.body;
 
-    if (!name || !ownerEmail || !ownerPassword || !ownerName) {
-      return res.status(400).json({ error: 'Store name, owner name, owner email, and password are required.' });
+    if (!name || !ownerEmail || !ownerPassword || !ownerName || !city || !country) {
+      return res.status(400).json({ error: 'Store name, owner name, owner email, password, city, and country are required.' });
     }
 
     // Check if user email already exists
@@ -63,6 +63,8 @@ const createStore = async (req, res) => {
       email: ownerEmail.toLowerCase(),
       phone: phone || '',
       address: address || '',
+      city: city.trim(),
+      country: country.trim(),
       businessType: businessType || 'General Retail',
       subscriptionPlan: subscriptionPlan || 'Pro',
       status: 'Active',

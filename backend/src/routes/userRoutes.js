@@ -20,6 +20,9 @@ const {
   changePassword,
   updateProfile,
   getStoreActivity,
+  getStoreCalendarEvents,
+  getStoreProfile,
+  updateStoreProfile,
 } = require('../controllers/userController');
 const { protect, restrictTo } = require('../middleware/authMiddleware');
 
@@ -42,8 +45,13 @@ router.route('/profile')
   .get(getProfile)
   .put(updateProfile);
 
+router.route('/store-profile')
+  .get(getStoreProfile)
+  .put(updateStoreProfile);
+
 router.put('/change-password', changePassword);
 router.get('/activity', restrictTo('System Admin', 'Owner', 'Manager'), getStoreActivity);
+router.get('/store-calendar-events', getStoreCalendarEvents);
 
 // Staff management endpoints (Store Owner & Manager)
 router.route('/staff')

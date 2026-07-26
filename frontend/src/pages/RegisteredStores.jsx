@@ -36,7 +36,6 @@ const RegisteredStores = () => {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Form State for creating store
   const [formData, setFormData] = useState({
     name: '',
     businessType: 'General Retail',
@@ -46,6 +45,8 @@ const RegisteredStores = () => {
     ownerPassword: 'password123',
     phone: '',
     address: '',
+    city: '',
+    country: '',
   });
 
   const fetchData = async () => {
@@ -96,6 +97,8 @@ const RegisteredStores = () => {
         ownerPassword: 'password123',
         phone: '',
         address: '',
+        city: '',
+        country: '',
       });
       fetchData();
     } catch (err) {
@@ -486,6 +489,38 @@ const RegisteredStores = () => {
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl font-semibold"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="space-y-1">
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">City *</label>
+                  <div className="relative">
+                    <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Dhaka"
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Country *</label>
+                  <div className="relative">
+                    <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Bangladesh"
+                      value={formData.country}
+                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                      className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold"
                     />
                   </div>
                 </div>

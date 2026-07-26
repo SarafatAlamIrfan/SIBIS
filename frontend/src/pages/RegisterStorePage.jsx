@@ -70,6 +70,8 @@ const RegisterStorePage = () => {
     confirmPassword: '',
     phone: '',
     address: '',
+    city: '',
+    country: '',
   });
 
   // Email Validation & Availability State
@@ -147,6 +149,11 @@ const RegisterStorePage = () => {
       const finalBusinessType =
         formData.businessType === 'Others' ? formData.customBusinessType.trim() : formData.businessType;
 
+      if (!formData.city || !formData.city.trim() || !formData.country || !formData.country.trim()) {
+        setError('City and Country are required to complete store registration.');
+        return;
+      }
+
       setSubmitting(true);
       try {
         await loginWithGoogle({
@@ -158,6 +165,8 @@ const RegisterStorePage = () => {
           businessType: finalBusinessType,
           phone: formData.phone,
           address: formData.address,
+          city: formData.city.trim(),
+          country: formData.country.trim(),
         });
         navigate('/dashboard');
       } catch (err) {
@@ -169,8 +178,8 @@ const RegisterStorePage = () => {
     }
 
     // Standard Email Registration Flow
-    if (!formData.storeName || !formData.ownerName || !formData.ownerEmail || !formData.ownerPassword) {
-      setError('Please fill in all required fields marked with *.');
+    if (!formData.storeName || !formData.ownerName || !formData.ownerEmail || !formData.ownerPassword || !formData.city || !formData.country) {
+      setError('Please fill in all required fields marked with * (including City and Country).');
       return;
     }
 
@@ -251,6 +260,8 @@ const RegisterStorePage = () => {
         businessType: finalBusinessType,
         phone: formData.phone,
         address: formData.address,
+        city: formData.city.trim(),
+        country: formData.country.trim(),
         ownerName: formData.ownerName,
         ownerEmail: formData.ownerEmail,
         ownerPassword: formData.ownerPassword,
@@ -445,6 +456,38 @@ const RegisterStorePage = () => {
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl font-semibold"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-slate-700 dark:text-slate-300 font-bold">City *</label>
+                  <div className="relative">
+                    <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Dhaka"
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-700 dark:text-slate-300 font-bold">Country *</label>
+                  <div className="relative">
+                    <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Bangladesh"
+                      value={formData.country}
+                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

@@ -5,6 +5,12 @@ const autoSeedDefaults = async () => {
     const User = require('../models/User');
     const Store = require('../models/Store');
 
+    // 0. Update existing stores that lack city/country to avoid schema validation errors
+    await Store.updateMany(
+      { $or: [{ city: { $exists: false } }, { country: { $exists: false } }] },
+      { $set: { city: 'Dhaka', country: 'Bangladesh' } }
+    );
+
     // 1. Ensure System Admin exists
     const adminExists = await User.findOne({ email: 'admin@sibis.com' });
     if (!adminExists) {
@@ -29,6 +35,8 @@ const autoSeedDefaults = async () => {
           email: 'contact@apexsupermarket.com',
           phone: '+880 1711-000111',
           address: 'Plot 12, Gulshan Avenue, Dhaka',
+          city: 'Dhaka',
+          country: 'Bangladesh',
           businessType: 'Supermarket & Grocery',
           status: 'Active',
           subscriptionPlan: 'Enterprise',

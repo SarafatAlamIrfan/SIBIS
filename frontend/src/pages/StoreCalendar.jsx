@@ -10,29 +10,39 @@ import {
   RefreshCw,
   Info,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Gift,
+  Sun
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const StoreCalendar = () => {
+const StoreCalendar = ({ hideHeader = false }) => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
+  const [locationEvents, setLocationEvents] = useState([]);
+  const [locationInfo, setLocationInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [productsRes, salesRes] = await Promise.all([
+      const [productsRes, salesRes, locationEventsRes] = await Promise.all([
         API.get('/products'),
-        API.get('/sales')
+        API.get('/sales'),
+        API.get('/users/store-calendar-events').catch(err => {
+          console.error('Failed to load location-aware events:', err);
+          return { data: { events: [], location: null } };
+        })
       ]);
       setProducts(productsRes.data || []);
       setSales(salesRes.data || []);
+      setLocationEvents(locationEventsRes.data?.events || []);
+      setLocationInfo(locationEventsRes.data?.location || null);
     } catch (err) {
       console.error('Failed to load calendar events data:', err);
     } finally {
@@ -45,7 +55,12 @@ const StoreCalendar = () => {
   }, []);
 
   // Compute Calendar Events
-  const events = [];
+  const events = [
+    ...locationEvents.map(e => ({
+      ...e,
+      date: new Date(e.date)
+    }))
+  ];
 
   // 1. Expiration dates
   products.forEach(p => {
@@ -155,29 +170,31 @@ const StoreCalendar = () => {
   return (
     <div className="space-y-8 animate-[fade-in_0.3s_ease-out]">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex items-center space-x-3">
-          <div className="p-2.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-2xl border border-indigo-500/20">
-            <CalendarIcon className="w-6 h-6" />
+      {!hideHeader && (
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-2.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-2xl border border-indigo-500/20">
+              <CalendarIcon className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                Operations Calendar & AI Scheduler
+              </h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
+                Interactive monthly agenda pre-populated with inventory expiration warnings and AI predictive reorder markers.
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-              Operations Calendar & AI Scheduler
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
-              Interactive monthly agenda pre-populated with inventory expiration warnings and AI predictive reorder markers.
-            </p>
-          </div>
-        </div>
 
-        <button
-          onClick={loadData}
-          className="px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center space-x-2 shadow-md shadow-indigo-600/10 cursor-pointer print:hidden transition-all"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh Data</span>
-        </button>
-      </div>
+          <button
+            onClick={loadData}
+            className="px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center space-x-2 shadow-md shadow-indigo-600/10 cursor-pointer print:hidden transition-all"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh Data</span>
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Calendar Grid Container */}
@@ -269,10 +286,18 @@ const StoreCalendar = () => {
                 <div className={`p-2 rounded-xl border ${
                   selectedEvent.type === 'expiry' 
                     ? 'bg-rose-500/10 text-rose-600 border-rose-500/20' 
+                    : selectedEvent.type === 'holiday'
+                    ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400'
+                    : selectedEvent.type === 'weather'
+                    ? 'bg-teal-500/10 text-teal-600 border-teal-500/20 dark:text-teal-400'
                     : 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20'
                 }`}>
                   {selectedEvent.type === 'expiry' ? (
                     <Clock className="w-5 h-5" />
+                  ) : selectedEvent.type === 'holiday' ? (
+                    <Gift className="w-5 h-5 text-emerald-500" />
+                  ) : selectedEvent.type === 'weather' ? (
+                    <Sun className="w-5 h-5 text-teal-500" />
                   ) : (
                     <Sparkles className="w-5 h-5 animate-pulse" />
                   )}
@@ -313,6 +338,22 @@ const StoreCalendar = () => {
                     className="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
                   >
                     <span>Audit Store Stock</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                ) : selectedEvent.type === 'holiday' ? (
+                  <button
+                    onClick={() => navigate('/dashboard')}
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
+                  >
+                    <span>Analyze Store Traffic</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                ) : selectedEvent.type === 'weather' ? (
+                  <button
+                    onClick={() => navigate('/products?filter=low-stock')}
+                    className="w-full py-3 bg-teal-650 hover:bg-teal-550 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
+                  >
+                    <span>Optimize Stock Level</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 ) : (

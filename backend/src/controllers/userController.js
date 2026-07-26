@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const logActivity = require('../utils/activityLogger');
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || 'super-secret-key-change-in-production', {
@@ -227,10 +228,10 @@ exports.verifyOtp = async (req, res, next) => {
 // @access  Public
 exports.registerStore = async (req, res, next) => {
   try {
-    const { storeName, businessType, phone, address, ownerName, ownerEmail, ownerPassword, otp } = req.body;
+    const { storeName, businessType, phone, address, city, country, ownerName, ownerEmail, ownerPassword, otp } = req.body;
 
-    if (!storeName || !ownerName || !ownerEmail || !ownerPassword) {
-      return res.status(400).json({ error: 'Store name, owner name, email, and password are required.' });
+    if (!storeName || !ownerName || !ownerEmail || !ownerPassword || !city || !country) {
+      return res.status(400).json({ error: 'Store name, owner name, email, password, city, and country are required.' });
     }
 
     const emailLower = ownerEmail.toLowerCase();
@@ -256,6 +257,8 @@ exports.registerStore = async (req, res, next) => {
       email: emailLower,
       phone: phone || '',
       address: address || '',
+      city: city.trim(),
+      country: country.trim(),
       businessType: businessType || 'General Retail',
       status: 'Active',
       subscriptionPlan: 'Pro',
@@ -606,7 +609,7 @@ exports.getStoreActivity = async (req, res, next) => {
 // @access  Public
 exports.googleAuth = async (req, res, next) => {
   try {
-    const { email, name, googleId, avatar, storeName, businessType, phone, address } = req.body;
+    const { email, name, googleId, avatar, storeName, businessType, phone, address, city, country } = req.body;
     if (!email) {
       return res.status(400).json({ error: 'Google authentication failed: Email is required.' });
     }
@@ -627,6 +630,10 @@ exports.googleAuth = async (req, res, next) => {
         });
       }
 
+      if (!city || !city.trim() || !country || !country.trim()) {
+        return res.status(400).json({ error: 'Store city and country are required to complete registration.' });
+      }
+
       // Create Store with provided details
       const Store = require('../models/Store');
       const store = new Store({
@@ -634,6 +641,8 @@ exports.googleAuth = async (req, res, next) => {
         email: emailLower,
         phone: phone ? phone.trim() : '',
         address: address ? address.trim() : '',
+        city: city.trim(),
+        country: country.trim(),
         businessType: businessType || 'General Retail',
         status: 'Active',
         subscriptionPlan: 'Pro',
@@ -760,5 +769,295 @@ exports.resetPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+// Helper mapping country name to ISO 2-letter country code for Nager.Date API
+const countryToCode = (countryName) => {
+  if (!countryName) return null;
+  const name = countryName.trim().toLowerCase();
+  
+  const mapping = {
+    'bangladesh': 'BD',
+    'united states': 'US',
+    'united states of america': 'US',
+    'usa': 'US',
+    'us': 'US',
+    'united kingdom': 'GB',
+    'uk': 'GB',
+    'great britain': 'GB',
+    'gb': 'GB',
+    'canada': 'CA',
+    'ca': 'CA',
+    'australia': 'AU',
+    'au': 'AU',
+    'india': 'IN',
+    'in': 'IN',
+    'germany': 'DE',
+    'de': 'DE',
+    'france': 'FR',
+    'fr': 'FR',
+    'italy': 'IT',
+    'it': 'IT',
+    'spain': 'ES',
+    'es': 'ES',
+    'japan': 'JP',
+    'jp': 'JP',
+    'china': 'CN',
+    'cn': 'CN',
+    'brazil': 'BR',
+    'br': 'BR',
+    'singapore': 'SG',
+    'sg': 'SG',
+    'malaysia': 'MY',
+    'my': 'MY',
+    'pakistan': 'PK',
+    'pk': 'PK',
+    'nepal': 'NP',
+    'np': 'NP',
+    'sri lanka': 'LK',
+    'lk': 'LK',
+    'saudi arabia': 'SA',
+    'sa': 'SA',
+    'united arab emirates': 'AE',
+    'uae': 'AE',
+    'ae': 'AE',
+    'turkey': 'TR',
+    'tr': 'TR',
+    'south africa': 'ZA',
+    'za': 'ZA',
+    'new zealand': 'NZ',
+    'nz': 'NZ'
+  };
+
+  return mapping[name] || null;
+};
+
+// Helper to generate seasonal weather calendar alerts based on city & country
+const getWeatherEvents = (city, country, year) => {
+  const weatherEvents = [];
+  const countryName = country ? country.trim().toLowerCase() : '';
+
+  if (countryName === 'bangladesh' || countryName === 'bd' || countryName === 'india' || countryName === 'in') {
+    // Monsoon season: June 15 to Sept 15
+    for (let month = 5; month <= 8; month++) {
+      weatherEvents.push({
+        id: `weather-monsoon-${month}`,
+        date: new Date(year, month, 15),
+        title: `Monsoon Advisory: ${city || 'Dhaka'}`,
+        desc: `Heavy monsoon rainfall expected. Store foot traffic might drop on rainy days. Focus on home delivery services and stock essential storm items.`,
+        type: 'weather',
+        color: 'bg-teal-500/10 text-teal-600 border-teal-500/30 dark:text-teal-400 hover:bg-teal-500/20'
+      });
+    }
+    // Summer heat: April & May
+    weatherEvents.push({
+      id: `weather-heat-4`,
+      date: new Date(year, 3, 20),
+      title: `Summer Heat peak: ${city || 'Dhaka'}`,
+      desc: `High summer heat expected. Physical shopping visits will shift to late evenings. Fully stock cold beverages, ice creams, and fresh juices.`,
+      type: 'weather',
+      color: 'bg-amber-500/10 text-amber-600 border-amber-500/30 dark:text-amber-400 hover:bg-amber-500/20'
+    });
+    weatherEvents.push({
+      id: `weather-heat-5`,
+      date: new Date(year, 4, 15),
+      title: `Pre-Monsoon Humidity: ${city || 'Dhaka'}`,
+      desc: `Extremely muggy weather. Store traffic will peak after sunset.`,
+      type: 'weather',
+      color: 'bg-amber-500/10 text-amber-600 border-amber-500/30 dark:text-amber-400 hover:bg-amber-500/20'
+    });
+    // Winter: Dec & Jan
+    weatherEvents.push({
+      id: `weather-winter-12`,
+      date: new Date(year, 11, 20),
+      title: `Winter Season: ${city || 'Dhaka'}`,
+      desc: `Cool and pleasant winter conditions. Evening store foot traffic is expected to double. Higher sales for warm beverages.`,
+      type: 'weather',
+      color: 'bg-sky-500/10 text-sky-600 border-sky-500/30 dark:text-sky-400 hover:bg-sky-500/20'
+    });
+  } else {
+    // 4 Seasons climate
+    const isSouthernHemisphere = countryName === 'australia' || countryName === 'au' || countryName === 'new zealand' || countryName === 'nz' || countryName === 'south africa' || countryName === 'za' || countryName === 'brazil' || countryName === 'br';
+
+    if (isSouthernHemisphere) {
+      // Southern Winter: June/July
+      weatherEvents.push({
+        id: `weather-winter`,
+        date: new Date(year, 6, 15),
+        title: `Winter Season: ${city || 'Sydney'}`,
+        desc: `Cold temperatures. High demand for winter clothing, heaters, hot food ingredients.`,
+        type: 'weather',
+        color: 'bg-sky-500/10 text-sky-600 border-sky-500/30 dark:text-sky-400 hover:bg-sky-500/20'
+      });
+      // Southern Summer: Dec/Jan
+      weatherEvents.push({
+        id: `weather-summer`,
+        date: new Date(year, 0, 15),
+        title: `Summer Season: ${city || 'Sydney'}`,
+        desc: `Hot summer weather. High demand for picnic supplies, cold beverages, barbecues, beach gear.`,
+        type: 'weather',
+        color: 'bg-amber-500/10 text-amber-600 border-amber-500/30 dark:text-amber-400 hover:bg-amber-500/20'
+      });
+    } else {
+      // Northern Winter: Jan/Feb
+      weatherEvents.push({
+        id: `weather-winter`,
+        date: new Date(year, 0, 15),
+        title: `Winter Season: ${city || 'New York'}`,
+        desc: `Freezing winter temperatures. Risk of snowstorms disrupting customer traffic. Ensure delivery channels are staffed.`,
+        type: 'weather',
+        color: 'bg-sky-500/10 text-sky-600 border-sky-500/30 dark:text-sky-400 hover:bg-sky-500/20'
+      });
+      // Northern Summer: July/Aug
+      weatherEvents.push({
+        id: `weather-summer`,
+        date: new Date(year, 6, 15),
+        title: `Summer Season: ${city || 'New York'}`,
+        desc: `Warm summer conditions. High outdoor activities. Peak retail sales for drinks, fresh produce, summer apparel.`,
+        type: 'weather',
+        color: 'bg-amber-500/10 text-amber-600 border-amber-500/30 dark:text-amber-400 hover:bg-amber-500/20'
+      });
+    }
+  }
+
+  return weatherEvents;
+};
+
+// @desc    Get automatically generated calendar events based on store location (city, country)
+// @route   GET /api/users/store-calendar-events
+// @access  Private
+exports.getStoreCalendarEvents = async (req, res, next) => {
+  try {
+    const Store = require('../models/Store');
+    const store = await Store.findById(req.user.storeId);
+    
+    if (!store) {
+      return res.status(404).json({ error: 'Store not found' });
+    }
+
+    const { city, country } = store;
+    const year = new Date().getFullYear();
+    const events = [];
+
+    // 1. Fetch public holidays dynamically based on country
+    const countryCode = countryToCode(country);
+    if (countryCode) {
+      try {
+        const holidayRes = await axios.get(`https://date.nager.at/api/v3/PublicHolidays/${year}/${countryCode}`, {
+          timeout: 4000
+        });
+        
+        if (Array.isArray(holidayRes.data)) {
+          holidayRes.data.forEach(h => {
+            events.push({
+              id: `holiday-${h.date}-${h.name}`,
+              date: new Date(h.date),
+              title: `Holiday: ${h.name}`,
+              desc: `National Public Holiday in ${country} (${h.localName}). Expected impact on general retail shopping volume.`,
+              type: 'holiday',
+              color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 dark:text-emerald-400 hover:bg-emerald-500/20'
+            });
+          });
+        }
+      } catch (apiErr) {
+        console.error('Nager.Date holiday API failed:', apiErr.message);
+        // Fallback static holidays for BD if API is down / offline
+        if (countryCode === 'BD') {
+          const fallbackHolidays = [
+            { date: `${year}-02-21`, name: "Language Martyrs' Day" },
+            { date: `${year}-03-26`, name: "Independence Day" },
+            { date: `${year}-05-01`, name: "May Day" },
+            { date: `${year}-12-16`, name: "Victory Day" },
+            { date: `${year}-12-25`, name: "Christmas Day" }
+          ];
+          fallbackHolidays.forEach(h => {
+            events.push({
+              id: `holiday-fallback-${h.date}-${h.name}`,
+              date: new Date(h.date),
+              title: `Holiday: ${h.name} (Offline)`,
+              desc: `National Public Holiday in ${country}. (Offline Fail-Safe Data)`,
+              type: 'holiday',
+              color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 dark:text-emerald-400 hover:bg-emerald-500/20'
+            });
+          });
+        }
+      }
+    }
+
+    // 2. Generate seasonal weather warnings based on city & country
+    const weatherEvents = getWeatherEvents(city, country, year);
+    events.push(...weatherEvents);
+
+    return res.status(200).json({
+      location: { city, country },
+      events
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get store profile details
+// @route   GET /api/users/store-profile
+// @access  Private (Authenticated)
+exports.getStoreProfile = async (req, res, next) => {
+  try {
+    const Store = require('../models/Store');
+    const store = await Store.findById(req.user.storeId).populate('ownerId', 'name email');
+    if (!store) {
+      return res.status(404).json({ error: 'Store profile not found.' });
+    }
+    res.status(200).json(store);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update store profile details
+// @route   PUT /api/users/store-profile
+// @access  Private (Owner / System Admin only)
+exports.updateStoreProfile = async (req, res, next) => {
+  try {
+    // Only allow Owner or System Admin to update store profile
+    if (req.user.role !== 'Owner' && req.user.role !== 'System Admin') {
+      return res.status(403).json({ error: 'Forbidden. Only the Store Owner can update store details.' });
+    }
+
+    const Store = require('../models/Store');
+    const store = await Store.findById(req.user.storeId);
+    if (!store) {
+      return res.status(404).json({ error: 'Store not found.' });
+    }
+
+    const { name, phone, address, city, country, businessType } = req.body;
+
+    if (name) store.name = name.trim();
+    if (phone !== undefined) store.phone = phone.trim();
+    if (address !== undefined) store.address = address.trim();
+    if (city) store.city = city.trim();
+    if (country) store.country = country.trim();
+    if (businessType) store.businessType = businessType.trim();
+
+    await store.save();
+
+    try {
+      await logActivity({
+        storeId: store._id,
+        user: req.user,
+        actionCategory: 'Store Configuration',
+        actionDescription: `${req.user.name} updated the store profile details.`,
+      });
+    } catch (logErr) {
+      console.warn('Activity logging failed:', logErr.message);
+    }
+
+    res.status(200).json({
+      message: 'Store profile updated successfully!',
+      store
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 

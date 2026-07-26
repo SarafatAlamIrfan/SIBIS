@@ -126,6 +126,12 @@ const Sidebar = () => {
       roles: ['System Admin', 'Owner', 'Manager', 'Cashier', 'Inventory Staff']
     },
     {
+      name: 'Store Profile',
+      path: '/store-profile',
+      icon: Building2,
+      roles: ['Owner', 'Manager']
+    },
+    {
       name: 'My Profile',
       path: '/profile',
       icon: User,

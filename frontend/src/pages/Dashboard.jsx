@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import API from '../services/api';
+import CalendarModal from '../components/CalendarModal';
 import { 
   TrendingUp, 
   Package, 
@@ -31,6 +32,7 @@ const Dashboard = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const isSystemAdmin = currentUser?.role === 'System Admin';
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
 
   // System Admin State
   const [adminStats, setAdminStats] = useState({
@@ -598,12 +600,16 @@ const Dashboard = () => {
             Welcome back, {currentUser?.name || 'User'}! {currentUser?.storeId?.name ? `(${currentUser.storeId.name})` : ''} Here is your store status at a glance.
           </p>
         </div>
-        <div className="flex items-center space-x-2 text-xs bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/60 p-2.5 rounded-xl shadow-sm">
+        <button
+          onClick={() => setShowCalendarModal(true)}
+          className="flex items-center space-x-2 text-xs bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/60 p-2.5 rounded-xl shadow-sm hover:border-indigo-500/50 hover:bg-slate-50 dark:hover:bg-slate-850 cursor-pointer transition-all active:scale-95 duration-200"
+          title="Click to view Operations Calendar"
+        >
           <Calendar className="w-4 h-4 text-indigo-500" />
           <span className="font-bold text-slate-700 dark:text-slate-350">
             {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
           </span>
-        </div>
+        </button>
       </div>
 
       {/* Stats Cards */}
@@ -1125,6 +1131,7 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+      <CalendarModal isOpen={showCalendarModal} onClose={() => setShowCalendarModal(false)} />
     </div>
   );
 };

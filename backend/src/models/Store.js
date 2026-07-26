@@ -30,6 +30,16 @@ const storeSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    city: {
+      type: String,
+      required: [true, 'Store city is required'],
+      trim: true,
+    },
+    country: {
+      type: String,
+      required: [true, 'Store country is required'],
+      trim: true,
+    },
     businessType: {
       type: String,
       default: 'General Retail',
