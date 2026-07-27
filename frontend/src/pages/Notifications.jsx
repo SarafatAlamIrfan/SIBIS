@@ -9,7 +9,9 @@ import {
   Clock, 
   ArrowRight,
   TrendingDown,
-  ShoppingBag
+  ShoppingBag,
+  Check,
+  CheckCheck
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -20,6 +22,9 @@ const Notifications = () => {
   const [loading, setLoading] = useState(false);
   const [stockAlerts, setStockAlerts] = useState([]);
   const [expiringAlerts, setExpiringAlerts] = useState([]);
+  const [readAlerts, setReadAlerts] = useState(() => {
+    return JSON.parse(localStorage.getItem('sibis_read_alerts') || '[]');
+  });
 
   const loadAlerts = async () => {
     setLoading(true);
@@ -40,6 +45,27 @@ const Notifications = () => {
   useEffect(() => {
     loadAlerts();
   }, []);
+
+  const markAsRead = (id) => {
+    setReadAlerts((prev) => {
+      const updated = [...prev, id];
+      localStorage.setItem('sibis_read_alerts', JSON.stringify(updated));
+      return updated;
+    });
+    // Trigger custom event to notify Navbar to refresh count
+    window.dispatchEvent(new Event('alerts_updated'));
+  };
+
+  const markAllAsRead = () => {
+    const allIds = alertsList.map((a) => a.id);
+    setReadAlerts((prev) => {
+      const updated = Array.from(new Set([...prev, ...allIds]));
+      localStorage.setItem('sibis_read_alerts', JSON.stringify(updated));
+      return updated;
+    });
+    // Trigger custom event to notify Navbar to refresh count
+    window.dispatchEvent(new Event('alerts_updated'));
+  };
 
   const alertsList = [
     ...stockAlerts.map(p => ({
@@ -78,6 +104,8 @@ const Notifications = () => {
     })
   ].sort((a, b) => new Date(b.time) - new Date(a.time));
 
+  const unreadAlerts = alertsList.filter((a) => !readAlerts.includes(a.id));
+
   return (
     <div className="space-y-8 animate-[fade-in_0.3s_ease-out]">
       {/* Header */}
@@ -96,13 +124,25 @@ const Notifications = () => {
           </div>
         </div>
 
-        <button
-          onClick={loadAlerts}
-          className="px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center space-x-2 shadow-md shadow-indigo-600/10 cursor-pointer print:hidden transition-all"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh Notices</span>
-        </button>
+        <div className="flex items-center space-x-3 print:hidden">
+          {unreadAlerts.length > 0 && (
+            <button
+              onClick={markAllAsRead}
+              className="px-4.5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold flex items-center space-x-2 border border-slate-200/50 dark:border-slate-700/60 cursor-pointer transition-all active:scale-95 duration-200"
+            >
+              <CheckCheck className="w-4 h-4 text-emerald-500" />
+              <span>Mark All as Read</span>
+            </button>
+          )}
+
+          <button
+            onClick={loadAlerts}
+            className="px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center space-x-2 shadow-md shadow-indigo-600/10 cursor-pointer transition-all active:scale-95 duration-200"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh Notices</span>
+          </button>
+        </div>
       </div>
 
       {/* Stream */}
@@ -124,15 +164,26 @@ const Notifications = () => {
         ) : (
           alertsList.map((alert) => {
             const Icon = alert.icon;
+            const isRead = readAlerts.includes(alert.id);
             return (
               <div 
                 key={alert.id}
-                className={`p-5 rounded-3xl border flex items-start space-x-4 bg-white dark:bg-slate-900/60 shadow-sm hover:shadow-md transition-all duration-300 ${
-                  alert.type === 'critical' 
-                    ? 'border-rose-500/20 hover:border-rose-500/40' 
+                className={`p-5 rounded-3xl border flex items-start space-x-4 bg-white dark:bg-slate-900/60 shadow-sm hover:shadow-md transition-all duration-300 relative ${
+                  isRead ? 'opacity-65 dark:bg-slate-900/25' : ''
+                } ${
+                  alert.type === 'critical' && !isRead
+                    ? 'border-rose-500/20 hover:border-rose-500/40 bg-rose-500/[0.01]' 
                     : 'border-slate-200 dark:border-slate-800 hover:border-indigo-500/30'
                 }`}
               >
+                {/* Visual Unread Pulse Dot */}
+                {!isRead && (
+                  <span className="absolute top-4 right-4 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                  </span>
+                )}
+
                 {/* Visual Icon indicator */}
                 <div className={`p-2.5 rounded-2xl border ${alert.color}`}>
                   <Icon className="w-5 h-5" />
@@ -141,19 +192,23 @@ const Notifications = () => {
                 {/* Text Description */}
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex justify-between items-start">
-                    <h4 className="font-black text-slate-800 dark:text-white text-sm">
+                    <h4 className={`font-black text-sm transition-colors duration-300 ${
+                      isRead ? 'text-slate-500 dark:text-slate-400 line-through/10' : 'text-slate-800 dark:text-white'
+                    }`}>
                       {alert.title}
                     </h4>
-                    <span className="text-[10px] text-slate-400 font-bold whitespace-nowrap ml-2">
-                      {alert.type === 'critical' ? 'Urgent Action' : 'Notice'}
+                    <span className="text-[10px] text-slate-400 font-bold whitespace-nowrap ml-6 mr-4">
+                      {isRead ? 'Read' : alert.type === 'critical' ? 'Urgent' : 'Notice'}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+                  <p className={`text-xs font-semibold leading-relaxed transition-colors duration-300 ${
+                    isRead ? 'text-slate-400 dark:text-slate-500' : 'text-slate-500 dark:text-slate-400'
+                  }`}>
                     {alert.desc}
                   </p>
                   
-                  {/* CTA link button */}
-                  <div className="pt-2">
+                  {/* CTA link and Mark as Read buttons */}
+                  <div className="pt-2 flex items-center space-x-4">
                     <button
                       onClick={() => navigate(alert.actionPath)}
                       className="text-[11px] font-black text-indigo-500 hover:text-indigo-600 flex items-center cursor-pointer transition-colors group"
@@ -161,6 +216,16 @@ const Notifications = () => {
                       <span>{alert.actionLabel}</span>
                       <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
                     </button>
+
+                    {!isRead && (
+                      <button
+                        onClick={() => markAsRead(alert.id)}
+                        className="text-[11px] font-black text-slate-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400 flex items-center cursor-pointer transition-colors duration-150"
+                      >
+                        <Check className="w-3.5 h-3.5 mr-1" />
+                        <span>Mark as read</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

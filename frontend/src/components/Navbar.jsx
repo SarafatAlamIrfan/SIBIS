@@ -23,16 +23,29 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode }
           API.get('/products/low-stock'),
           API.get('/products/expiring')
         ]);
-        const lowStockCount = (lowStockRes.data || []).length;
-        const expiringCount = (expiringRes.data || []).length;
-        setActiveAlertsCount(lowStockCount + expiringCount);
+        
+        const readAlerts = JSON.parse(localStorage.getItem('sibis_read_alerts') || '[]');
+        const activeStock = (lowStockRes.data || []).filter(p => !readAlerts.includes(`stock-${p._id}`));
+        const activeExpiring = (expiringRes.data || []).filter(p => !readAlerts.includes(`expire-${p._id}`));
+        
+        setActiveAlertsCount(activeStock.length + activeExpiring.length);
       } catch (err) {
         console.warn('Navbar alerts load failed:', err.message);
       }
     };
+    
     fetchAlerts();
+    
+    // Listen to custom updates from Notifications page
+    window.addEventListener('alerts_updated', fetchAlerts);
+    window.addEventListener('storage', fetchAlerts);
+    
     const interval = setInterval(fetchAlerts, 15000);
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener('alerts_updated', fetchAlerts);
+      window.removeEventListener('storage', fetchAlerts);
+      clearInterval(interval);
+    };
   }, [currentUser]);
 
   const handleLogout = async () => {
