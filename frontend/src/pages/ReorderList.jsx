@@ -232,7 +232,7 @@ const ReorderList = () => {
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={handleAddAllLowStock}
             className="px-4 py-3 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200/40 dark:border-amber-900/50 font-bold rounded-xl text-xs transition-all cursor-pointer flex items-center transform active:scale-97"

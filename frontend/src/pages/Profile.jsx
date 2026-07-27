@@ -247,7 +247,7 @@ const Profile = () => {
 
       {/* Tabs Navigation */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-6">
-        <div className="flex border-b border-slate-100 dark:border-slate-800 space-x-6">
+        <div className="flex border-b border-slate-100 dark:border-slate-800 space-x-6 overflow-x-auto scrollbar-none whitespace-nowrap pb-1">
           <button
             onClick={() => setActiveTab('details')}
             className={`pb-3 text-xs font-black tracking-wider transition-all cursor-pointer flex items-center border-b-2 ${

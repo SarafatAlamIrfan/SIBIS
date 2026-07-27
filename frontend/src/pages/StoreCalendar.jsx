@@ -230,11 +230,11 @@ const StoreCalendar = ({ hideHeader = false }) => {
             </div>
 
             {/* Days cells */}
-            <div className="grid grid-cols-7 gap-1.5 pt-2">
+            <div className="grid grid-cols-7 gap-1 sm:gap-1.5 pt-2">
               {calendarCells.map((cell, idx) => {
                 if (cell.isPadding) {
                   return (
-                    <div key={`pad-${idx}`} className="h-24 bg-slate-50/35 dark:bg-slate-950/5 rounded-2xl border border-transparent"></div>
+                    <div key={`pad-${idx}`} className="h-16 sm:h-24 bg-slate-50/35 dark:bg-slate-950/5 rounded-xl sm:rounded-2xl border border-transparent"></div>
                   );
                 }
 
@@ -247,13 +247,13 @@ const StoreCalendar = ({ hideHeader = false }) => {
                 return (
                   <div 
                     key={`day-${cell.dayNum}`} 
-                    className={`h-24 p-2 bg-slate-50/50 dark:bg-slate-950/20 border rounded-2xl flex flex-col justify-between overflow-hidden hover:border-indigo-500/25 transition-all ${
+                    className={`h-16 sm:h-24 p-1 sm:p-2 bg-slate-50/50 dark:bg-slate-950/20 border rounded-xl sm:rounded-2xl flex flex-col justify-between overflow-hidden hover:border-indigo-500/25 transition-all ${
                       isToday 
                         ? 'border-indigo-500 dark:border-indigo-500 bg-indigo-500/5 shadow-inner' 
                         : 'border-slate-200/60 dark:border-slate-800/60'
                     }`}
                   >
-                    <span className={`text-xs font-black self-end px-1.5 py-0.5 rounded-lg ${
+                    <span className={`text-[10px] sm:text-xs font-black self-end px-1 sm:px-1.5 py-0.5 rounded-md sm:rounded-lg ${
                       isToday ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'
                     }`}>
                       {cell.dayNum}

@@ -227,7 +227,7 @@ const SystemReports = () => {
           </div>
         </div>
 
-        <div className="flex items-center space-x-3 print:hidden">
+        <div className="flex flex-wrap gap-3 print:hidden">
           <button
             onClick={handleExportCSV}
             className="px-4.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800 dark:hover:bg-slate-800 border border-slate-200 rounded-xl text-xs font-bold flex items-center space-x-2 shadow-sm cursor-pointer"

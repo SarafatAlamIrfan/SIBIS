@@ -441,7 +441,7 @@ const PurchaseOrders = () => {
             {/* Items Table */}
             <div className="space-y-2">
               <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Ordered Product Items</h4>
-              <div className="border border-slate-200/60 dark:border-slate-800 rounded-2xl overflow-hidden">
+              <div className="border border-slate-200/60 dark:border-slate-800 rounded-2xl overflow-x-auto">
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-50 dark:bg-slate-950 text-slate-400 uppercase font-extrabold tracking-wider border-b border-slate-200/60 dark:border-slate-800">
                     <tr>
