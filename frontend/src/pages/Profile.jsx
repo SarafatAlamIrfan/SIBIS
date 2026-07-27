@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import API from '../services/api';
@@ -33,6 +33,7 @@ const Profile = () => {
     phone: currentUser?.phone || '',
     bio: currentUser?.bio || '',
     avatar: currentUser?.avatar || '',
+    otp: '',
   });
 
   const [avatarPreview, setAvatarPreview] = useState(currentUser?.avatar || '');
@@ -45,6 +46,7 @@ const Profile = () => {
         phone: currentUser.phone || '',
         bio: currentUser.bio || '',
         avatar: currentUser.avatar || '',
+        otp: '',
       });
       setAvatarPreview(currentUser.avatar || '');
     }
@@ -63,6 +65,33 @@ const Profile = () => {
 
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+
+  // Email verification OTP states
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [otpSentMessage, setOtpSentMessage] = useState('');
+
+  const isEmailModified = currentUser && profileData.email && profileData.email.toLowerCase().trim() !== currentUser.email.toLowerCase();
+
+  const handleSendOtp = async () => {
+    if (!profileData.email || !profileData.email.trim()) {
+      setProfileMessage({ type: 'error', text: 'Please enter a valid email address first.' });
+      return;
+    }
+    setSendingOtp(true);
+    setProfileMessage({ type: '', text: '' });
+    setOtpSentMessage('');
+    try {
+      const res = await API.post('/users/send-verification-otp', { email: profileData.email });
+      setShowOtpInput(true);
+      const demoCodeSuffix = res.data.otp ? ` (Demo OTP Code: ${res.data.otp})` : '';
+      setOtpSentMessage(`Verification code sent to ${profileData.email}${demoCodeSuffix}`);
+    } catch (err) {
+      setProfileMessage({ type: 'error', text: err.response?.data?.error || 'Failed to send verification code.' });
+    } finally {
+      setSendingOtp(false);
+    }
+  };
 
   // Preset Avatars for quick selection
   const avatarPresets = [
@@ -102,10 +131,17 @@ const Profile = () => {
       return;
     }
 
+    if (isEmailModified && !profileData.otp?.trim()) {
+      setProfileMessage({ type: 'error', text: 'Please enter the verification code sent to your new email.' });
+      return;
+    }
+
     setSavingProfile(true);
     try {
       await updateUserProfile(profileData);
       setProfileMessage({ type: 'success', text: 'Profile updated successfully!' });
+      setShowOtpInput(false);
+      setOtpSentMessage('');
     } catch (err) {
       setProfileMessage({ type: 'error', text: err.message || 'Failed to update profile.' });
     } finally {
@@ -351,17 +387,51 @@ const Profile = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-700 dark:text-slate-300 font-bold">Email Address</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="email"
-                  placeholder="name@example.com"
-                  value={profileData.email}
-                  onChange={(e) => setFormData({ ...profileData, email: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold"
-                />
+              <label className="text-slate-700 dark:text-slate-355 font-bold">Email Address</label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    placeholder="name@example.com"
+                    value={profileData.email}
+                    onChange={(e) => setFormData({ ...profileData, email: e.target.value })}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold"
+                  />
+                </div>
+                {isEmailModified && (
+                  <button
+                    type="button"
+                    onClick={handleSendOtp}
+                    disabled={sendingOtp}
+                    className="px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs flex-shrink-0 cursor-pointer disabled:opacity-50 transition-colors"
+                  >
+                    {sendingOtp ? 'Sending...' : 'Send OTP'}
+                  </button>
+                )}
               </div>
+              
+              {otpSentMessage && (
+                <p className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold mt-1">
+                  {otpSentMessage}
+                </p>
+              )}
+
+              {showOtpInput && (
+                <div className="mt-3.5 space-y-1.5 p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-200/50 dark:border-slate-800 rounded-2xl animate-[fade-in_0.2s_ease-out]">
+                  <label className="text-slate-700 dark:text-slate-350 font-bold block">Enter 6-Digit Verification Code *</label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    placeholder="Enter code (e.g. 123456)"
+                    value={profileData.otp || ''}
+                    onChange={(e) => setFormData({ ...profileData, otp: e.target.value })}
+                    className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-mono font-bold text-center tracking-widest text-sm text-slate-800 dark:text-white"
+                  />
+                  <p className="text-[10px] text-slate-400 font-medium">Please check your inbox at the new email address for the verification code.</p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1">

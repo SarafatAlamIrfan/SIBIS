@@ -544,7 +544,7 @@ exports.changePassword = async (req, res, next) => {
 // @access  Private (Authenticated)
 exports.updateProfile = async (req, res, next) => {
   try {
-    const { name, avatar, phone, bio, email } = req.body;
+    const { name, avatar, phone, bio, email, otp } = req.body;
 
     const user = await User.findById(req.user._id);
     if (!user) {
@@ -555,13 +555,36 @@ exports.updateProfile = async (req, res, next) => {
     if (avatar !== undefined) user.avatar = avatar;
     if (phone !== undefined) user.phone = phone.trim();
     if (bio !== undefined) user.bio = bio.trim();
+    
     if (email && email.toLowerCase().trim() !== user.email.toLowerCase()) {
       const emailLower = email.toLowerCase().trim();
+
+      if (!otp) {
+        return res.status(400).json({ error: 'A verification code is required to update your email address.' });
+      }
+
+      const otpRecord = otpStore.get(emailLower);
+      if (!otpRecord) {
+        return res.status(400).json({ error: 'No verification record found. Please request a verification code.' });
+      }
+
+      if (Date.now() > otpRecord.expiresAt) {
+        otpStore.delete(emailLower);
+        return res.status(400).json({ error: 'Verification code has expired. Please request a new code.' });
+      }
+
+      if (otpRecord.code !== otp.toString().trim()) {
+        return res.status(400).json({ error: 'Invalid verification code. Please check and try again.' });
+      }
+
       const existingUser = await User.findOne({ email: emailLower });
       if (existingUser) {
-        return res.status(400).json({ error: 'This email address is already in use by another account.' });
+        otpStore.delete(emailLower);
+        return res.status(400).json({ error: 'This email address is already registered under another account.' });
       }
+
       user.email = emailLower;
+      otpStore.delete(emailLower);
     }
 
     await user.save();
