@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import ThemeSelector from './ThemeSelector';
 import API from '../services/api';
-import { LogOut, User, Sun, Moon, Bell } from 'lucide-react';
+import { LogOut, User, Sun, Moon, Bell, BarChart3 } from 'lucide-react';
 
 const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode }) => {
   const { currentUser, logout } = useAuth();
@@ -67,8 +67,20 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode }
   const badgeClass = roleBadges[currentUser.role] || 'bg-slate-100 text-slate-800 border-slate-200';
 
   return (
-    <header className="h-16 bg-white/80 border-b border-slate-200/50 backdrop-blur-md fixed top-0 right-0 left-64 z-30 flex items-center justify-between px-8 shadow-xs dark:bg-slate-900/80 dark:border-slate-800/60 transition-all duration-300">
+    <header className="h-16 bg-white/80 border-b border-slate-200/50 backdrop-blur-md fixed top-0 right-0 left-0 z-30 flex items-center justify-between px-8 shadow-xs dark:bg-slate-900/80 dark:border-slate-800/60 transition-all duration-300">
       <div className="flex items-center space-x-2">
+        <Link
+          to="/dashboard"
+          className="flex items-center hover:opacity-90 transition-opacity cursor-pointer group mr-6"
+          title="Go to Dashboard Overview"
+        >
+          <div className="p-1.5 rounded-lg shadow-md mr-2.5 group-hover:scale-105 transition-transform duration-200 bg-indigo-600">
+            <BarChart3 className="w-4.5 h-4.5 text-white animate-pulse" />
+          </div>
+          <span className="text-base font-black tracking-widest bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">
+            SIBIS
+          </span>
+        </Link>
       </div>
 
       <div className="flex items-center space-x-3 sm:space-x-4">

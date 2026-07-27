@@ -30,15 +30,17 @@ const Layout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
-      <Sidebar />
-      <div className="pl-64 min-h-screen flex flex-col">
-        <Navbar darkMode={darkMode} toggleDarkMode={toggleMode} />
-        <main className="flex-1 p-8 pt-24 overflow-auto animate-[pulse-subtle_2s_ease-out_1]">
-          <div className="max-w-7xl mx-auto">
-            <Outlet />
-          </div>
-        </main>
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 flex flex-col">
+      <Navbar darkMode={darkMode} toggleDarkMode={toggleMode} />
+      <div className="flex flex-1 pt-16 relative">
+        <Sidebar />
+        <div className="flex-1 pl-64 flex flex-col min-h-[calc(100vh-4rem)]">
+          <main className="flex-1 p-8 bg-white dark:bg-slate-900/45 rounded-tl-[32px] border-t border-l border-slate-200/50 dark:border-slate-800/30 shadow-xs overflow-auto animate-[pulse-subtle_2s_ease-out_1]">
+            <div className="max-w-7xl mx-auto">
+              <Outlet />
+            </div>
+          </main>
+        </div>
       </div>
       <AIChatBot />
     </div>
