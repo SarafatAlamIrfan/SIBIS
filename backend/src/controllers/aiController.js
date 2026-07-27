@@ -159,124 +159,112 @@ exports.getInsights = async (req, res, next) => {
       ? (req.user.storeId._id || req.user.storeId).toString()
       : null;
 
-    const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
     let insights = [];
 
-    try {
-      // Try to fetch insights from Python AI service
-      const response = await axios.get(`${aiServiceUrl}/ai/insights`, {
-        params: storeId ? { store_id: storeId } : {}
-      });
-      insights = response.data;
-    } catch (aiError) {
-      console.error('Python AI service failed/offline. Falling back to local Node.js insights:', aiError.message);
+    const filter = {};
+    if (storeId) {
+      filter.storeId = storeId;
+    }
 
-      // Fallback local calculations
-      const filter = {};
-      if (storeId) {
-        filter.storeId = storeId;
+    const products = await Product.find(filter);
+    const sales = await Sale.find(filter);
+
+    if (products.length === 0) {
+      insights = [
+        {
+          id: 'no-products',
+          type: 'info',
+          message: 'No products added yet. Add inventory products to start receiving real-time business insights.',
+          icon: 'Package',
+          color: 'text-indigo-500 bg-indigo-500/10 dark:text-indigo-400 dark:bg-indigo-950/30',
+        },
+      ];
+    } else {
+      // Calculate sales revenue & volume per product
+      const productSalesMap = {};
+      let totalStoreRevenue = 0;
+
+      sales.forEach((sale) => {
+        totalStoreRevenue += sale.totalAmount;
+        sale.items.forEach((item) => {
+          if (item.productId) {
+            const pId = item.productId.toString();
+            if (!productSalesMap[pId]) {
+              productSalesMap[pId] = { qty: 0, revenue: 0 };
+            }
+            productSalesMap[pId].qty += item.quantity;
+            productSalesMap[pId].revenue += item.priceAtSale * item.quantity;
+          }
+        });
+      });
+
+      // A. Top performing product
+      let topProduct = null;
+      let maxRev = -1;
+      products.forEach((p) => {
+        const pData = productSalesMap[p._id.toString()] || { revenue: 0, qty: 0 };
+        if (pData.revenue > maxRev && pData.revenue > 0) {
+          maxRev = pData.revenue;
+          topProduct = { product: p, revenue: pData.revenue, qty: pData.qty };
+        }
+      });
+
+      if (topProduct) {
+        insights.push({
+          id: 'top-product',
+          type: 'positive',
+          message: `"${topProduct.product.name}" is your top performing product generating ৳${topProduct.revenue.toFixed(2)} in total sales revenue (${topProduct.qty} units sold).`,
+          icon: 'TrendingUp',
+          color: 'text-emerald-500 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-950/30',
+        });
       }
 
-      const products = await Product.find(filter);
-      const sales = await Sale.find(filter);
-
-      if (products.length === 0) {
-        insights = [
-          {
-            id: 'no-products',
-            type: 'info',
-            message: 'No products added yet. Add inventory products to start receiving real-time business insights.',
-            icon: 'Package',
-            color: 'text-indigo-500 bg-indigo-500/10 dark:text-indigo-400 dark:bg-indigo-950/30',
-          },
-        ];
-      } else {
-        // Calculate sales revenue & volume per product
-        const productSalesMap = {};
-        let totalStoreRevenue = 0;
-
-        sales.forEach((sale) => {
-          totalStoreRevenue += sale.totalAmount;
-          sale.items.forEach((item) => {
-            if (item.productId) {
-              const pId = item.productId.toString();
-              if (!productSalesMap[pId]) {
-                productSalesMap[pId] = { qty: 0, revenue: 0 };
-              }
-              productSalesMap[pId].qty += item.quantity;
-              productSalesMap[pId].revenue += item.priceAtSale * item.quantity;
-            }
-          });
+      // B. Low stock alert insight
+      const lowStockProducts = products.filter((p) => p.currentStock <= p.minStockThreshold);
+      if (lowStockProducts.length > 0) {
+        const p = lowStockProducts[0];
+        insights.push({
+          id: 'low-stock-alert',
+          type: 'warning',
+          message: `"${p.name}" stock level (${p.currentStock}) is below minimum threshold (${p.minStockThreshold}). Reorder recommended.`,
+          icon: 'AlertTriangle',
+          color: 'text-amber-500 bg-amber-500/10 dark:text-amber-400 dark:bg-amber-950/30',
         });
+      }
 
-        // A. Top performing product
-        let topProduct = null;
-        let maxRev = -1;
-        products.forEach((p) => {
-          const pData = productSalesMap[p._id.toString()] || { revenue: 0, qty: 0 };
-          if (pData.revenue > maxRev && pData.revenue > 0) {
-            maxRev = pData.revenue;
-            topProduct = { product: p, revenue: pData.revenue, qty: pData.qty };
-          }
+      // C. Unsold / Slow-moving stock insight
+      const zeroSalesProduct = products.find(
+        (p) => !productSalesMap[p._id.toString()] || productSalesMap[p._id.toString()].qty === 0
+      );
+      if (zeroSalesProduct) {
+        insights.push({
+          id: 'slow-stock-alert',
+          type: 'negative',
+          message: `"${zeroSalesProduct.name}" has recorded zero sales so far. Consider promotional pricing or placement.`,
+          icon: 'TrendingDown',
+          color: 'text-rose-500 bg-rose-500/10 dark:text-rose-400 dark:bg-rose-950/30',
         });
+      }
 
-        if (topProduct) {
-          insights.push({
-            id: 'top-product',
-            type: 'positive',
-            message: `"${topProduct.product.name}" is your top performing product generating ৳${topProduct.revenue.toFixed(2)} in total sales revenue (${topProduct.qty} units sold).`,
-            icon: 'TrendingUp',
-            color: 'text-emerald-500 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-950/30',
-          });
+      // D. Highest profit margin product
+      let highestMarginProduct = null;
+      let maxMargin = -1;
+      products.forEach((p) => {
+        const margin = p.sellingPrice - p.purchasePrice;
+        if (margin > maxMargin) {
+          maxMargin = margin;
+          highestMarginProduct = { product: p, margin };
         }
+      });
 
-        // B. Low stock alert insight
-        const lowStockProducts = products.filter((p) => p.currentStock <= p.minStockThreshold);
-        if (lowStockProducts.length > 0) {
-          const p = lowStockProducts[0];
-          insights.push({
-            id: 'low-stock-alert',
-            type: 'warning',
-            message: `"${p.name}" stock level (${p.currentStock}) is below minimum threshold (${p.minStockThreshold}). Reorder recommended.`,
-            icon: 'AlertTriangle',
-            color: 'text-amber-500 bg-amber-500/10 dark:text-amber-400 dark:bg-amber-950/30',
-          });
-        }
-
-        // C. Unsold / Slow-moving stock insight
-        const zeroSalesProduct = products.find(
-          (p) => !productSalesMap[p._id.toString()] || productSalesMap[p._id.toString()].qty === 0
-        );
-        if (zeroSalesProduct) {
-          insights.push({
-            id: 'slow-stock-alert',
-            type: 'negative',
-            message: `"${zeroSalesProduct.name}" has recorded zero sales so far. Consider promotional pricing or placement.`,
-            icon: 'TrendingDown',
-            color: 'text-rose-500 bg-rose-500/10 dark:text-rose-400 dark:bg-rose-950/30',
-          });
-        }
-
-        // D. Highest profit margin product
-        let highestMarginProduct = null;
-        let maxMargin = -1;
-        products.forEach((p) => {
-          const margin = p.sellingPrice - p.purchasePrice;
-          if (margin > maxMargin) {
-            maxMargin = margin;
-            highestMarginProduct = { product: p, margin };
-          }
+      if (highestMarginProduct && highestMarginProduct.margin > 0) {
+        insights.push({
+          id: 'high-margin',
+          type: 'info',
+          message: `"${highestMarginProduct.product.name}" offers your highest unit profit margin (৳${highestMarginProduct.margin.toFixed(2)} profit per unit).`,
+          icon: 'DollarSign',
+          color: 'text-indigo-500 bg-indigo-500/10 dark:text-indigo-400 dark:bg-indigo-950/30',
         });
-
-        if (highestMarginProduct && highestMarginProduct.margin > 0) {
-          insights.push({
-            id: 'high-margin',
-            type: 'info',
-            message: `"${highestMarginProduct.product.name}" offers your highest unit profit margin (৳${highestMarginProduct.margin.toFixed(2)} profit per unit).`,
-            icon: 'DollarSign',
-            color: 'text-indigo-500 bg-indigo-500/10 dark:text-indigo-400 dark:bg-indigo-950/30',
-          });
-        }
       }
     }
 
