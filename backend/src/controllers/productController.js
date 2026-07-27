@@ -245,3 +245,65 @@ exports.getExpiringProducts = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Set or clear discount on a product
+// @route   PUT /api/products/:id/discount
+// @access  Private (Owner, Manager)
+exports.setProductDiscount = async (req, res, next) => {
+  try {
+    const { discountType, discountValue, discountLabel, discountExpiry } = req.body;
+
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found.' });
+    }
+
+    // Store isolation
+    if (req.user.role !== 'System Admin' && product.storeId?.toString() !== req.user.storeId?._id?.toString()) {
+      return res.status(403).json({ error: 'Unauthorized to modify products from another store.' });
+    }
+
+    const validTypes = ['none', 'percentage', 'fixed'];
+    if (!validTypes.includes(discountType)) {
+      return res.status(400).json({ error: 'Invalid discount type. Use none, percentage, or fixed.' });
+    }
+
+    if (discountType !== 'none') {
+      const val = parseFloat(discountValue);
+      if (isNaN(val) || val <= 0) {
+        return res.status(400).json({ error: 'Discount value must be a positive number.' });
+      }
+      if (discountType === 'percentage' && val > 100) {
+        return res.status(400).json({ error: 'Percentage discount cannot exceed 100%.' });
+      }
+      if (discountType === 'fixed' && val >= product.sellingPrice) {
+        return res.status(400).json({ error: 'Fixed discount cannot be greater than or equal to the selling price.' });
+      }
+    }
+
+    product.discountType = discountType;
+    product.discountValue = discountType === 'none' ? 0 : parseFloat(discountValue);
+    product.discountLabel = discountType === 'none' ? '' : (discountLabel || '').trim();
+    product.discountExpiry = discountType === 'none' ? null : (discountExpiry ? new Date(discountExpiry) : null);
+
+    await product.save();
+
+    // Audit log
+    const logActivity = require('../utils/activityLogger');
+    const discountSummary = discountType === 'none'
+      ? `discount removed from "${product.name}"`
+      : `${discountType === 'percentage' ? discountValue + '%' : '৳' + discountValue} discount applied to "${product.name}"${discountLabel ? ` (${discountLabel})` : ''}`;
+
+    await logActivity({
+      storeId: product.storeId,
+      user: req.user,
+      actionCategory: 'Inventory Stock',
+      actionDescription: `${req.user.name} ${discountSummary}`,
+    });
+
+    const updated = await Product.findById(product._id).populate('supplierId', 'name contactPerson phone');
+    res.status(200).json(updated);
+  } catch (error) {
+    next(error);
+  }
+};

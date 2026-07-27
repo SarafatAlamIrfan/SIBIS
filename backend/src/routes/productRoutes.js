@@ -9,6 +9,7 @@ const {
   getLowStockProducts,
   getInventoryHistory,
   getExpiringProducts,
+  setProductDiscount,
 } = require('../controllers/productController');
 const { protect, restrictTo } = require('../middleware/authMiddleware');
 
@@ -32,5 +33,9 @@ router.route('/:id')
   .get(getProductById)
   .put(restrictTo('Owner', 'Manager', 'Inventory Staff'), updateProduct)
   .delete(restrictTo('Owner', 'Manager'), deleteProduct);
+
+// Discount management — Owner and Manager only
+router.route('/:id/discount')
+  .put(restrictTo('Owner', 'Manager'), setProductDiscount);
 
 module.exports = router;
