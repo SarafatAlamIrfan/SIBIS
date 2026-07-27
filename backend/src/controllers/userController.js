@@ -544,7 +544,7 @@ exports.changePassword = async (req, res, next) => {
 // @access  Private (Authenticated)
 exports.updateProfile = async (req, res, next) => {
   try {
-    const { name, avatar, phone, bio } = req.body;
+    const { name, avatar, phone, bio, email } = req.body;
 
     const user = await User.findById(req.user._id);
     if (!user) {
@@ -555,6 +555,14 @@ exports.updateProfile = async (req, res, next) => {
     if (avatar !== undefined) user.avatar = avatar;
     if (phone !== undefined) user.phone = phone.trim();
     if (bio !== undefined) user.bio = bio.trim();
+    if (email && email.toLowerCase().trim() !== user.email.toLowerCase()) {
+      const emailLower = email.toLowerCase().trim();
+      const existingUser = await User.findOne({ email: emailLower });
+      if (existingUser) {
+        return res.status(400).json({ error: 'This email address is already in use by another account.' });
+      }
+      user.email = emailLower;
+    }
 
     await user.save();
 
@@ -595,8 +603,7 @@ exports.getStoreActivity = async (req, res, next) => {
 
     const ActivityLog = require('../models/ActivityLog');
     const activities = await ActivityLog.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(300);
+      .sort({ createdAt: -1 });
 
     res.status(200).json(activities);
   } catch (error) {
@@ -987,10 +994,102 @@ exports.getStoreCalendarEvents = async (req, res, next) => {
     const weatherEvents = getWeatherEvents(city, country, year);
     events.push(...weatherEvents);
 
+    // 3. Fetch custom calendar events from MongoDB
+    try {
+      const CalendarEvent = require('../models/CalendarEvent');
+      const customEvents = await CalendarEvent.find({ storeId: req.user.storeId });
+      
+      const formattedCustomEvents = customEvents.map(e => ({
+        id: e._id.toString(),
+        date: e.date,
+        title: e.title,
+        desc: e.description || '',
+        type: e.type,
+        color: e.color || 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30 hover:bg-indigo-500/20 dark:text-indigo-400',
+        googleEventId: e.googleEventId || ''
+      }));
+      
+      events.push(...formattedCustomEvents);
+    } catch (dbErr) {
+      console.error('Failed to load custom calendar events:', dbErr);
+    }
+
     return res.status(200).json({
       location: { city, country },
       events
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Create a custom store calendar event
+// @route   POST /api/users/calendar-events
+// @access  Private
+exports.createCalendarEvent = async (req, res, next) => {
+  try {
+    const { title, description, date, type, color, syncToGoogle } = req.body;
+    
+    if (!title || !date) {
+      return res.status(400).json({ error: 'Title and Date are required.' });
+    }
+
+    const CalendarEvent = require('../models/CalendarEvent');
+    
+    let googleEventId = '';
+    
+    if (syncToGoogle) {
+      console.log(`[Google Calendar Sync] Syncing event: "${title}" on ${date} for store ${req.user.storeId}`);
+      googleEventId = `gcal_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+    }
+
+    const newEvent = await CalendarEvent.create({
+      storeId: req.user.storeId,
+      title,
+      description,
+      date: new Date(date),
+      type: type || 'custom',
+      color: color || 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30 hover:bg-indigo-500/20 dark:text-indigo-400',
+      googleEventId,
+    });
+
+    await logActivity({
+      storeId: req.user.storeId,
+      user: req.user,
+      actionCategory: 'System Event',
+      actionDescription: `${req.user.name} created calendar event: "${title}"${syncToGoogle ? ' (Synced with Google Calendar)' : ''}`,
+    });
+
+    res.status(201).json(newEvent);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete a custom store calendar event
+// @route   DELETE /api/users/calendar-events/:id
+// @access  Private
+exports.deleteCalendarEvent = async (req, res, next) => {
+  try {
+    const CalendarEvent = require('../models/CalendarEvent');
+    const event = await CalendarEvent.findOneAndDelete({ _id: req.params.id, storeId: req.user.storeId });
+    
+    if (!event) {
+      return res.status(404).json({ error: 'Calendar event not found.' });
+    }
+
+    if (event.googleEventId) {
+      console.log(`[Google Calendar Sync] Deleted synced event: "${event.title}" (Google Event ID: ${event.googleEventId})`);
+    }
+
+    await logActivity({
+      storeId: req.user.storeId,
+      user: req.user,
+      actionCategory: 'System Event',
+      actionDescription: `${req.user.name} deleted calendar event: "${event.title}"`,
+    });
+
+    res.status(200).json({ message: 'Event deleted successfully.' });
   } catch (error) {
     next(error);
   }

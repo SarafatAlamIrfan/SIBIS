@@ -29,12 +29,26 @@ const Profile = () => {
   // Profile Edit Form State
   const [profileData, setFormData] = useState({
     name: currentUser?.name || '',
+    email: currentUser?.email || '',
     phone: currentUser?.phone || '',
     bio: currentUser?.bio || '',
     avatar: currentUser?.avatar || '',
   });
 
   const [avatarPreview, setAvatarPreview] = useState(currentUser?.avatar || '');
+
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        bio: currentUser.bio || '',
+        avatar: currentUser.avatar || '',
+      });
+      setAvatarPreview(currentUser.avatar || '');
+    }
+  }, [currentUser]);
 
   // Password Change Form State
   const [passData, setPassData] = useState({
@@ -337,14 +351,15 @@ const Profile = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-700 dark:text-slate-300 font-bold">Email Address (Read Only)</label>
+              <label className="text-slate-700 dark:text-slate-300 font-bold">Email Address</label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="email"
-                  disabled
-                  value={currentUser?.email || ''}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-500 dark:text-slate-400 cursor-not-allowed font-semibold"
+                  placeholder="name@example.com"
+                  value={profileData.email}
+                  onChange={(e) => setFormData({ ...profileData, email: e.target.value })}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold"
                 />
               </div>
             </div>

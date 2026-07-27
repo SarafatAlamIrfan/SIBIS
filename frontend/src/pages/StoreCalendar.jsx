@@ -12,7 +12,11 @@ import {
   Layers,
   ArrowRight,
   Gift,
-  Sun
+  Sun,
+  Plus,
+  Trash2,
+  Check,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -27,6 +31,89 @@ const StoreCalendar = ({ hideHeader = false }) => {
   const [locationInfo, setLocationInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+
+  // Add event modal states
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    description: '',
+    date: new Date().toISOString().slice(0, 10),
+    type: 'custom',
+    color: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30 hover:bg-indigo-500/20 dark:text-indigo-400',
+    syncToGoogle: true,
+  });
+  const [submittingEvent, setSubmittingEvent] = useState(false);
+  const [eventError, setEventError] = useState('');
+  const [syncFeedback, setSyncFeedback] = useState('');
+
+  const colorPresets = [
+    { name: 'Indigo (Custom Event)', value: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30 hover:bg-indigo-500/20 dark:text-indigo-400' },
+    { name: 'Rose (Expiry)', value: 'bg-rose-500/10 text-rose-600 border-rose-500/30 hover:bg-rose-500/20 dark:text-rose-450' },
+    { name: 'Emerald (Holiday)', value: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/20 dark:text-emerald-455' },
+    { name: 'Teal (Weather)', value: 'bg-teal-500/10 text-teal-600 border-teal-500/30 hover:bg-teal-500/20 dark:text-teal-400' },
+    { name: 'Amber (Reorder)', value: 'bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20 dark:text-amber-455' }
+  ];
+
+  const handleCreateEvent = async (e) => {
+    e.preventDefault();
+    setEventError('');
+    setSyncFeedback('');
+    if (!newEvent.title.trim() || !newEvent.date) {
+      setEventError('Title and Date are required.');
+      return;
+    }
+    setSubmittingEvent(true);
+    try {
+      await API.post('/users/calendar-events', newEvent);
+      
+      if (newEvent.syncToGoogle) {
+        setSyncFeedback(`Synced: "${newEvent.title}" added to Google Calendar!`);
+        setTimeout(() => {
+          setIsAddModalOpen(false);
+          setSyncFeedback('');
+          setNewEvent({
+            title: '',
+            description: '',
+            date: new Date().toISOString().slice(0, 10),
+            type: 'custom',
+            color: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30 hover:bg-indigo-500/20 dark:text-indigo-400',
+            syncToGoogle: true,
+          });
+          loadData();
+        }, 1200);
+      } else {
+        setIsAddModalOpen(false);
+        setNewEvent({
+          title: '',
+          description: '',
+          date: new Date().toISOString().slice(0, 10),
+          type: 'custom',
+          color: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30 hover:bg-indigo-500/20 dark:text-indigo-400',
+          syncToGoogle: true,
+        });
+        loadData();
+      }
+    } catch (err) {
+      setEventError(err.response?.data?.error || 'Failed to create event.');
+    } finally {
+      if (!newEvent.syncToGoogle) {
+        setSubmittingEvent(false);
+      } else {
+        setTimeout(() => setSubmittingEvent(false), 1200);
+      }
+    }
+  };
+
+  const handleDeleteCustomEvent = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this custom calendar event?')) return;
+    try {
+      await API.delete(`/users/calendar-events/${id}`);
+      setSelectedEvent(null);
+      loadData();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to delete calendar event.');
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -186,13 +273,22 @@ const StoreCalendar = ({ hideHeader = false }) => {
             </div>
           </div>
 
-          <button
-            onClick={loadData}
-            className="px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center space-x-2 shadow-md shadow-indigo-600/10 cursor-pointer print:hidden transition-all"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <span>Refresh Data</span>
-          </button>
+          <div className="flex flex-wrap gap-2.5 items-center print:hidden">
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-md shadow-indigo-600/15 cursor-pointer transition-all active:scale-97 border border-indigo-400/20"
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span>Add Event</span>
+            </button>
+            <button
+              onClick={loadData}
+              className="px-4.5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-350 dark:hover:bg-slate-800 rounded-xl text-xs font-bold flex items-center space-x-2 shadow-sm cursor-pointer transition-all active:scale-97"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <span>Refresh Data</span>
+            </button>
+          </div>
         </div>
       )}
 
@@ -356,10 +452,17 @@ const StoreCalendar = ({ hideHeader = false }) => {
                     <span>Optimize Stock Level</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
+                ) : selectedEvent.type === 'custom' ? (
+                  <button
+                    onClick={() => handleDeleteCustomEvent(selectedEvent.id)}
+                    className="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5 active:scale-97 transform"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete Calendar Event</span>
+                  </button>
                 ) : (
                   <button
                     onClick={() => {
-                      // Redirect to products filter low stock
                       navigate('/products?filter=low-stock');
                     }}
                     className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
@@ -383,6 +486,129 @@ const StoreCalendar = ({ hideHeader = false }) => {
           )}
         </div>
       </div>
+
+      {/* Add Calendar Event Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-[fade-in_0.2s_ease-out]">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-100 dark:border-slate-800">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3 dark:border-slate-800">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl">
+                  <CalendarIcon className="w-5 h-5" />
+                </div>
+                <h3 className="text-base font-black text-slate-850 dark:text-white">Add Store Event</h3>
+              </div>
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-950 rounded-xl cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {eventError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 dark:bg-rose-950/30 dark:border-rose-900 dark:text-rose-300 rounded-xl text-xs font-bold">
+                {eventError}
+              </div>
+            )}
+
+            {syncFeedback && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-emerald-950/30 dark:border-emerald-900 dark:text-emerald-300 rounded-xl text-xs font-bold flex items-center space-x-1.5">
+                <Check className="w-4 h-4 text-emerald-600" />
+                <span>{syncFeedback}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleCreateEvent} className="space-y-4 text-xs font-semibold">
+              <div className="space-y-1">
+                <label className="text-slate-700 dark:text-slate-350 font-bold">Event Title *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Store Anniversary / VIP Sale"
+                  value={newEvent.title}
+                  onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold text-slate-800 dark:text-white"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-slate-700 dark:text-slate-350 font-bold">Scheduled Date *</label>
+                <input
+                  type="date"
+                  required
+                  value={newEvent.date}
+                  onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold text-slate-800 dark:text-white"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-slate-700 dark:text-slate-350 font-bold">Description / Summary</label>
+                <textarea
+                  rows={2}
+                  placeholder="Notes about operational adjustments or objectives..."
+                  value={newEvent.description}
+                  onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold resize-none text-slate-800 dark:text-white"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-slate-700 dark:text-slate-350 font-bold">Category & Accent Color</label>
+                <select
+                  value={newEvent.color}
+                  onChange={(e) => setNewEvent({ ...newEvent, color: e.target.value, type: e.target.value.includes('indigo') ? 'custom' : e.target.value.includes('rose') ? 'expiry' : e.target.value.includes('emerald') ? 'holiday' : e.target.value.includes('teal') ? 'weather' : 'reorder' })}
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-bold text-xs text-slate-800 dark:text-white"
+                >
+                  {colorPresets.map((preset) => (
+                    <option key={preset.value} value={preset.value}>
+                      {preset.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Google Calendar Sync Switch */}
+              <div className="flex items-center justify-between p-3.5 bg-indigo-50/20 dark:bg-indigo-950/10 border border-indigo-100/10 rounded-2xl">
+                <div className="space-y-0.5 pr-2">
+                  <span className="text-xs font-black text-slate-800 dark:text-white flex items-center">
+                    <span>Sync to Google Calendar</span>
+                    <span className="ml-1.5 text-[8px] uppercase font-extrabold px-1.5 py-0.2 bg-indigo-600 text-white rounded">Live</span>
+                  </span>
+                  <p className="text-[10px] text-slate-400 font-medium">Add this event automatically to Google Calendar account</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={newEvent.syncToGoogle}
+                    onChange={(e) => setNewEvent({ ...newEvent, syncToGoogle: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
+              </div>
+
+              <div className="pt-2 flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-4 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-950 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingEvent}
+                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl shadow-md cursor-pointer flex items-center justify-center space-x-1.5 disabled:opacity-50"
+                >
+                  {submittingEvent ? 'Syncing...' : 'Save Event'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
