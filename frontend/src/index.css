@@ -8,16 +8,10 @@
   --animate-float-delayed: float-delayed 10s ease-in-out infinite;
   --animate-pulse-subtle: pulse-subtle 3s ease-in-out infinite;
   --animate-shimmer: shimmer 2.5s linear infinite;
-  --animate-blink: blink 0.8s infinite;
   
   --shadow-neon-indigo: 0 0 15px rgba(99, 102, 241, 0.4);
   --shadow-neon-rose: 0 0 15px rgba(244, 63, 94, 0.4);
   --shadow-neon-emerald: 0 0 15px rgba(16, 185, 129, 0.4);
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
 }
 
 @keyframes float-slow {

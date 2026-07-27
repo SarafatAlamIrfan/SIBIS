@@ -6,35 +6,6 @@ import ThemeSelector from './ThemeSelector';
 import API from '../services/api';
 import { LogOut, User, Sun, Moon, Bell, BarChart3, Menu, X as CloseIcon } from 'lucide-react';
 
-const TypewriterText = ({ storeName }) => {
-  const fullText = `${storeName || 'Store'} by SIBIS`;
-  const [displayText, setDisplayText] = useState('');
-
-  useEffect(() => {
-    let index = 0;
-    setDisplayText('');
-    const interval = setInterval(() => {
-      setDisplayText((prev) => {
-        const nextChar = fullText.charAt(index);
-        index++;
-        if (index > fullText.length) {
-          clearInterval(interval);
-        }
-        return prev + nextChar;
-      });
-    }, 120);
-
-    return () => clearInterval(interval);
-  }, [storeName]);
-
-  return (
-    <span className="text-[11px] sm:text-xs md:text-sm font-mono font-black tracking-wide bg-gradient-to-r from-indigo-500 via-indigo-650 to-purple-500 bg-clip-text text-transparent select-none whitespace-nowrap">
-      {displayText}
-      <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-indigo-500 dark:bg-indigo-400 animate-blink select-none align-middle"></span>
-    </span>
-  );
-};
-
 const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode, onToggleSidebar, isSidebarOpen }) => {
   const { currentUser, logout } = useAuth();
   const { darkMode: ctxDarkMode, toggleMode } = useTheme();
@@ -43,6 +14,41 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode, 
 
   const darkMode = propsDarkMode !== undefined ? propsDarkMode : ctxDarkMode;
   const handleToggle = propsToggleDarkMode || toggleMode;
+
+  // Typewriter brand title animation
+  const storeName = currentUser?.storeId?.name || 'Retail Store';
+  const fullText = `${storeName} by SIBIS`;
+  const [charCount, setCharCount] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    const handleType = () => {
+      if (!isDeleting) {
+        if (charCount < fullText.length) {
+          setCharCount((prev) => prev + 1);
+        } else {
+          // Pause at fully typed state
+          timer = setTimeout(() => setIsDeleting(true), 2500);
+          return;
+        }
+      } else {
+        if (charCount > 0) {
+          setCharCount((prev) => prev - 1);
+        } else {
+          // Pause at fully cleared state
+          timer = setTimeout(() => setIsDeleting(false), 800);
+          return;
+        }
+      }
+      
+      const speed = isDeleting ? 40 : 100;
+      timer = setTimeout(handleType, speed);
+    };
+
+    timer = setTimeout(handleType, isDeleting ? 40 : 100);
+    return () => clearTimeout(timer);
+  }, [charCount, isDeleting, fullText]);
 
   useEffect(() => {
     const fetchAlerts = async () => {
@@ -115,7 +121,17 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode, 
           <div className="p-1.5 rounded-lg shadow-md mr-2.5 group-hover:scale-105 transition-transform duration-200 bg-indigo-600">
             <BarChart3 className="w-4.5 h-4.5 text-white animate-pulse" />
           </div>
-          <TypewriterText storeName={currentUser?.storeId?.name} />
+          <span className="text-xs sm:text-base font-black tracking-widest uppercase flex items-center whitespace-nowrap">
+            <span className="bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">
+              {fullText.slice(0, Math.min(charCount, storeName.length))}
+            </span>
+            {charCount > storeName.length && (
+              <span className="text-slate-400 dark:text-slate-500 ml-1.5">
+                {fullText.slice(storeName.length, charCount)}
+              </span>
+            )}
+            <span className="w-0.5 h-3 sm:h-4 bg-indigo-500 dark:bg-indigo-400 ml-0.5 animate-pulse"></span>
+          </span>
         </Link>
       </div>
 
