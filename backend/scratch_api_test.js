@@ -54,6 +54,14 @@ async function runTests() {
 
   // 1. Check MongoDB connectivity first
   const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/sibis';
+  
+  if (!mongoUri.includes('localhost') && !mongoUri.includes('127.0.0.1')) {
+    console.error('\n\x1b[31m🚨 CRITICAL SAFETY SHIELD: Running integration tests on a remote database is BLOCKED to prevent data loss.\x1b[0m');
+    console.error(`Current MONGO_URI: ${mongoUri}`);
+    console.error('Please update backend/.env to use a local MongoDB URI (e.g. mongodb://localhost:27017/sibis) before running tests.\n');
+    process.exit(1);
+  }
+
   console.log(`Connecting to MongoDB at: ${mongoUri}`);
   
   try {
