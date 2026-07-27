@@ -108,7 +108,7 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode }
 
           <button
             onClick={handleLogout}
-            className="flex items-center text-xs font-black text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-450 transition-colors duration-150 cursor-pointer py-2 px-3 rounded-xl hover:bg-rose-50/50 dark:hover:bg-rose-950/20 border border-transparent hover:border-rose-250/20"
+            className="flex items-center text-xs font-black text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors duration-150 cursor-pointer py-2 px-3 rounded-xl hover:bg-rose-50/50 dark:hover:bg-rose-950/20 border border-transparent hover:border-rose-250/20"
           >
             <LogOut className="w-3.5 h-3.5 mr-1.5" />
             Logout

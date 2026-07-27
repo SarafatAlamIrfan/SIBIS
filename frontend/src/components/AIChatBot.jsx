@@ -384,7 +384,7 @@ const AIChatBot = () => {
                     <div className="space-y-1">
                       {renderMarkdown(m.text)}
                       {isAi && isLastMessage && isTyping && (
-                        <span className="inline-block w-1.5 h-3.5 bg-indigo-450 ml-1 rounded-sm animate-pulse align-middle" />
+                        <span className="inline-block w-1.5 h-3.5 bg-indigo-400 ml-1 rounded-sm animate-pulse align-middle" />
                       )}
                     </div>
                     <span className="block text-[8px] text-slate-400 mt-2 text-right select-none">
@@ -439,7 +439,7 @@ const AIChatBot = () => {
             {(loading || isTyping) ? (
               <button
                 onClick={handleStopTyping}
-                className="p-2.5 bg-red-650 hover:bg-red-550 text-white rounded-xl shadow-md transition-colors cursor-pointer"
+                className="p-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl shadow-md transition-colors cursor-pointer"
                 title="Stop generation"
               >
                 <Square className="w-4 h-4 fill-white" />
