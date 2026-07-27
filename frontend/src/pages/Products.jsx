@@ -339,11 +339,11 @@ const Products = () => {
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 transform active:scale-97 border ${isActive
                     ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm dark:bg-indigo-500 dark:border-indigo-500'
-                    : 'bg-white text-slate-655 border-slate-200/50 hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:border-slate-850 hover:border-slate-300'
+                    : 'bg-white text-slate-600 border-slate-200/50 hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:border-slate-800 hover:border-slate-300'
                   }`}
               >
                 <span>{cat}</span>
-                <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-black ${isActive ? 'bg-indigo-700/80 text-white' : 'bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-550'
+                <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-black ${isActive ? 'bg-indigo-700/80 text-white' : 'bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-500'
                   }`}>
                   {count}
                 </span>
@@ -355,14 +355,14 @@ const Products = () => {
         {/* Search Input */}
         <div className="relative w-full md:w-80">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-slate-405" />
+            <Search className="h-4 w-4 text-slate-400" />
           </div>
           <input
             type="text"
             placeholder="Search by product name or SKU..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-slate-805 bg-white placeholder-slate-405 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+            className="block w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-slate-805 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
           />
         </div>
       </div>
@@ -371,7 +371,7 @@ const Products = () => {
       <div className="glass-panel border border-slate-200/40 dark:border-slate-800/40 rounded-3xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50/50 border-b border-slate-200/40 text-slate-405 uppercase font-bold tracking-wider dark:bg-slate-950/40 dark:border-slate-850/40">
+            <thead className="bg-slate-50/50 border-b border-slate-200/40 text-slate-400 uppercase font-bold tracking-wider dark:bg-slate-950/40 dark:border-slate-800/40">
               <tr>
                 <th className="px-6 py-4.5">Product Details</th>
                 <th className="px-6 py-4.5">SKU / Barcode</th>
@@ -381,7 +381,7 @@ const Products = () => {
                 <th className="px-6 py-4.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-150 dark:divide-slate-850">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="text-center py-16 text-slate-400 font-bold uppercase tracking-wider">
@@ -394,23 +394,23 @@ const Products = () => {
                   const stockPct = Math.min((product.currentStock / (product.minStockThreshold * 2 || 10)) * 100, 100);
 
                   return (
-                    <tr key={product._id} className="hover:bg-slate-50/30 dark:hover:bg-slate-850/10 transition-colors">
+                    <tr key={product._id} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/10 transition-colors">
                       <td className="px-6 py-4">
                         <div className="space-y-1">
-                          <p className="font-extrabold text-slate-850 dark:text-white text-sm leading-tight">{product.name}</p>
+                          <p className="font-extrabold text-slate-800 dark:text-white text-sm leading-tight">{product.name}</p>
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{product.brand || 'No Brand'}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-950 px-2 py-1 rounded-md text-slate-500 border border-slate-200/20 dark:border-slate-850">
+                        <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-950 px-2 py-1 rounded-md text-slate-500 border border-slate-200/20 dark:border-slate-800">
                           {product.sku}
                         </span>
                       </td>
-                      <td className="px-6 py-4 font-bold text-slate-655 dark:text-slate-350">{product.category}</td>
+                      <td className="px-6 py-4 font-bold text-slate-600 dark:text-slate-350">{product.category}</td>
                       <td className="px-6 py-4">
                         <div className="space-y-0.5 font-bold">
                           <p className="text-slate-400 dark:text-slate-500 text-[10px]">Cost: ৳{product.purchasePrice.toFixed(2)}</p>
-                          <p className="text-slate-805 dark:text-slate-205 text-xs">Sell: <strong className="text-indigo-600 dark:text-indigo-400">৳{product.sellingPrice.toFixed(2)}</strong></p>
+                          <p className="text-slate-805 dark:text-slate-200 text-xs">Sell: <strong className="text-indigo-600 dark:text-indigo-400">৳{product.sellingPrice.toFixed(2)}</strong></p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -453,7 +453,7 @@ const Products = () => {
                           <button
                             onClick={() => openEditModal(product)}
                             title="Edit product"
-                            className="p-2 text-slate-400 hover:text-indigo-650 hover:bg-slate-50 dark:hover:bg-slate-850 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-200/30"
+                            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-200/30"
                           >
                             <Edit3 className="w-4 h-4" />
                           </button>
@@ -481,14 +481,14 @@ const Products = () => {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl border border-slate-100 dark:bg-slate-900 dark:border-slate-800 overflow-y-auto max-h-[90vh]">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-4 dark:border-slate-850">
-              <h3 className="text-xl font-black text-slate-850 dark:text-white flex items-center">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4 dark:border-slate-800">
+              <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center">
                 <BarChart2 className="w-5 h-5 mr-2 text-indigo-500" />
                 {editingProduct ? 'Edit Product' : 'Add New Product'}
               </h3>
               <button
                 onClick={() => setModalOpen(false)}
-                className="text-slate-405 hover:text-slate-655 dark:hover:text-slate-202 cursor-pointer p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-202 cursor-pointer p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -570,6 +570,7 @@ const Products = () => {
                     required
                     value={formData.purchasePrice}
                     onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
+                    onFocus={(e) => e.target.select()}
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
@@ -582,6 +583,7 @@ const Products = () => {
                     required
                     value={formData.sellingPrice}
                     onChange={(e) => setFormData({ ...formData, sellingPrice: e.target.value })}
+                    onFocus={(e) => e.target.select()}
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
@@ -593,6 +595,7 @@ const Products = () => {
                     required
                     value={formData.currentStock}
                     onChange={(e) => setFormData({ ...formData, currentStock: e.target.value })}
+                    onFocus={(e) => e.target.select()}
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
@@ -604,6 +607,7 @@ const Products = () => {
                     required
                     value={formData.minStockThreshold}
                     onChange={(e) => setFormData({ ...formData, minStockThreshold: e.target.value })}
+                    onFocus={(e) => e.target.select()}
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
@@ -627,11 +631,11 @@ const Products = () => {
                 </div>
               </div>
 
-              <div className="flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-850">
+              <div className="flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-center cursor-pointer dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-750"
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-center cursor-pointer dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 >
                   Cancel
                 </button>

@@ -266,7 +266,7 @@ const ReorderList = () => {
 
       {/* Main Table View */}
       <div className="glass-panel border border-slate-200/40 dark:border-slate-800/40 rounded-3xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 dark:border-slate-850 flex items-center justify-between">
+        <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-3 text-xs">
             <input 
               type="checkbox"
@@ -292,7 +292,7 @@ const ReorderList = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50/50 border-b border-slate-200/40 text-slate-405 uppercase font-bold tracking-wider dark:bg-slate-950/40 dark:border-slate-850/40">
+            <thead className="bg-slate-50/50 border-b border-slate-200/40 text-slate-400 uppercase font-bold tracking-wider dark:bg-slate-950/40 dark:border-slate-800/40">
               <tr>
                 <th className="px-6 py-4.5 w-12"></th>
                 <th className="px-6 py-4.5">Product & SKU</th>
@@ -304,7 +304,7 @@ const ReorderList = () => {
                 <th className="px-6 py-4.5 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-150 dark:divide-slate-850">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {reorderItems.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="text-center py-20">
@@ -336,7 +336,7 @@ const ReorderList = () => {
                   return (
                     <tr 
                       key={item.productId}
-                      className={`transition-colors ${isSelected ? 'bg-indigo-50/20 dark:bg-indigo-950/20' : 'hover:bg-slate-50/30 dark:hover:bg-slate-850/10'}`}
+                      className={`transition-colors ${isSelected ? 'bg-indigo-50/20 dark:bg-indigo-950/20' : 'hover:bg-slate-50/30 dark:hover:bg-slate-800/10'}`}
                     >
                       <td className="px-6 py-4">
                         <input
@@ -348,8 +348,8 @@ const ReorderList = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="space-y-1">
-                          <p className="font-extrabold text-slate-850 dark:text-white text-sm leading-tight">{prod.name}</p>
-                          <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-950 px-2 py-0.5 rounded text-slate-500 border border-slate-200/20 dark:border-slate-850">
+                          <p className="font-extrabold text-slate-800 dark:text-white text-sm leading-tight">{prod.name}</p>
+                          <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-950 px-2 py-0.5 rounded text-slate-500 border border-slate-200/20 dark:border-slate-800">
                             {prod.sku}
                           </span>
                         </div>
@@ -395,10 +395,10 @@ const ReorderList = () => {
                           </button>
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-bold text-slate-650 dark:text-slate-350">
+                      <td className="px-6 py-4 font-bold text-slate-600 dark:text-slate-350">
                         ৳{item.purchasePrice.toFixed(2)}
                       </td>
-                      <td className="px-6 py-4 font-black text-slate-850 dark:text-white text-sm">
+                      <td className="px-6 py-4 font-black text-slate-800 dark:text-white text-sm">
                         ৳{lineTotal.toFixed(2)}
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -420,7 +420,7 @@ const ReorderList = () => {
 
         {/* Footer Summary & Purchase Order Conversion CTA */}
         {reorderItems.length > 0 && (
-          <div className="p-6 bg-slate-50/80 dark:bg-slate-950/60 border-t border-slate-200/40 dark:border-slate-850 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="p-6 bg-slate-50/80 dark:bg-slate-950/60 border-t border-slate-200/40 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="space-y-1 text-slate-600 dark:text-slate-400 text-xs">
               <p className="font-semibold">
                 Selected for Order: <strong className="text-slate-900 dark:text-white font-extrabold">{activeReorderItems.length} items</strong>

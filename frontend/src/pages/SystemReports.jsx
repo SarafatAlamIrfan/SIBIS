@@ -301,7 +301,7 @@ const SystemReports = () => {
                       <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">{card.title}</p>
                       <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight mt-1">{card.value}</h3>
                     </div>
-                    <span className="text-[10px] text-slate-450 dark:text-slate-500 font-semibold mt-3 block">{card.desc}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-3 block">{card.desc}</span>
                   </div>
                 ))}
               </div>
@@ -312,7 +312,7 @@ const SystemReports = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-200/40 dark:border-slate-850/40 text-[9px] uppercase tracking-wider font-extrabold text-slate-400">
+                      <tr className="bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-200/40 dark:border-slate-800/40 text-[9px] uppercase tracking-wider font-extrabold text-slate-400">
                         <th className="py-3 px-4">Invoice Number</th>
                         <th className="py-3 px-4">Timestamp</th>
                         <th className="py-3 px-4">Payment Method</th>
@@ -357,7 +357,7 @@ const SystemReports = () => {
                       <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">{card.title}</p>
                       <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight mt-1">{card.value}</h3>
                     </div>
-                    <span className="text-[10px] text-slate-455 dark:text-slate-500 font-semibold mt-3 block">{card.desc}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-3 block">{card.desc}</span>
                   </div>
                 ))}
               </div>
@@ -365,11 +365,11 @@ const SystemReports = () => {
               {/* Alert items summary */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm space-y-3">
-                  <h4 className="font-extrabold text-sm text-slate-850 dark:text-white flex items-center">
+                  <h4 className="font-extrabold text-sm text-slate-800 dark:text-white flex items-center">
                     <span className="w-2 h-2 rounded-full bg-amber-500 mr-2 animate-pulse"></span>
                     Low Stock Products ({inventoryData.lowStockCount} items)
                   </h4>
-                  <p className="text-xs text-slate-450 dark:text-slate-500 font-semibold">Listing products with stock levels at or below safety thresholds.</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-semibold">Listing products with stock levels at or below safety thresholds.</p>
                   <div className="max-h-60 overflow-y-auto pr-2 divide-y divide-slate-100 dark:divide-slate-800/40 text-xs">
                     {products.filter(p => p.currentStock <= p.minStockThreshold).map(p => (
                       <div key={p._id} className="py-2.5 flex justify-between">
@@ -381,16 +381,16 @@ const SystemReports = () => {
                 </div>
 
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm space-y-3">
-                  <h4 className="font-extrabold text-sm text-slate-850 dark:text-white flex items-center">
+                  <h4 className="font-extrabold text-sm text-slate-800 dark:text-white flex items-center">
                     <span className="w-2 h-2 rounded-full bg-rose-500 mr-2"></span>
                     Out of Stock Products ({inventoryData.outOfStockCount} items)
                   </h4>
-                  <p className="text-xs text-slate-450 dark:text-slate-500 font-semibold">Items currently unavailable with zero units in stock.</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-semibold">Items currently unavailable with zero units in stock.</p>
                   <div className="max-h-60 overflow-y-auto pr-2 divide-y divide-slate-100 dark:divide-slate-800/40 text-xs">
                     {products.filter(p => p.currentStock <= 0).map(p => (
                       <div key={p._id} className="py-2.5 flex justify-between">
                         <span className="font-bold text-slate-800 dark:text-slate-200">{p.name}</span>
-                        <span className="font-mono text-rose-600 bg-rose-500/10 dark:text-rose-450 px-2 py-0.5 rounded text-[10px] font-black uppercase">Out of Stock</span>
+                        <span className="font-mono text-rose-600 bg-rose-500/10 dark:text-rose-400 px-2 py-0.5 rounded text-[10px] font-black uppercase">Out of Stock</span>
                       </div>
                     ))}
                   </div>
@@ -408,14 +408,14 @@ const SystemReports = () => {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-base text-slate-950 dark:text-white">Margin Profitability Leaderboard</h3>
-                  <p className="text-[10px] text-slate-450 dark:text-slate-500 font-bold uppercase tracking-wider">Ranked by total profit generated from sales</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Ranked by total profit generated from sales</p>
                 </div>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-200/40 dark:border-slate-850/40 text-[9px] uppercase tracking-wider font-extrabold text-slate-400">
+                    <tr className="bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-200/40 dark:border-slate-800/40 text-[9px] uppercase tracking-wider font-extrabold text-slate-400">
                       <th className="py-3 px-4">Product Name</th>
                       <th className="py-3 px-4 text-center">Unit Margin</th>
                       <th className="py-3 px-4 text-center">Markup %</th>

@@ -201,7 +201,7 @@ const StoreCalendar = ({ hideHeader = false }) => {
         <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
           {/* Calendar Header Controls */}
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-black text-slate-850 dark:text-white">
+            <h3 className="text-lg font-black text-slate-800 dark:text-white">
               {monthName} {currentYear}
             </h3>
             <div className="flex items-center space-x-2">
@@ -250,11 +250,11 @@ const StoreCalendar = ({ hideHeader = false }) => {
                     className={`h-24 p-2 bg-slate-50/50 dark:bg-slate-950/20 border rounded-2xl flex flex-col justify-between overflow-hidden hover:border-indigo-500/25 transition-all ${
                       isToday 
                         ? 'border-indigo-500 dark:border-indigo-500 bg-indigo-500/5 shadow-inner' 
-                        : 'border-slate-200/60 dark:border-slate-850/60'
+                        : 'border-slate-200/60 dark:border-slate-800/60'
                     }`}
                   >
                     <span className={`text-xs font-black self-end px-1.5 py-0.5 rounded-lg ${
-                      isToday ? 'bg-indigo-650 text-white shadow-sm' : 'text-slate-500 dark:text-slate-450'
+                      isToday ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'
                     }`}>
                       {cell.dayNum}
                     </span>
@@ -325,7 +325,7 @@ const StoreCalendar = ({ hideHeader = false }) => {
 
                 <div>
                   <h5 className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Summary</h5>
-                  <p className="text-xs font-semibold text-slate-550 dark:text-slate-400 leading-relaxed mt-1 bg-slate-50 dark:bg-slate-950/30 p-3 rounded-2xl border border-slate-100 dark:border-slate-800/40">
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 leading-relaxed mt-1 bg-slate-50 dark:bg-slate-950/30 p-3 rounded-2xl border border-slate-100 dark:border-slate-800/40">
                     {selectedEvent.desc}
                   </p>
                 </div>
@@ -351,7 +351,7 @@ const StoreCalendar = ({ hideHeader = false }) => {
                 ) : selectedEvent.type === 'weather' ? (
                   <button
                     onClick={() => navigate('/products?filter=low-stock')}
-                    className="w-full py-3 bg-teal-650 hover:bg-teal-550 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
+                    className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
                   >
                     <span>Optimize Stock Level</span>
                     <ArrowRight className="w-4 h-4" />
@@ -362,7 +362,7 @@ const StoreCalendar = ({ hideHeader = false }) => {
                       // Redirect to products filter low stock
                       navigate('/products?filter=low-stock');
                     }}
-                    className="w-full py-3 bg-indigo-650 hover:bg-indigo-550 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
+                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
                   >
                     <span>One-Click Reorder Menu</span>
                     <ArrowRight className="w-4 h-4" />
@@ -372,11 +372,11 @@ const StoreCalendar = ({ hideHeader = false }) => {
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 py-16 space-y-3 text-center">
-              <div className="p-4 bg-slate-50 dark:bg-slate-950 inline-block rounded-full border border-slate-100 dark:border-slate-850">
+              <div className="p-4 bg-slate-50 dark:bg-slate-950 inline-block rounded-full border border-slate-100 dark:border-slate-800">
                 <Info className="w-8 h-8 stroke-1" />
               </div>
               <p className="text-xs font-bold uppercase tracking-wider">No Event Selected</p>
-              <p className="text-[11px] font-semibold text-slate-450 max-w-[200px]">
+              <p className="text-[11px] font-semibold text-slate-400 max-w-[200px]">
                 Click on any calendar day event chip to inspect warning logs and access AI scheduling options.
               </p>
             </div>

@@ -113,7 +113,7 @@ const Notifications = () => {
           </div>
         ) : alertsList.length === 0 ? (
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-12 rounded-3xl text-center space-y-3 shadow-sm">
-            <div className="p-4 bg-slate-50 dark:bg-slate-950 inline-block rounded-full border border-slate-100 dark:border-slate-850">
+            <div className="p-4 bg-slate-50 dark:bg-slate-950 inline-block rounded-full border border-slate-100 dark:border-slate-800">
               <Bell className="w-8 h-8 text-slate-400" />
             </div>
             <p className="font-extrabold text-slate-700 dark:text-slate-350 text-sm uppercase">No Active Alerts</p>
@@ -156,7 +156,7 @@ const Notifications = () => {
                   <div className="pt-2">
                     <button
                       onClick={() => navigate(alert.actionPath)}
-                      className="text-[11px] font-black text-indigo-500 hover:text-indigo-650 flex items-center cursor-pointer transition-colors group"
+                      className="text-[11px] font-black text-indigo-500 hover:text-indigo-600 flex items-center cursor-pointer transition-colors group"
                     >
                       <span>{alert.actionLabel}</span>
                       <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />

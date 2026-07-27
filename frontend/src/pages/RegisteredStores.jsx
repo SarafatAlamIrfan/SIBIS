@@ -174,34 +174,34 @@ const RegisteredStores = () => {
           </span>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-850 p-5 rounded-3xl shadow-sm space-y-2">
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-3xl shadow-sm space-y-2">
           <div className="flex justify-between items-center text-slate-400">
             <span className="text-[10px] font-extrabold uppercase tracking-wider">Platform Products Catalog</span>
             <Package className="w-4 h-4 text-purple-500" />
           </div>
-          <p className="text-2xl font-black text-slate-850 dark:text-white">{stats.totalProducts}</p>
+          <p className="text-2xl font-black text-slate-800 dark:text-white">{stats.totalProducts}</p>
           <span className="text-[10px] text-purple-600 font-bold bg-purple-50 dark:bg-purple-950/40 px-2 py-0.5 rounded-full border border-purple-500/20">
             Across all stores
           </span>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-850 p-5 rounded-3xl shadow-sm space-y-2">
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-3xl shadow-sm space-y-2">
           <div className="flex justify-between items-center text-slate-400">
             <span className="text-[10px] font-extrabold uppercase tracking-wider">Total Platform Sales Volume</span>
             <TrendingUp className="w-4 h-4 text-emerald-500" />
           </div>
-          <p className="text-2xl font-black text-slate-850 dark:text-white">৳{(stats.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+          <p className="text-2xl font-black text-slate-800 dark:text-white">৳{(stats.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
           <span className="text-[10px] text-slate-400 font-bold">
             {stats.totalSalesCount || 0} Total POS Transactions
           </span>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-850 p-5 rounded-3xl shadow-sm space-y-2">
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-3xl shadow-sm space-y-2">
           <div className="flex justify-between items-center text-slate-400">
             <span className="text-[10px] font-extrabold uppercase tracking-wider">System Users</span>
             <Users className="w-4 h-4 text-blue-500" />
           </div>
-          <p className="text-2xl font-black text-slate-850 dark:text-white">{stats.totalUsers}</p>
+          <p className="text-2xl font-black text-slate-800 dark:text-white">{stats.totalUsers}</p>
           <span className="text-[10px] text-blue-600 font-bold bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-full border border-blue-500/20">
             Owners, Managers & Staff
           </span>
@@ -209,7 +209,7 @@ const RegisteredStores = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-850 p-4 rounded-3xl shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 rounded-3xl shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:w-96">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -239,10 +239,10 @@ const RegisteredStores = () => {
       </div>
 
       {/* Registered Stores Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-850 rounded-3xl shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-950 text-slate-400 uppercase font-black tracking-wider border-b border-slate-150 dark:border-slate-850">
+            <thead className="bg-slate-50 dark:bg-slate-950 text-slate-400 uppercase font-black tracking-wider border-b border-slate-100 dark:border-slate-800">
               <tr>
                 <th className="px-6 py-4">Store / Shop Name</th>
                 <th className="px-6 py-4">Business Type</th>
@@ -253,7 +253,7 @@ const RegisteredStores = () => {
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
                   <td colSpan="7" className="text-center py-12 text-slate-400 font-semibold animate-pulse">
@@ -268,14 +268,14 @@ const RegisteredStores = () => {
                 </tr>
               ) : (
                 filteredStores.map((store) => (
-                  <tr key={store._id} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40 transition-colors">
+                  <tr key={store._id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
                         <div className="p-2 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl">
                           <StoreIcon className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="font-extrabold text-slate-850 dark:text-white text-sm">{store.name}</p>
+                          <p className="font-extrabold text-slate-800 dark:text-white text-sm">{store.name}</p>
                           <span className="font-mono text-[10px] text-indigo-500 font-bold">{store.code || 'N/A'}</span>
                         </div>
                       </div>
@@ -302,7 +302,7 @@ const RegisteredStores = () => {
                       {store.productCount || 0} items
                     </td>
 
-                    <td className="px-6 py-4 text-right font-black text-slate-850 dark:text-white">
+                    <td className="px-6 py-4 text-right font-black text-slate-800 dark:text-white">
                       ৳{(store.totalVolume || 0).toFixed(2)}
                     </td>
 
@@ -342,13 +342,13 @@ const RegisteredStores = () => {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-[fade-in_0.2s_ease-out]">
           <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full p-6 space-y-6 shadow-2xl border border-slate-100 dark:border-slate-800 overflow-y-auto max-h-[90vh]">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-4 dark:border-slate-850">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4 dark:border-slate-800">
               <div className="flex items-center space-x-3">
                 <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-2xl">
                   <Building2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-850 dark:text-white">Register New Shop / Store</h3>
+                  <h3 className="text-lg font-black text-slate-800 dark:text-white">Register New Shop / Store</h3>
                   <p className="text-xs text-slate-400">Set up a new tenant business and assign its store owner account.</p>
                 </div>
               </div>
@@ -413,7 +413,7 @@ const RegisteredStores = () => {
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 dark:border-slate-850 pt-3 space-y-3">
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-3">
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Store Owner Account Details</p>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -526,7 +526,7 @@ const RegisteredStores = () => {
                 </div>
               </div>
 
-              <div className="flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-850">
+              <div className="flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}

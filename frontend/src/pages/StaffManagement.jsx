@@ -259,14 +259,14 @@ const StaffManagement = () => {
                   const isCurrentOwner = staff._id === currentUser?._id;
 
                   return (
-                    <tr key={staff._id} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40 transition-colors">
+                    <tr key={staff._id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-3">
                           <div className="p-2 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl">
                             <User className="w-4 h-4" />
                           </div>
                           <div>
-                            <p className="font-extrabold text-slate-850 dark:text-white text-sm">
+                            <p className="font-extrabold text-slate-800 dark:text-white text-sm">
                               {staff.name} {isCurrentOwner && <span className="text-[10px] text-indigo-500 font-bold">(You - Owner)</span>}
                             </p>
                           </div>
@@ -424,7 +424,7 @@ const StaffManagement = () => {
                 </div>
               </div>
 
-              <div className="flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-850">
+              <div className="flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}

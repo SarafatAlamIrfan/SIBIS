@@ -106,7 +106,7 @@ export const ThemeProvider = ({ children }) => {
 
   const [mode, setModeState] = useState(() => {
     const savedMode = localStorage.getItem('sibis_theme_mode') || localStorage.getItem('sibis_theme');
-    if (savedMode) return savedMode;
+    if (savedMode === 'light' || savedMode === 'dark' || savedMode === 'black') return savedMode;
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
 
@@ -117,13 +117,20 @@ export const ThemeProvider = ({ children }) => {
   }, [theme]);
 
   useEffect(() => {
-    // Apply dark class on root element
+    // Apply dark and black classes on root element
     if (mode === 'dark') {
       document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('black');
       localStorage.setItem('sibis_theme_mode', 'dark');
       localStorage.setItem('sibis_theme', 'dark');
+    } else if (mode === 'black') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add('black');
+      localStorage.setItem('sibis_theme_mode', 'black');
+      localStorage.setItem('sibis_theme', 'black');
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove('black');
       localStorage.setItem('sibis_theme_mode', 'light');
       localStorage.setItem('sibis_theme', 'light');
     }
@@ -136,13 +143,17 @@ export const ThemeProvider = ({ children }) => {
   };
 
   const setMode = (newMode) => {
-    if (newMode === 'dark' || newMode === 'light') {
+    if (newMode === 'dark' || newMode === 'light' || newMode === 'black') {
       setModeState(newMode);
     }
   };
 
   const toggleMode = () => {
-    setModeState(prev => (prev === 'dark' ? 'light' : 'dark'));
+    setModeState(prev => {
+      if (prev === 'light') return 'dark';
+      if (prev === 'dark') return 'black';
+      return 'light';
+    });
   };
 
   const currentThemeObj = THEME_PRESETS.find(t => t.id === theme) || THEME_PRESETS[0];
@@ -152,7 +163,7 @@ export const ThemeProvider = ({ children }) => {
       value={{
         theme,
         mode,
-        darkMode: mode === 'dark',
+        darkMode: mode === 'dark' || mode === 'black',
         setTheme,
         setMode,
         toggleMode,

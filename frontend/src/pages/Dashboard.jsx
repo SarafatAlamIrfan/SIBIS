@@ -451,7 +451,7 @@ const Dashboard = () => {
                     <th className="pb-3 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-850/60 font-semibold text-slate-700 dark:text-slate-300">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-700 dark:text-slate-300">
                   {adminStores.slice(0, 5).map((s) => (
                     <tr key={s._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-colors">
                       <td className="py-3 font-bold text-slate-900 dark:text-white flex items-center space-x-2">
@@ -602,7 +602,7 @@ const Dashboard = () => {
         </div>
         <button
           onClick={() => setShowCalendarModal(true)}
-          className="flex items-center space-x-2 text-xs bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/60 p-2.5 rounded-xl shadow-sm hover:border-indigo-500/50 hover:bg-slate-50 dark:hover:bg-slate-850 cursor-pointer transition-all active:scale-95 duration-200"
+          className="flex items-center space-x-2 text-xs bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/60 p-2.5 rounded-xl shadow-sm hover:border-indigo-500/50 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-all active:scale-95 duration-200"
           title="Click to view Operations Calendar"
         >
           <Calendar className="w-4 h-4 text-indigo-500" />
@@ -928,12 +928,12 @@ const Dashboard = () => {
         {/* Top Selling Products */}
         <div className="glass-panel p-6 rounded-3xl shadow-sm space-y-6">
           <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-4">
-            <div className="p-2 bg-gradient-to-br from-indigo-500 to-violet-650 rounded-xl text-white shadow-md">
+            <div className="p-2 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl text-white shadow-md">
               <TrendingUp className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-850 dark:text-white">Top Selling Products</h3>
-              <p className="text-slate-450 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Top 5 items by units sold</p>
+              <h3 className="text-lg font-black text-slate-800 dark:text-white">Top Selling Products</h3>
+              <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Top 5 items by units sold</p>
             </div>
           </div>
 
@@ -971,7 +971,7 @@ const Dashboard = () => {
             </div>
             <div>
               <h3 className="text-lg font-black text-slate-855 dark:text-white">Expiring Soon</h3>
-              <p className="text-slate-450 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Products expiring in less than 30 days</p>
+              <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Products expiring in less than 30 days</p>
             </div>
           </div>
 
@@ -985,7 +985,7 @@ const Dashboard = () => {
                   <div key={idx} className="flex justify-between items-center text-xs py-2.5">
                     <div>
                       <p className="font-extrabold text-slate-800 dark:text-slate-200">{p.name}</p>
-                      <p className="text-[10px] text-slate-450 dark:text-slate-500 mt-0.5 font-semibold">Expiry: {new Date(p.expirationDate).toLocaleDateString()}</p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 font-semibold">Expiry: {new Date(p.expirationDate).toLocaleDateString()}</p>
                     </div>
                     <span className={`text-[9px] font-black uppercase px-2.5 py-0.5 rounded-lg border tracking-wider ${
                       daysLeft <= 7 
@@ -1004,8 +1004,8 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* AI Recommendations */}
-        <div className="glass-panel p-6 rounded-3xl shadow-sm space-y-6">
-          <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div className="glass-panel p-6 rounded-3xl shadow-sm space-y-6 flex flex-col h-[480px]">
+          <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-4 shrink-0">
             <div className="p-2 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl shadow-md shadow-indigo-500/10 text-white">
               <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
@@ -1015,7 +1015,7 @@ const Dashboard = () => {
             </div>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto flex-1 pr-2 custom-scrollbar">
             {aiRecommendations.length === 0 ? (
               <div className="p-8 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-center space-y-1">
                 <p className="font-extrabold text-slate-700 dark:text-slate-300 text-xs">All Stock Levels Healthy</p>
@@ -1058,8 +1058,8 @@ const Dashboard = () => {
         </div>
 
         {/* AI Business Insights */}
-        <div className="glass-panel p-6 rounded-3xl shadow-sm space-y-6">
-          <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div className="glass-panel p-6 rounded-3xl shadow-sm space-y-6 flex flex-col h-[480px]">
+          <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-4 shrink-0">
             <div className="p-2 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl shadow-md shadow-indigo-500/10 text-white">
               <Lightbulb className="w-5 h-5" />
             </div>
@@ -1069,9 +1069,9 @@ const Dashboard = () => {
             </div>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto flex-1 pr-2 custom-scrollbar">
             {aiInsightsSummary && (
-              <div className="relative p-5 rounded-2xl bg-gradient-to-r from-indigo-50/40 via-violet-50/40 to-indigo-50/40 dark:from-indigo-950/20 dark:via-violet-950/20 dark:to-indigo-950/20 border border-indigo-100/40 dark:border-indigo-900/20 overflow-hidden shadow-inner flex items-start space-x-4">
+              <div className="relative p-5 rounded-2xl bg-gradient-to-r from-indigo-50/40 via-violet-50/40 to-indigo-50/40 dark:from-indigo-950/20 dark:via-violet-950/20 dark:to-indigo-950/20 border border-indigo-100/40 dark:border-indigo-900/20 overflow-hidden shadow-inner flex items-start space-x-4 shrink-0">
                 <div className="absolute top-0 right-0 p-2 opacity-[0.03]">
                   <Sparkles className="w-24 h-24 text-indigo-600" />
                 </div>
@@ -1080,7 +1080,7 @@ const Dashboard = () => {
                 </div>
                 <div className="space-y-1 relative z-10">
                   <div className="flex items-center space-x-2">
-                    <span className="text-[10px] text-indigo-650 dark:text-indigo-400 font-extrabold uppercase tracking-wider">AI Executive Brief</span>
+                    <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-extrabold uppercase tracking-wider">AI Executive Brief</span>
                     <span className="flex h-1.5 w-1.5 relative">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-450 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>

@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -34,7 +35,7 @@
 }
 
 :root {
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
   color-scheme: light;
 
   /* Default (Indigo Velvet) Variables */
@@ -162,16 +163,17 @@ body {
 /* Glassmorphism helpers */
 .glass-panel {
   background-color: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dark .glass-panel {
-  background-color: rgba(13, 18, 30, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(30, 41, 59, 0.6);
+  background-color: rgba(13, 18, 30, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Scrollbar styles */
@@ -222,4 +224,174 @@ body {
 
 .dark .receipt-edge::after {
   background-image: linear-gradient(135deg, transparent 50%, #1e293b 50%), linear-gradient(225deg, transparent 50%, #1e293b 50%);
+}
+
+/* =====================================================================
+   DEEP BLACK OLED THEME OVERRIDES
+   ===================================================================== */
+.black body {
+  background-color: #000000 !important;
+  color: #f8fafc;
+}
+
+/* Force backgrounds in deep black */
+.black .min-h-screen,
+.black .bg-slate-900,
+.black .bg-slate-950,
+.black .bg-slate-900\/95,
+.black .bg-slate-950\/95,
+.black .bg-slate-950\/80,
+.black .bg-slate-950\/20,
+.black .bg-slate-950\/40,
+.black .bg-slate-950\/60,
+.black .bg-slate-900\/30,
+.black .bg-slate-50\/50,
+.black .bg-slate-100,
+.black .bg-slate-50,
+.black .bg-slate-100\/70,
+.black .bg-slate-900\/40,
+.black .bg-slate-950\/50,
+.black .dark\:bg-slate-900\/80,
+.black .dark\:bg-slate-950,
+.black .dark\:bg-slate-950\/80,
+.black .dark\:bg-slate-950\/40,
+.black .dark\:bg-slate-950\/20,
+.black .dark\:bg-slate-950\/60,
+.black .dark\:bg-slate-950\/30,
+.black .dark\:bg-slate-900\/30,
+.black .dark\:bg-slate-900\/40,
+.black .dark\:bg-slate-900\/60,
+.black .dark\:bg-slate-900\/10,
+.black .dark\:bg-slate-950\/95,
+.black .dark\:bg-slate-900\/95,
+.black .dark\:bg-slate-900,
+.black .dark\:bg-slate-950\/50,
+.black .bg-white\/60,
+.black .bg-white\/20,
+.black .bg-white\/40,
+.black .dark\:bg-slate-900\/40,
+.black .dark\:bg-slate-900\/20 {
+  background-color: #000000 !important;
+}
+
+/* Glassmorphism overlays in deep black */
+.black .glass-panel,
+.black .dark .glass-panel {
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: rgba(38, 38, 38, 0.7) !important;
+}
+
+/* Borders in deep black */
+.black .border-slate-800,
+.black .border-slate-800\/60,
+.black .border-slate-800\/40,
+.black .border-slate-800\/80,
+.black .border-slate-900\/50,
+.black .border-slate-200\/40,
+.black .border-slate-200\/60,
+.black .border-slate-200\/50,
+.black .border-slate-200,
+.black .border-slate-100,
+.black .border-slate-150\/40,
+.black .border-slate-800\/20,
+.black .border-slate-900\/55,
+.black .border-slate-200\/55,
+.black .border-b,
+.black .border-t,
+.black .border-r,
+.black .border-l,
+.black .divide-y > *,
+.black .divide-x > *,
+.black .dark\:border-slate-900\/50,
+.black .dark\:border-slate-800\/60,
+.black .dark\:border-slate-800\/20,
+.black .dark\:border-slate-850,
+.black .dark\:border-slate-800,
+.black .dark\:border-slate-700,
+.black .dark\:border-slate-700\/50,
+.black .dark\:border-slate-700\/60,
+.black .dark\:border-slate-800\/40 {
+  border-color: #161616 !important;
+}
+
+/* Scrollbar adjustment */
+.black ::-webkit-scrollbar-thumb {
+  background: #222222 !important;
+}
+.black ::-webkit-scrollbar-thumb:hover {
+  background: #333333 !important;
+}
+
+/* Receipt Cut Edge Override */
+.black .receipt-edge::after,
+.black .dark .receipt-edge::after {
+  background-image: linear-gradient(135deg, transparent 50%, #000000 50%), linear-gradient(225deg, transparent 50%, #000000 50%) !important;
+}
+
+/* ==========================================
+   PRINT STYLES: Clean Thermal Receipt & Document Printing
+   ========================================== */
+@media print {
+  /* Hide all app chrome: sidebar, navbar, chatbot, modal backdrops, print buttons */
+  aside,
+  header,
+  nav,
+  button,
+  .print\:hidden,
+  .fixed.bottom-6.right-6 {
+    display: none !important;
+  }
+
+  /* Reset body and root backgrounds to clean white paper */
+  body, html, #root {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Hide backdrop shadows and fixed overlays */
+  .fixed {
+    position: static !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+  }
+
+  /* Thermal Receipt Printable Block */
+  .printable-receipt {
+    display: block !important;
+    position: relative !important;
+    margin: 0 auto !important;
+    width: 80mm !important;
+    max-width: 100% !important;
+    padding: 12px !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+
+  .printable-receipt * {
+    color: #000000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  @page {
+    size: auto;
+    margin: 0mm;
+  }
 }

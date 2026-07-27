@@ -148,15 +148,10 @@ const Sidebar = () => {
         className="h-16 flex items-center px-6 border-b border-slate-800/40 dark:border-slate-900/50 bg-slate-950/20 backdrop-blur-sm hover:bg-slate-800/30 transition-all cursor-pointer group"
         title="Go to Dashboard Overview"
       >
-        <div
-          className="p-1.5 rounded-lg shadow-md mr-3 group-hover:scale-105 transition-transform duration-200"
-          style={{ backgroundColor: currentThemeObj.primaryColor }}
-        >
-          <BarChart3 className="w-5 h-5 text-white animate-[pulse-subtle_2s_infinite]" />
+        <div className="p-1.5 rounded-lg shadow-md mr-3 group-hover:scale-105 transition-transform duration-200 bg-indigo-650">
+          <BarChart3 className="w-5 h-5 text-white animate-pulse" />
         </div>
-        <span
-          className={`text-lg font-black tracking-widest bg-gradient-to-r ${currentThemeObj.darkGradient} bg-clip-text text-transparent group-hover:opacity-90 transition-opacity`}
-        >
+        <span className="text-lg font-black tracking-widest bg-gradient-to-r from-indigo-450 to-violet-450 bg-clip-text text-transparent group-hover:opacity-90 transition-opacity">
           SIBIS
         </span>
       </Link>
@@ -171,17 +166,12 @@ const Sidebar = () => {
               to={item.path}
               className={`flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all duration-300 transform active:scale-97 ${
                 isActive
-                  ? 'text-white shadow-lg border border-white/20'
-                  : 'text-slate-400 hover:bg-slate-800/20 hover:text-slate-100 hover:translate-x-1.5 border border-transparent'
+                  ? 'bg-indigo-650 text-white shadow-lg border border-white/20'
+                  : 'text-slate-450 hover:bg-slate-800/20 hover:text-slate-100 hover:translate-x-1.5 border border-transparent'
               }`}
-              style={
-                isActive
-                  ? { backgroundColor: currentThemeObj.primaryColor }
-                  : {}
-              }
             >
               <div className="flex items-center">
-                <Icon className={`w-4.5 h-4.5 mr-3 transition-colors ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                <Icon className={`w-4.5 h-4.5 mr-3 transition-colors ${isActive ? 'text-white' : 'text-slate-450'}`} />
                 <span>{item.name}</span>
               </div>
               {item.badge && (
@@ -197,19 +187,11 @@ const Sidebar = () => {
       </div>
 
       <div className="p-4 border-t border-slate-800/40 bg-slate-950/40 text-xs space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Active Theme</span>
-          <span className="flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300">
-            <Palette className="w-3 h-3 mr-1" style={{ color: currentThemeObj.primaryColor }} />
-            {currentThemeObj.name.split(' ')[0]}
-          </span>
-        </div>
-
         {currentUser.storeId?.name && (
           <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Active Tenant Store</p>
-            <p className="font-extrabold text-white text-xs truncate flex items-center mt-0.5">
-              <Building2 className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+            <p className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500">Active Tenant Store</p>
+            <p className="font-extrabold text-white text-xs truncate flex items-center mt-1.5">
+              <Building2 className="w-3.5 h-3.5 mr-1.5 text-slate-450" />
               {currentUser.storeId.name}
             </p>
           </div>

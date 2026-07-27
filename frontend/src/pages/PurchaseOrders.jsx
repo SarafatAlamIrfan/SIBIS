@@ -167,7 +167,7 @@ const PurchaseOrders = () => {
       <div className="glass-panel border border-slate-200/40 dark:border-slate-800/40 rounded-3xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50/50 border-b border-slate-200/40 text-slate-405 uppercase font-bold tracking-wider dark:bg-slate-950/40 dark:border-slate-850/40">
+            <thead className="bg-slate-50/50 border-b border-slate-200/40 text-slate-400 uppercase font-bold tracking-wider dark:bg-slate-950/40 dark:border-slate-800/40">
               <tr>
                 <th className="px-6 py-4.5">PO Number</th>
                 <th className="px-6 py-4.5">Supplier</th>
@@ -177,7 +177,7 @@ const PurchaseOrders = () => {
                 <th className="px-6 py-4.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-150 dark:divide-slate-855">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-855">
               {purchaseOrders.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="text-center py-16 text-slate-400 font-bold uppercase tracking-wider">
@@ -186,8 +186,8 @@ const PurchaseOrders = () => {
                 </tr>
               ) : (
                 purchaseOrders.map((po) => {
-                  let statusBadge = 'bg-slate-105 text-slate-655 border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800';
-                  if (po.status === 'Received') statusBadge = 'bg-emerald-550/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400 shadow-neon-emerald/10';
+                  let statusBadge = 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800';
+                  if (po.status === 'Received') statusBadge = 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400 shadow-neon-emerald/10';
                   if (po.status === 'Cancelled') statusBadge = 'bg-rose-550/10 text-rose-600 border-rose-500/20 dark:text-rose-400 shadow-neon-rose/10';
                   if (po.status === 'Ordered') statusBadge = 'bg-blue-550/10 text-blue-600 border-blue-500/20 dark:text-blue-400 shadow-neon-indigo/10';
 
@@ -195,18 +195,18 @@ const PurchaseOrders = () => {
                     <tr 
                       key={po._id} 
                       onClick={() => setViewingPO(po)}
-                      className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40 transition-colors cursor-pointer group select-none"
+                      className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group select-none"
                       title="Click to view purchase order items & details"
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-1.5">
-                          <span className="font-mono font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white px-2 py-1 rounded-md border border-indigo-200/20 dark:border-indigo-900/30 transition-colors">
+                          <span className="font-mono font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white px-2 py-1 rounded-md border border-indigo-200/20 dark:border-indigo-900/30 transition-colors">
                             {po.poNumber}
                           </span>
                           <Eye className="w-3.5 h-3.5 text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-extrabold text-slate-850 dark:text-white text-sm">{po.supplierId?.name || 'Unknown Supplier'}</td>
+                      <td className="px-6 py-4 font-extrabold text-slate-800 dark:text-white text-sm">{po.supplierId?.name || 'Unknown Supplier'}</td>
                       <td className="px-6 py-4 text-slate-500 dark:text-slate-400">
                         <span className="flex items-center text-xs font-bold">
                           <Calendar className="w-3.5 h-3.5 mr-1.5 text-indigo-500" />
@@ -245,7 +245,7 @@ const PurchaseOrders = () => {
                           </div>
                         ) : (
                           <span className="text-[10px] text-slate-400 font-bold flex items-center justify-end uppercase tracking-wider">
-                            <FileText className="w-3.5 h-3.5 mr-1 text-slate-450" />
+                            <FileText className="w-3.5 h-3.5 mr-1 text-slate-400" />
                             Archived {po.receivedDate && `(${new Date(po.receivedDate).toLocaleDateString([], { month: 'short', day: 'numeric' })})`}
                           </span>
                         )}
@@ -263,14 +263,14 @@ const PurchaseOrders = () => {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
           <div className="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-6 shadow-2xl border border-slate-100 dark:bg-slate-900 dark:border-slate-800 overflow-y-auto max-h-[90vh]">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-4 dark:border-slate-850">
-              <h3 className="text-xl font-black text-slate-850 dark:text-white flex items-center">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4 dark:border-slate-800">
+              <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center">
                 <Truck className="w-5 h-5 mr-2 text-indigo-500" />
                 Place Purchase Order
               </h3>
               <button
                 onClick={() => setModalOpen(false)}
-                className="text-slate-405 hover:text-slate-655 dark:hover:text-slate-202 cursor-pointer p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-202 cursor-pointer p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -300,7 +300,7 @@ const PurchaseOrders = () => {
                 <label className="block font-bold">Ordered Items *</label>
                 
                 {poItems.map((item, idx) => (
-                  <div key={idx} className="flex items-center space-x-3 bg-slate-50 dark:bg-slate-950 p-3 rounded-2xl border border-slate-150/50 dark:border-slate-850">
+                  <div key={idx} className="flex items-center space-x-3 bg-slate-50 dark:bg-slate-950 p-3 rounded-2xl border border-slate-100/50 dark:border-slate-800">
                     <div className="flex-1">
                       <select
                         value={item.productId}
@@ -348,18 +348,18 @@ const PurchaseOrders = () => {
                 <button
                   type="button"
                   onClick={handleAddItemRow}
-                  className="px-3.5 py-2 text-[10px] text-indigo-650 hover:text-indigo-800 font-bold border border-indigo-250 border-dashed rounded-xl transition-colors cursor-pointer flex items-center"
+                  className="px-3.5 py-2 text-[10px] text-indigo-600 hover:text-indigo-800 font-bold border border-indigo-250 border-dashed rounded-xl transition-colors cursor-pointer flex items-center"
                 >
                   <PlusCircle className="w-4 h-4 mr-1.5" />
                   Add Another Item
                 </button>
               </div>
 
-              <div className="flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-850">
+              <div className="flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-705 font-bold rounded-xl text-center cursor-pointer dark:bg-slate-800 dark:text-slate-305 dark:hover:bg-slate-750"
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-705 font-bold rounded-xl text-center cursor-pointer dark:bg-slate-800 dark:text-slate-305 dark:hover:bg-slate-700"
                 >
                   Cancel
                 </button>
@@ -379,14 +379,14 @@ const PurchaseOrders = () => {
       {viewingPO && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-[fade-in_0.2s_ease-out]">
           <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 space-y-6 shadow-2xl border border-slate-100 dark:border-slate-800 overflow-y-auto max-h-[90vh]">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-4 dark:border-slate-850">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4 dark:border-slate-800">
               <div className="flex items-center space-x-3">
                 <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-2xl">
                   <FileText className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="flex items-center space-x-2">
-                    <h3 className="text-xl font-black text-slate-850 dark:text-white font-mono">{viewingPO.poNumber}</h3>
+                    <h3 className="text-xl font-black text-slate-800 dark:text-white font-mono">{viewingPO.poNumber}</h3>
                     <span className={`text-[9px] px-2.5 py-0.5 rounded-lg border font-black tracking-wide ${
                       viewingPO.status === 'Received' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400' :
                       viewingPO.status === 'Cancelled' ? 'bg-rose-500/10 text-rose-600 border-rose-500/20 dark:text-rose-400' :
@@ -409,10 +409,10 @@ const PurchaseOrders = () => {
             </div>
 
             {/* Supplier & Order Info Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/60 dark:bg-slate-950/40 p-4 rounded-2xl border border-slate-150/60 dark:border-slate-850">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/60 dark:bg-slate-950/40 p-4 rounded-2xl border border-slate-100/60 dark:border-slate-800">
               <div className="space-y-1.5 text-xs">
                 <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Supplier Information</p>
-                <p className="font-extrabold text-slate-850 dark:text-white text-sm flex items-center">
+                <p className="font-extrabold text-slate-800 dark:text-white text-sm flex items-center">
                   <Truck className="w-4 h-4 mr-1.5 text-indigo-500" />
                   {viewingPO.supplierId?.name || 'Unknown Supplier'}
                 </p>
@@ -452,18 +452,18 @@ const PurchaseOrders = () => {
                       <th className="px-4 py-3 text-right">Subtotal</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {viewingPO.items?.map((item, idx) => {
                       const prodName = item.productId?.name || 'Product Item';
                       const sku = item.productId?.sku || 'N/A';
                       const lineTotal = item.purchasePrice * item.quantityOrdered;
                       return (
-                        <tr key={idx} className="hover:bg-slate-50/40 dark:hover:bg-slate-850/20">
+                        <tr key={idx} className="hover:bg-slate-50/40 dark:hover:bg-slate-800/20">
                           <td className="px-4 py-3 font-extrabold text-slate-800 dark:text-white">{prodName}</td>
                           <td className="px-4 py-3 font-mono text-[10px] text-slate-500">{sku}</td>
                           <td className="px-4 py-3 text-right font-black text-indigo-600 dark:text-indigo-400">{item.quantityOrdered} units</td>
                           <td className="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-400">৳{item.purchasePrice.toFixed(2)}</td>
-                          <td className="px-4 py-3 text-right font-black text-slate-850 dark:text-white">৳{lineTotal.toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right font-black text-slate-800 dark:text-white">৳{lineTotal.toFixed(2)}</td>
                         </tr>
                       );
                     })}
@@ -473,7 +473,7 @@ const PurchaseOrders = () => {
             </div>
 
             {/* Total Cost Breakdown */}
-            <div className="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-850">
+            <div className="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-800">
               <button
                 onClick={() => window.print()}
                 className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5"
@@ -485,7 +485,7 @@ const PurchaseOrders = () => {
               <div className="flex items-center space-x-4">
                 <div className="text-right">
                   <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Purchase Order Cost</p>
-                  <p className="text-2xl font-black text-slate-850 dark:text-white">৳{viewingPO.totalAmount.toFixed(2)}</p>
+                  <p className="text-2xl font-black text-slate-800 dark:text-white">৳{viewingPO.totalAmount.toFixed(2)}</p>
                 </div>
 
                 {viewingPO.status === 'Ordered' && (

@@ -129,7 +129,7 @@ const Home = () => {
               <div className="h-44 bg-white/60 dark:bg-slate-900/40 rounded-2xl border border-slate-200/20 dark:border-slate-800/20 p-4 flex flex-col justify-between">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">7-Day Sales Trend</span>
-                  <span className="text-[9px] bg-emerald-550/10 text-emerald-500 font-bold px-2 py-0.5 rounded-md border border-emerald-500/20">Live</span>
+                  <span className="text-[9px] bg-emerald-500/10 text-emerald-500 font-bold px-2 py-0.5 rounded-md border border-emerald-500/20">Live</span>
                 </div>
                 {/* SVG trend line preview */}
                 <svg className="w-full h-24 mt-2" viewBox="0 0 100 30" preserveAspectRatio="none">
@@ -147,7 +147,7 @@ const Home = () => {
                 <div className="bg-white/60 dark:bg-slate-900/40 border border-slate-200/20 dark:border-slate-800/20 p-4 rounded-2xl flex flex-col justify-between h-24">
                   <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Total Sales</span>
                   <span className="text-xl font-black">৳145,230.00</span>
-                  <span className="text-[9px] text-emerald-550 font-bold">+12.4% vs last week</span>
+                  <span className="text-[9px] text-emerald-500 font-bold">+12.4% vs last week</span>
                 </div>
                 <div className="bg-white/60 dark:bg-slate-900/40 border border-slate-200/20 dark:border-slate-800/20 p-4 rounded-2xl flex flex-col justify-between h-24">
                   <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Stock Alerts</span>
@@ -160,15 +160,15 @@ const Home = () => {
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">AI Recommendations</span>
               <div className="space-y-3.5 my-auto">
                 <div className="p-3 bg-indigo-50 dark:bg-slate-950/50 rounded-xl border border-indigo-100/10">
-                  <p className="text-[10px] font-bold text-indigo-650 dark:text-indigo-400">📈 Stock Optimization Alert</p>
+                  <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">📈 Stock Optimization Alert</p>
                   <p className="text-[9px] text-slate-500 mt-1 leading-relaxed">Basmati Rice sales grew by 15%. Order 25 more bags to prevent depletion.</p>
                 </div>
                 <div className="p-3 bg-amber-50 dark:bg-slate-950/50 rounded-xl border border-amber-100/10">
-                  <p className="text-[10px] font-bold text-amber-655 dark:text-amber-405">⚠️ Slow-Moving Stock</p>
+                  <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400">⚠️ Slow-Moving Stock</p>
                   <p className="text-[9px] text-slate-500 mt-1 leading-relaxed">Chocolate Biscuits have zero sales in 30 days. Avoid re-ordering.</p>
                 </div>
               </div>
-              <button disabled className="w-full py-2.5 bg-indigo-600/10 text-indigo-650 dark:text-indigo-400 text-[10px] font-bold rounded-xl border border-indigo-500/10">
+              <button disabled className="w-full py-2.5 bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold rounded-xl border border-indigo-500/10">
                 AI Diagnostics Active
               </button>
             </div>

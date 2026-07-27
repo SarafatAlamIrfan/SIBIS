@@ -7,10 +7,10 @@ const CalendarModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-6 overflow-y-auto">
-      <div className="bg-slate-50 dark:bg-slate-950 w-full max-w-6xl rounded-3xl overflow-hidden shadow-2xl relative border border-slate-200/40 dark:border-slate-850 max-h-[90vh] flex flex-col animate-[fade-in_0.3s_ease-out]">
+      <div className="bg-slate-50 dark:bg-slate-950 w-full max-w-6xl rounded-3xl overflow-hidden shadow-2xl relative border border-slate-200/40 dark:border-slate-800 max-h-[90vh] flex flex-col animate-[fade-in_0.3s_ease-out]">
         
         {/* Header bar */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200/40 dark:border-slate-850 bg-white dark:bg-slate-900 select-none">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200/40 dark:border-slate-800 bg-white dark:bg-slate-900 select-none">
           <div className="flex items-center space-x-2">
             <span className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
               Operations Calendar & AI Scheduler Overview

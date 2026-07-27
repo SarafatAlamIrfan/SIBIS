@@ -152,7 +152,7 @@ const Suppliers = () => {
                 <div className="p-6 space-y-4">
                   <div className="flex justify-between items-start">
                     <div className="space-y-1 max-w-[170px]">
-                      <h3 className="font-extrabold text-lg text-slate-850 dark:text-white leading-tight truncate" title={supplier.name}>
+                      <h3 className="font-extrabold text-lg text-slate-800 dark:text-white leading-tight truncate" title={supplier.name}>
                         {supplier.name}
                       </h3>
                       {supplier.contactPerson && (
@@ -164,14 +164,14 @@ const Suppliers = () => {
                     </div>
                     <span className={`text-[9px] px-2.5 py-1 rounded-lg border font-black tracking-wide ${
                       isActive 
-                        ? 'bg-emerald-550/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400' 
+                        ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400' 
                         : 'bg-slate-100 text-slate-500 border-slate-200/25 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700/50'
                     }`}>
                       {supplier.status.toUpperCase()}
                     </span>
                   </div>
 
-                  <div className="space-y-2.5 text-xs text-slate-655 dark:text-slate-350 font-medium">
+                  <div className="space-y-2.5 text-xs text-slate-600 dark:text-slate-350 font-medium">
                     <p className="flex items-center">
                       <Phone className="w-4 h-4 mr-2 text-indigo-400" />
                       {supplier.phone}
@@ -191,17 +191,17 @@ const Suppliers = () => {
                   </div>
                 </div>
 
-                <div className="px-6 py-4.5 bg-slate-50/50 border-t border-slate-200/40 flex justify-end space-x-2 dark:bg-slate-950/20 dark:border-slate-850/40">
+                <div className="px-6 py-4.5 bg-slate-50/50 border-t border-slate-200/40 flex justify-end space-x-2 dark:bg-slate-950/20 dark:border-slate-800/40">
                   <button
                     onClick={() => openEditModal(supplier)}
-                    className="px-3.5 py-2 bg-white text-slate-700 hover:text-indigo-650 border border-slate-200 rounded-xl text-[10px] font-bold cursor-pointer transition-colors dark:bg-slate-900 dark:text-slate-300 dark:border-slate-750 dark:hover:text-indigo-400"
+                    className="px-3.5 py-2 bg-white text-slate-700 hover:text-indigo-600 border border-slate-200 rounded-xl text-[10px] font-bold cursor-pointer transition-colors dark:bg-slate-900 dark:text-slate-300 dark:border-slate-700 dark:hover:text-indigo-400"
                   >
                     Edit Profile
                   </button>
                   {isActive && (
                     <button
                       onClick={() => handleDelete(supplier._id)}
-                      className="px-3.5 py-2 bg-white text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-xl text-[10px] font-bold cursor-pointer transition-all dark:bg-slate-900 dark:border-slate-750 dark:hover:bg-rose-950"
+                      className="px-3.5 py-2 bg-white text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-xl text-[10px] font-bold cursor-pointer transition-all dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-rose-950"
                     >
                       Deactivate
                     </button>
@@ -217,14 +217,14 @@ const Suppliers = () => {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl border border-slate-100 dark:bg-slate-900 dark:border-slate-800">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-4 dark:border-slate-850">
-              <h3 className="text-xl font-black text-slate-850 dark:text-white flex items-center">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4 dark:border-slate-800">
+              <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center">
                 <Users className="w-5 h-5 mr-2 text-indigo-500" />
                 {editingSupplier ? 'Edit Supplier' : 'Add New Supplier'}
               </h3>
               <button
                 onClick={() => setModalOpen(false)}
-                className="text-slate-405 hover:text-slate-655 dark:hover:text-slate-202 cursor-pointer p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-202 cursor-pointer p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -245,7 +245,7 @@ const Suppliers = () => {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2.5 border border-slate-205 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
                 <div>
@@ -254,7 +254,7 @@ const Suppliers = () => {
                     type="text"
                     value={formData.contactPerson}
                     onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                    className="w-full px-3 py-2.5 border border-slate-205 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
                 <div>
@@ -264,7 +264,7 @@ const Suppliers = () => {
                     required
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3 py-2.5 border border-slate-205 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
                 <div>
@@ -273,7 +273,7 @@ const Suppliers = () => {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2.5 border border-slate-205 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
                 <div>
@@ -282,7 +282,7 @@ const Suppliers = () => {
                     rows="2"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full px-3 py-2.5 border border-slate-205 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-850 dark:text-white"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
                 {editingSupplier && (
@@ -291,7 +291,7 @@ const Suppliers = () => {
                     <select
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-slate-205 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                     >
                       <option value="Active">Active</option>
                       <option value="Inactive">Inactive</option>
@@ -300,11 +300,11 @@ const Suppliers = () => {
                 )}
               </div>
 
-              <div className="flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-850">
+              <div className="flex space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-center cursor-pointer dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-750"
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-center cursor-pointer dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 >
                   Cancel
                 </button>

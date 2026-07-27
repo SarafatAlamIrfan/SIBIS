@@ -175,7 +175,7 @@ const InventoryHistory = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-200/40 dark:border-slate-850/40 text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
+                <tr className="bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-200/40 dark:border-slate-800/40 text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
                   <th className="py-4 px-6">Timestamp</th>
                   <th className="py-4 px-6">Product Details</th>
                   <th className="py-4 px-6">Change Type</th>
@@ -210,7 +210,7 @@ const InventoryHistory = () => {
                         <p className="font-extrabold text-slate-800 dark:text-slate-200 text-sm">
                           {log.productId?.name || 'Deleted Product'}
                         </p>
-                        <p className="text-[10px] text-slate-450 dark:text-slate-500 font-mono mt-0.5">
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">
                           SKU: {log.productId?.sku || 'N/A'}
                         </p>
                       </td>

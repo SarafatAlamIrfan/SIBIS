@@ -297,7 +297,7 @@ const RegisterStorePage = () => {
       <div className="relative z-10 w-full max-w-xl bg-white/80 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800/80 backdrop-blur-xl p-8 md:p-10 rounded-3xl shadow-2xl transition-all duration-300 space-y-6">
         {/* Registration Stepper Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center p-3.5 bg-gradient-to-br from-indigo-600 to-violet-650 rounded-2xl shadow-lg shadow-indigo-600/20">
+          <div className="inline-flex items-center justify-center p-3.5 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl shadow-lg shadow-indigo-600/20">
             {step === 1 ? <Building2 className="h-8 w-8 text-white" /> : <ShieldCheck className="h-8 w-8 text-white" />}
           </div>
           <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
@@ -493,7 +493,7 @@ const RegisterStorePage = () => {
             </div>
 
             {/* Owner Account Group */}
-            <div className="space-y-3 border-t border-slate-100 dark:border-slate-850 pt-3">
+            <div className="space-y-3 border-t border-slate-100 dark:border-slate-800 pt-3">
               <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. Owner Account & Security</p>
 
               <div className="space-y-1">
@@ -708,7 +708,7 @@ const RegisterStorePage = () => {
           </form>
         )}
 
-        <div className="text-center pt-2 border-t border-slate-100 dark:border-slate-850">
+        <div className="text-center pt-2 border-t border-slate-100 dark:border-slate-800">
           <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">
             Already have a registered store?{' '}
             <Link to="/login" className="text-indigo-600 dark:text-indigo-400 hover:underline">

@@ -370,7 +370,7 @@ const Login = () => {
               <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-4">
                 <div className="flex items-center space-x-2">
                   <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  <h3 className="text-sm font-black text-slate-850 dark:text-white">Developer Offline Controls</h3>
+                  <h3 className="text-sm font-black text-slate-800 dark:text-white">Developer Offline Controls</h3>
                 </div>
                 <button
                   onClick={() => setDevDrawerOpen(false)}
@@ -407,7 +407,7 @@ const Login = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-center">
-                            <h4 className="font-bold text-xs text-slate-850 dark:text-white">{role.name}</h4>
+                            <h4 className="font-bold text-xs text-slate-800 dark:text-white">{role.name}</h4>
                             {isActive && <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest bg-indigo-500/10 px-2 py-0.5 rounded-md">Selected</span>}
                           </div>
                           <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold truncate mt-0.5">{role.desc}</p>
@@ -422,7 +422,7 @@ const Login = () => {
             <div className="border-t border-slate-200 dark:border-slate-800 pt-4 mt-8 flex justify-end">
               <button
                 onClick={() => setDevDrawerOpen(false)}
-                className="w-full py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-850 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-center cursor-pointer text-xs transition-colors"
+                className="w-full py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-center cursor-pointer text-xs transition-colors"
               >
                 Close Drawer
               </button>

@@ -343,7 +343,7 @@ const AIChatBot = () => {
       {isOpen && (
         <div className="mb-4 w-80 sm:w-96 h-[480px] bg-slate-900/95 dark:bg-slate-950/95 border border-slate-800/80 rounded-3xl shadow-2xl backdrop-blur-xl flex flex-col overflow-hidden animate-[fade-in-up_0.25s_ease-out_1]">
           {/* Header */}
-          <div className="p-4 bg-gradient-to-r from-indigo-650 to-violet-650 text-white flex items-center justify-between border-b border-indigo-500/20 shadow-md">
+          <div className="p-4 bg-gradient-to-r from-indigo-600 to-violet-600 text-white flex items-center justify-between border-b border-indigo-500/20 shadow-md">
             <div className="flex items-center space-x-2.5">
               <div className="p-1.5 bg-white/10 rounded-xl shadow-inner">
                 <Sparkles className="w-5 h-5 text-indigo-300 animate-pulse" />
@@ -379,7 +379,7 @@ const AIChatBot = () => {
                   <div className={`max-w-[80%] p-3.5 rounded-2xl text-xs font-semibold leading-relaxed shadow-sm ${
                     isAi
                       ? 'bg-slate-800/85 text-slate-100 rounded-tl-none border border-slate-800/60'
-                      : 'bg-indigo-650 text-white rounded-tr-none'
+                      : 'bg-indigo-600 text-white rounded-tr-none'
                   }`}>
                     <div className="space-y-1">
                       {renderMarkdown(m.text)}
@@ -448,7 +448,7 @@ const AIChatBot = () => {
               <button
                 onClick={() => handleSend()}
                 disabled={!inputText.trim()}
-                className="p-2.5 bg-indigo-650 hover:bg-indigo-550 text-white rounded-xl shadow-md transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="p-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-md transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 title="Send message"
               >
                 <Send className="w-4 h-4" />
@@ -461,7 +461,7 @@ const AIChatBot = () => {
       {/* Floating circular button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-4 bg-gradient-to-br from-indigo-500 via-indigo-650 to-violet-650 hover:from-indigo-600 hover:to-violet-600 text-white rounded-full shadow-2xl border border-indigo-400/20 cursor-pointer transform active:scale-95 transition-all duration-300 flex items-center justify-center hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] group"
+        className="p-4 bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 hover:from-indigo-600 hover:to-violet-600 text-white rounded-full shadow-2xl border border-indigo-400/20 cursor-pointer transform active:scale-95 transition-all duration-300 flex items-center justify-center hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] group"
         title="Open SIBIS AI Advisor Chat"
       >
         <MessageSquare className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />

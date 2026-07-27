@@ -95,7 +95,7 @@ const StoreProfile = () => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-96 space-y-4">
-        <div className="w-10 h-10 border-4 border-indigo-650 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-slate-400 dark:text-slate-500 font-semibold text-xs tracking-wider animate-pulse">
           RETRIEVING STORE PROFILE...
         </p>
@@ -119,10 +119,10 @@ const StoreProfile = () => {
         ></div>
 
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10">
-          <div className="p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200/40 dark:border-slate-850 rounded-3xl flex items-center justify-center flex-shrink-0 relative shadow-inner">
+          <div className="p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200/40 dark:border-slate-800 rounded-3xl flex items-center justify-center flex-shrink-0 relative shadow-inner">
             <Building2 className="w-14 h-14" style={{ color: currentThemeObj.primaryColor }} />
-            <span className="absolute -bottom-1.5 bg-emerald-550 text-white p-1 rounded-full shadow-md">
-              <CheckCircle2 className="w-3.5 h-3.5 fill-emerald-550" />
+            <span className="absolute -bottom-1.5 bg-emerald-500 text-white p-1 rounded-full shadow-md">
+              <CheckCircle2 className="w-3.5 h-3.5 fill-emerald-500" />
             </span>
           </div>
 
@@ -150,7 +150,7 @@ const StoreProfile = () => {
               </div>
             </div>
 
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-850 flex flex-wrap items-center justify-center md:justify-start gap-x-5 gap-y-1.5 text-slate-500 dark:text-slate-400 text-xs font-semibold">
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-center md:justify-start gap-x-5 gap-y-1.5 text-slate-500 dark:text-slate-400 text-xs font-semibold">
               <div className="flex items-center">
                 <Globe className="w-4 h-4 mr-1.5 text-slate-400" />
                 <span>{storeInfo?.city}, {storeInfo?.country}</span>
@@ -304,7 +304,7 @@ const StoreProfile = () => {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full md:w-auto px-6 py-3 bg-indigo-650 hover:bg-indigo-550 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/10 cursor-pointer flex items-center justify-center space-x-2 transition-all active:scale-97 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full md:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/10 cursor-pointer flex items-center justify-center space-x-2 transition-all active:scale-97 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className="w-4 h-4" />
                   <span>{saving ? 'Saving changes...' : 'Save Store Details'}</span>
@@ -349,7 +349,7 @@ const StoreProfile = () => {
               SaaS Subscription Details
             </h3>
             
-            <div className="space-y-3 font-semibold text-xs text-slate-650 dark:text-slate-400 leading-relaxed">
+            <div className="space-y-3 font-semibold text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
               <div className="flex items-center space-x-2">
                 <Award className="w-4.5 h-4.5 text-amber-500" />
                 <span className="text-slate-800 dark:text-slate-200 font-black">Plan Level: {storeInfo?.subscriptionPlan}</span>
