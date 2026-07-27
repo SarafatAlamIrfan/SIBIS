@@ -4,9 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import ThemeSelector from './ThemeSelector';
 import API from '../services/api';
-import { LogOut, User, Sun, Moon, Bell, BarChart3 } from 'lucide-react';
+import { LogOut, User, Sun, Moon, Bell, BarChart3, Menu, X as CloseIcon } from 'lucide-react';
 
-const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode }) => {
+const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode, onToggleSidebar, isSidebarOpen }) => {
   const { currentUser, logout } = useAuth();
   const { darkMode: ctxDarkMode, toggleMode } = useTheme();
   const [activeAlertsCount, setActiveAlertsCount] = useState(0);
@@ -67,8 +67,17 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode }
   const badgeClass = roleBadges[currentUser.role] || 'bg-slate-100 text-slate-800 border-slate-200';
 
   return (
-    <header className="h-16 bg-white/80 border-b border-slate-200/50 backdrop-blur-md fixed top-0 right-0 left-0 z-30 flex items-center justify-between px-8 shadow-xs dark:bg-slate-900/80 dark:border-slate-800/60 transition-all duration-300">
+    <header className="h-16 bg-white/80 border-b border-slate-200/50 backdrop-blur-md fixed top-0 right-0 left-0 z-30 flex items-center justify-between px-4 sm:px-8 shadow-xs dark:bg-slate-900/80 dark:border-slate-800/60 transition-all duration-300">
       <div className="flex items-center space-x-2">
+        {/* Mobile Hamburger toggle button */}
+        <button
+          onClick={onToggleSidebar}
+          className="p-2 rounded-xl text-slate-600 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden cursor-pointer border border-slate-200/40 dark:border-slate-700/40 focus:outline-none transition-all active:scale-95 mr-1"
+          aria-label="Toggle Navigation Sidebar"
+        >
+          {isSidebarOpen ? <CloseIcon className="w-4.5 h-4.5" /> : <Menu className="w-4.5 h-4.5" />}
+        </button>
+
         <Link
           to="/dashboard"
           className="flex items-center hover:opacity-90 transition-opacity cursor-pointer group mr-6"
@@ -118,7 +127,7 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode }
                 <User className="w-4 h-4 text-slate-655 dark:text-slate-300 group-hover:text-indigo-600 transition-colors" />
               )}
             </div>
-            <div className="flex flex-col text-left">
+            <div className="hidden md:flex flex-col text-left">
               <span className="font-bold text-slate-800 text-xs dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-none">
                 {currentUser.name}
               </span>
@@ -126,7 +135,7 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode }
                 {currentUser.email}
               </span>
             </div>
-            <span className={`text-[9px] px-2 py-0.5 rounded-md border font-extrabold shadow-sm ${badgeClass}`}>
+            <span className={`hidden sm:inline-block text-[9px] px-2 py-0.5 rounded-md border font-extrabold shadow-sm ${badgeClass}`}>
               {currentUser.role}
             </span>
           </Link>
@@ -136,7 +145,7 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode }
             className="flex items-center text-xs font-black text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors duration-150 cursor-pointer py-2 px-3 rounded-xl hover:bg-rose-50/50 dark:hover:bg-rose-950/20 border border-transparent hover:border-rose-250/20"
           >
             <LogOut className="w-3.5 h-3.5 mr-1.5" />
-            Logout
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </div>

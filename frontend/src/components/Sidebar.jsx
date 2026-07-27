@@ -21,7 +21,7 @@ import {
   Bell 
 } from 'lucide-react';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
   const { currentUser } = useAuth();
   const { currentThemeObj } = useTheme();
   const location = useLocation();
@@ -160,7 +160,9 @@ const Sidebar = () => {
   const categoriesList = ['ADMINISTRATION', 'CONSOLE', 'MANAGEMENT', 'PERSONAL CENTER'];
 
   return (
-    <div className="fixed top-16 bottom-0 left-0 z-20 w-64 bg-white border-r border-slate-200/60 dark:bg-slate-950 dark:border-slate-900/50 flex flex-col transition-all duration-300">
+    <div className={`fixed top-16 bottom-0 left-0 z-20 w-64 bg-white border-r border-slate-200/60 dark:bg-slate-950 dark:border-slate-900/50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+      isOpen ? 'translate-x-0' : '-translate-x-full'
+    }`}>
       <div className="flex-1 py-4 pr-3 pl-0 space-y-4 overflow-y-auto custom-scrollbar">
         {categoriesList.map((catName) => {
           const catItems = visibleItems.filter(item => item.category === catName);
