@@ -6,6 +6,35 @@ import ThemeSelector from './ThemeSelector';
 import API from '../services/api';
 import { LogOut, User, Sun, Moon, Bell, BarChart3, Menu, X as CloseIcon } from 'lucide-react';
 
+const TypewriterText = ({ storeName }) => {
+  const fullText = `${storeName || 'Store'} by SIBIS`;
+  const [displayText, setDisplayText] = useState('');
+
+  useEffect(() => {
+    let index = 0;
+    setDisplayText('');
+    const interval = setInterval(() => {
+      setDisplayText((prev) => {
+        const nextChar = fullText.charAt(index);
+        index++;
+        if (index > fullText.length) {
+          clearInterval(interval);
+        }
+        return prev + nextChar;
+      });
+    }, 120);
+
+    return () => clearInterval(interval);
+  }, [storeName]);
+
+  return (
+    <span className="text-[11px] sm:text-xs md:text-sm font-mono font-black tracking-wide bg-gradient-to-r from-indigo-500 via-indigo-650 to-purple-500 bg-clip-text text-transparent select-none whitespace-nowrap">
+      {displayText}
+      <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-indigo-500 dark:bg-indigo-400 animate-blink select-none align-middle"></span>
+    </span>
+  );
+};
+
 const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode, onToggleSidebar, isSidebarOpen }) => {
   const { currentUser, logout } = useAuth();
   const { darkMode: ctxDarkMode, toggleMode } = useTheme();
@@ -86,9 +115,7 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode, 
           <div className="p-1.5 rounded-lg shadow-md mr-2.5 group-hover:scale-105 transition-transform duration-200 bg-indigo-600">
             <BarChart3 className="w-4.5 h-4.5 text-white animate-pulse" />
           </div>
-          <span className="text-base font-black tracking-widest bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">
-            SIBIS
-          </span>
+          <TypewriterText storeName={currentUser?.storeId?.name} />
         </Link>
       </div>
 
