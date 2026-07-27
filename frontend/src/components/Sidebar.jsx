@@ -142,7 +142,7 @@ const Sidebar = () => {
   const visibleItems = menuItems.filter(item => item.roles.includes(role));
 
   return (
-    <div className="fixed inset-y-0 left-0 z-20 w-64 bg-slate-900 border-r border-slate-800/60 dark:bg-slate-950/80 dark:border-slate-900/50 backdrop-blur-xl flex flex-col transition-all duration-300">
+    <div className="fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 border-r border-slate-800/60 dark:bg-slate-950/80 dark:border-slate-900/50 backdrop-blur-xl flex flex-col transition-all duration-300">
       <Link
         to="/dashboard"
         className="h-16 flex items-center px-6 border-b border-slate-800/40 dark:border-slate-900/50 bg-slate-950/20 backdrop-blur-sm hover:bg-slate-800/30 transition-all cursor-pointer group"
