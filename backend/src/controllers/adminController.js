@@ -2,6 +2,25 @@ const Store = require('../models/Store');
 const User = require('../models/User');
 const Product = require('../models/Product');
 const Sale = require('../models/Sale');
+const PlatformLog = require('../models/PlatformLog');
+
+// Helper: write a platform-level log entry
+const logPlatformEvent = async ({ actor, eventCategory, eventDescription, affectedStore, details }) => {
+  try {
+    await PlatformLog.create({
+      performedBy: actor?._id || null,
+      actorName: actor?.name || 'System',
+      actorRole: actor?.role || 'System',
+      eventCategory,
+      eventDescription,
+      affectedStoreId: affectedStore?._id || null,
+      affectedStoreName: affectedStore?.name || null,
+      details: details || {},
+    });
+  } catch (err) {
+    console.error('[PlatformLog] Failed to write platform log:', err.message);
+  }
+};
 
 // @desc    Get all registered stores with aggregate metrics
 // @route   GET /api/admin/stores
@@ -87,6 +106,15 @@ const createStore = async (req, res) => {
     store.ownerId = ownerUser._id;
     await store.save();
 
+    // Log platform event: new store registered by admin
+    await logPlatformEvent({
+      actor: req.user,
+      eventCategory: 'Store Registration',
+      eventDescription: `Admin registered new store "${name}" for owner ${ownerName} (${ownerEmail}) in ${city}, ${country}`,
+      affectedStore: store,
+      details: { ownerName, ownerEmail, city, country, businessType, subscriptionPlan },
+    });
+
     const populatedStore = await Store.findById(store._id).populate('ownerId', 'name email phone role');
 
     res.status(201).json({
@@ -116,6 +144,8 @@ const toggleStoreStatus = async (req, res) => {
       return res.status(404).json({ error: 'Store not found.' });
     }
 
+    const previousStatus = store.status;
+
     if (status && ['Active', 'Suspended', 'Trial'].includes(status)) {
       store.status = status;
     } else {
@@ -123,6 +153,15 @@ const toggleStoreStatus = async (req, res) => {
     }
 
     await store.save();
+
+    // Log platform event: store status changed
+    await logPlatformEvent({
+      actor: req.user,
+      eventCategory: 'Store Status Change',
+      eventDescription: `Store "${store.name}" status changed from ${previousStatus} → ${store.status}`,
+      affectedStore: store,
+      details: { previousStatus, newStatus: store.status },
+    });
 
     res.status(200).json({
       message: `Store status updated to ${store.status}`,
@@ -165,9 +204,24 @@ const getPlatformStats = async (req, res) => {
   }
 };
 
+// @desc    Get platform-level activity log (admin only)
+// @route   GET /api/admin/platform-logs
+// @access  Private (System Admin)
+const getPlatformLogs = async (req, res) => {
+  try {
+    const logs = await PlatformLog.find()
+      .sort({ createdAt: -1 });
+    res.status(200).json(logs);
+  } catch (error) {
+    console.error('Error fetching platform logs:', error.message);
+    res.status(500).json({ error: 'Failed to fetch platform activity logs.' });
+  }
+};
+
 module.exports = {
   getAllStores,
   createStore,
   toggleStoreStatus,
   getPlatformStats,
+  getPlatformLogs,
 };

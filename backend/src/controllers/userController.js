@@ -1,6 +1,25 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const logActivity = require('../utils/activityLogger');
+const PlatformLog = require('../models/PlatformLog');
+
+// Helper: log a platform-level event (no storeId required)
+const logPlatformEvent = async ({ actor, eventCategory, eventDescription, affectedStore, details }) => {
+  try {
+    await PlatformLog.create({
+      performedBy: actor?._id || null,
+      actorName: actor?.name || 'System',
+      actorRole: actor?.role || 'System',
+      eventCategory,
+      eventDescription,
+      affectedStoreId: affectedStore?._id || null,
+      affectedStoreName: affectedStore?.name || null,
+      details: details || {},
+    });
+  } catch (err) {
+    console.error('[PlatformLog] Failed to write platform log:', err.message);
+  }
+};
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || 'super-secret-key-change-in-production', {
@@ -281,6 +300,15 @@ exports.registerStore = async (req, res, next) => {
 
     // Clean up OTP store
     otpStore.delete(emailLower);
+
+    // Log platform event: self-service store registration
+    await logPlatformEvent({
+      actor: user,
+      eventCategory: 'Store Registration',
+      eventDescription: `New store "${storeName}" self-registered by ${ownerName} (${emailLower}) in ${city}, ${country}`,
+      affectedStore: store,
+      details: { ownerName, ownerEmail: emailLower, city, country, businessType },
+    });
 
     const token = generateToken(user._id);
 
