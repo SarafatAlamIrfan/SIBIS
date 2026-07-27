@@ -26,7 +26,10 @@ const Notifications = () => {
     return JSON.parse(localStorage.getItem('sibis_read_alerts') || '[]');
   });
 
+  const isSystemAdmin = currentUser?.role === 'System Admin';
+
   const loadAlerts = async () => {
+    if (isSystemAdmin) return; // Admin has no store — no store alerts
     setLoading(true);
     try {
       const [lowStockRes, expiringRes] = await Promise.all([
@@ -43,8 +46,10 @@ const Notifications = () => {
   };
 
   useEffect(() => {
-    loadAlerts();
-  }, []);
+    if (!isSystemAdmin) {
+      loadAlerts();
+    }
+  }, [isSystemAdmin]);
 
   const markAsRead = (id) => {
     setReadAlerts((prev) => {
@@ -147,7 +152,21 @@ const Notifications = () => {
 
       {/* Stream */}
       <div className="max-w-3xl space-y-4">
-        {loading ? (
+        {isSystemAdmin ? (
+          <div className="bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-900/60 p-10 rounded-3xl text-center space-y-4 shadow-sm">
+            <div className="p-4 bg-indigo-50 dark:bg-indigo-950/40 inline-block rounded-full border border-indigo-100 dark:border-indigo-900">
+              <Bell className="w-8 h-8 text-indigo-500" />
+            </div>
+            <p className="font-extrabold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wide">Platform Admin View</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 font-semibold max-w-sm mx-auto leading-relaxed">
+              As a Site Administrator, you do not receive individual store inventory or expiration alerts.
+              Store-specific notifications are scoped only to their respective store teams.
+            </p>
+            <p className="text-[11px] text-indigo-500 dark:text-indigo-400 font-bold">
+              Use the Admin Panel to monitor platform-wide activity across all stores.
+            </p>
+          </div>
+        ) : loading ? (
           <div className="text-center py-20 text-slate-400 font-semibold animate-pulse">
             Loading real-time notifications...
           </div>

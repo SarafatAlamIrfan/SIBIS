@@ -54,6 +54,11 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode, 
     const fetchAlerts = async () => {
       try {
         if (!currentUser) return;
+        // System Admin has no store — never show store alerts in badge
+        if (currentUser.role === 'System Admin') {
+          setActiveAlertsCount(0);
+          return;
+        }
         const [lowStockRes, expiringRes] = await Promise.all([
           API.get('/products/low-stock'),
           API.get('/products/expiring')
