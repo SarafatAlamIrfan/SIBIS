@@ -11,71 +11,140 @@ exports.getRecommendations = async (req, res, next) => {
       ? (req.user.storeId._id || req.user.storeId).toString()
       : null;
 
-    const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+    const filter = {};
+    if (storeId) {
+      filter.storeId = storeId;
+    }
 
-    try {
-      // Try to fetch recommendations from Python AI service
-      const response = await axios.get(`${aiServiceUrl}/ai/forecast`, {
-        params: storeId ? { store_id: storeId } : {}
-      });
-      return res.status(200).json(response.data);
-    } catch (aiError) {
-      console.error('Python AI service failed/offline. Falling back to local Node.js calculations:', aiError.message);
+    // 1. Fetch store products
+    const products = await Product.find(filter).lean();
 
-      // Fallback local calculations
-      const filter = {};
-      if (storeId) {
-        filter.storeId = storeId;
-      }
+    // 2. Fetch store sales in the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      // 1. Fetch store products
-      const products = await Product.find(filter);
+    const salesFilter = { createdAt: { $gte: thirtyDaysAgo } };
+    if (storeId) {
+      salesFilter.storeId = storeId;
+    }
+    const sales = await Sale.find(salesFilter).lean();
 
-      // 2. Fetch store sales in the last 30 days
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const salesFilter = { createdAt: { $gte: thirtyDaysAgo } };
-      if (storeId) {
-        salesFilter.storeId = storeId;
-      }
-      const sales = await Sale.find(salesFilter);
-
-      // Calculate total quantity sold per product over 30 days
-      const productSalesMap = {};
-      sales.forEach((sale) => {
-        sale.items.forEach((item) => {
-          if (item.productId) {
-            const pId = item.productId.toString();
-            productSalesMap[pId] = (productSalesMap[pId] || 0) + item.quantity;
+    // Aggregate daily sales metrics per product to keep prompt size optimized
+    const productSalesMap = {};
+    sales.forEach((sale) => {
+      sale.items.forEach((item) => {
+        if (item.productId) {
+          const pId = item.productId.toString();
+          if (!productSalesMap[pId]) {
+            productSalesMap[pId] = { totalQuantity: 0, saleDaysCount: 0, dates: new Set() };
           }
-        });
-      });
-
-      const recommendations = [];
-
-      products.forEach((product) => {
-        const pId = product._id.toString();
-        const total30DaySales = productSalesMap[pId] || 0;
-        const avgDailySales = total30DaySales / 30;
-        // 14-day predicted demand
-        const predictedDemand = Math.max(product.minStockThreshold, Math.ceil(avgDailySales * 14));
-
-        // Trigger recommendation if current stock is <= threshold or < predicted demand
-        if (product.currentStock <= product.minStockThreshold || product.currentStock < predictedDemand) {
-          const suggestedQty = Math.max(10, (predictedDemand - product.currentStock) + product.minStockThreshold);
-          recommendations.push({
-            id: product._id,
-            product: product.name,
-            currentStock: product.currentStock,
-            predictedDemand,
-            suggestion: `Current stock (${product.currentStock}) is below safe threshold (${product.minStockThreshold}). Recommended reorder: ${suggestedQty} units.`,
-          });
+          productSalesMap[pId].totalQuantity += item.quantity;
+          if (sale.createdAt) {
+            const dateStr = new Date(sale.createdAt).toISOString().split('T')[0];
+            productSalesMap[pId].dates.add(dateStr);
+          }
         }
       });
+    });
 
-      return res.status(200).json(recommendations);
+    // Resolve Set sizes
+    Object.keys(productSalesMap).forEach((pId) => {
+      productSalesMap[pId].saleDaysCount = productSalesMap[pId].dates.size;
+    });
+
+    // Try Gemini forecasting first if API key is present
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (apiKey && products.length > 0) {
+      try {
+        const storeName = req.user?.storeId?.name || 'the Store';
+        const productsListText = products.map(p => {
+          const salesInfo = productSalesMap[p._id.toString()] || { totalQuantity: 0, saleDaysCount: 0 };
+          return `- ID: ${p._id} | Name: ${p.name} | SKU: ${p.sku} | Current Stock: ${p.currentStock} | Min Threshold: ${p.minStockThreshold || 10} | Sales in 30 Days: ${salesInfo.totalQuantity} units sold over ${salesInfo.saleDaysCount} days`;
+        }).join('\n');
+
+        const prompt = `
+You are SIBIS AI, the demand forecasting engine for "${storeName}".
+Analyze the current stock levels and 30-day sales history for the following products:
+
+Product List:
+${productsListText}
+
+Forecast the weekly (7-day) demand for each product. 
+Trigger a reorder recommendation if:
+1. Current Stock <= Min Threshold OR
+2. Current Stock < 7-day Predicted Demand
+
+For each triggered recommendation, calculate a suggested reorder quantity (predicted weekly demand - current stock + min stock threshold, rounded up and at least equal to min stock threshold).
+
+You MUST output your response strictly as a JSON array of objects matching this exact structure:
+[
+  {
+    "id": "product_id_string",
+    "product": "product_name_string",
+    "currentStock": number,
+    "predictedDemand": number,
+    "suggestion": "Detailed friendly recommendation text explaining why and how much to order"
+  }
+]
+
+Do not return any extra fields, explanations, or Markdown blocks. Return only a raw JSON array.
+        `.trim();
+
+        const response = await axios.post(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+          {
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: prompt }]
+              }
+            ],
+            generationConfig: {
+              responseMimeType: 'application/json'
+            }
+          },
+          {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 12000
+          }
+        );
+
+        if (response.data && response.data.candidates && response.data.candidates[0].content) {
+          const text = response.data.candidates[0].content.parts[0].text.trim();
+          const recommendations = JSON.parse(text);
+          if (Array.isArray(recommendations)) {
+            return res.status(200).json(recommendations);
+          }
+        }
+      } catch (geminiError) {
+        console.error('Gemini forecasting failed. Falling back to local Node.js logic:', geminiError.message);
+      }
     }
+
+    // Fallback local calculations
+    const recommendations = [];
+
+    products.forEach((product) => {
+      const pId = product._id.toString();
+      const salesInfo = productSalesMap[pId] || { totalQuantity: 0 };
+      const avgDailySales = salesInfo.totalQuantity / 30;
+      // 14-day predicted demand
+      const predictedDemand = Math.max(product.minStockThreshold, Math.ceil(avgDailySales * 14));
+
+      // Trigger recommendation if current stock is <= threshold or < predicted demand
+      if (product.currentStock <= product.minStockThreshold || product.currentStock < predictedDemand) {
+        const suggestedQty = Math.max(10, (predictedDemand - product.currentStock) + product.minStockThreshold);
+        recommendations.push({
+          id: product._id,
+          product: product.name,
+          currentStock: product.currentStock,
+          predictedDemand,
+          suggestion: `Current stock (${product.currentStock}) is below safe threshold (${product.minStockThreshold}). Recommended reorder: ${suggestedQty} units.`,
+        });
+      }
+    });
+
+    return res.status(200).json(recommendations);
   } catch (error) {
     next(error);
   }

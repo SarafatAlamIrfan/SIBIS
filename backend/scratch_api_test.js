@@ -102,6 +102,8 @@ async function runTests() {
         email: 'teststore@sibis.com',
         phone: '12345678',
         address: '123 Test St',
+        city: 'Dhaka',
+        country: 'Bangladesh',
       });
       const storeId = store._id;
 
