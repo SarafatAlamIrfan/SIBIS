@@ -14,13 +14,19 @@ import {
   RefreshCw,
   Globe,
   ShieldCheck,
+  UserPlus,
+  UserMinus,
 } from 'lucide-react';
 
 const StoreActivity = () => {
   const { currentUser } = useAuth();
   const isSystemAdmin = currentUser?.role === 'System Admin';
 
+  // Admin has two tabs: Platform Events | Staff Logs
+  const [adminTab, setAdminTab] = useState('platform'); // 'platform' | 'staff'
+
   const [activities, setActivities] = useState([]);
+  const [staffLogs, setStaffLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
@@ -29,9 +35,13 @@ const StoreActivity = () => {
     setLoading(true);
     try {
       if (isSystemAdmin) {
-        // Admin fetches platform-level log
-        const res = await API.get('/admin/platform-logs');
-        setActivities(res.data || []);
+        // Admin fetches BOTH platform-level log AND staff management logs
+        const [platformRes, staffRes] = await Promise.all([
+          API.get('/admin/platform-logs'),
+          API.get('/admin/staff-logs'),
+        ]);
+        setActivities(platformRes.data || []);
+        setStaffLogs(staffRes.data || []);
       } else {
         // Store staff fetches their scoped store log
         const res = await API.get('/users/activity');
@@ -46,7 +56,9 @@ const StoreActivity = () => {
 
   useEffect(() => {
     fetchActivities();
-  }, [isSystemAdmin]);
+    setSearchQuery('');
+    setCategoryFilter('All');
+  }, [isSystemAdmin, adminTab]);
 
   // ─── Store-user config ───────────────────────────────────────
   const storeCategoryIcons = {
@@ -84,24 +96,49 @@ const StoreActivity = () => {
 
   const platformCategories = ['All', 'Store Registration', 'Store Status Change', 'Admin Action', 'Platform System'];
 
-  // ─── Active config based on role ─────────────────────────────
-  const activeIcons = isSystemAdmin ? platformCategoryIcons : storeCategoryIcons;
-  const activeColors = isSystemAdmin ? platformCategoryColors : storeCategoryColors;
-  const activeCategories = isSystemAdmin ? platformCategories : storeCategories;
+  // ─── Admin staff-log config ──────────────────────────────────
+  const staffLogIcon = (desc = '') => {
+    if (desc.toLowerCase().includes('removed') || desc.toLowerCase().includes('delete')) return UserMinus;
+    return UserPlus;
+  };
 
-  const filteredActivities = activities.filter((act) => {
-    const nameField = isSystemAdmin ? act.actorName : act.userName;
+  const staffLogColor = (desc = '') => {
+    if (desc.toLowerCase().includes('removed') || desc.toLowerCase().includes('delete'))
+      return 'bg-rose-500/10 text-rose-600 border-rose-500/20 dark:text-rose-400';
+    if (desc.toLowerCase().includes('deactivated'))
+      return 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400';
+    return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400';
+  };
+
+  // ─── Active config based on role and tab ─────────────────────
+  const isStaffTab = isSystemAdmin && adminTab === 'staff';
+  const isPlatformTab = isSystemAdmin && adminTab === 'platform';
+
+  const activeIcons = isPlatformTab ? platformCategoryIcons : storeCategoryIcons;
+  const activeColors = isPlatformTab ? platformCategoryColors : storeCategoryColors;
+  const activeCategories = isPlatformTab ? platformCategories : storeCategories;
+
+  // Choose which data source to display
+  const activeData = isStaffTab ? staffLogs : activities;
+
+  const filteredActivities = activeData.filter((act) => {
+    const nameField = isSystemAdmin ? (act.actorName || act.userName || '') : (act.userName || '');
     const descField = act.eventDescription || act.actionDescription || '';
-    const roleField = isSystemAdmin ? act.actorRole : act.userRole;
-    const catField = isSystemAdmin ? act.eventCategory : act.actionCategory;
+    const roleField = isSystemAdmin ? (act.actorRole || act.userRole || '') : (act.userRole || '');
+    const catField = isPlatformTab ? act.eventCategory : act.actionCategory;
+    const storeNameField = act.storeId?.name || act.affectedStoreName || '';
 
     const matchesSearch =
-      nameField?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      nameField.toLowerCase().includes(searchQuery.toLowerCase()) ||
       descField.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      roleField?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      act.affectedStoreName?.toLowerCase().includes(searchQuery.toLowerCase());
+      roleField.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      storeNameField.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesCategory = categoryFilter === 'All' || catField === categoryFilter;
+    const matchesCategory =
+      categoryFilter === 'All' ||
+      catField === categoryFilter ||
+      // Staff tab has no category filter (all are Staff Management)
+      isStaffTab;
 
     return matchesSearch && matchesCategory;
   });
@@ -130,7 +167,9 @@ const StoreActivity = () => {
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
                 {isSystemAdmin
-                  ? 'Site-wide events — new store registrations, status changes, and admin actions across all stores.'
+                  ? isStaffTab
+                    ? 'Cross-store staff management events — accounts created, deactivated, and removed.'
+                    : 'Site-wide events — new store registrations, status changes, and admin actions across all stores.'
                   : `Real-time member activity stream for ${currentUser?.storeId?.name || 'your store'} – Track POS sales, inventory updates, and staff actions.`}
               </p>
             </div>
@@ -148,34 +187,82 @@ const StoreActivity = () => {
         </div>
       </div>
 
+      {/* Admin Tab Switcher */}
+      {isSystemAdmin && (
+        <div className="flex items-center space-x-2 bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl w-fit border border-slate-200 dark:border-slate-800">
+          <button
+            onClick={() => { setAdminTab('platform'); setSearchQuery(''); setCategoryFilter('All'); }}
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center space-x-2 ${
+              adminTab === 'platform'
+                ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700'
+                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>Platform Events</span>
+            {activities.length > 0 && (
+              <span className="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-[9px] px-1.5 py-0.5 rounded-md font-black">
+                {activities.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => { setAdminTab('staff'); setSearchQuery(''); setCategoryFilter('All'); }}
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center space-x-2 ${
+              adminTab === 'staff'
+                ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-sm border border-slate-200 dark:border-slate-700'
+                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Staff Logs</span>
+            {staffLogs.length > 0 && (
+              <span className="bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 text-[9px] px-1.5 py-0.5 rounded-md font-black">
+                {staffLogs.length}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
       {/* Filter and Search Controls */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-3xl shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:w-96">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder={isSystemAdmin ? 'Search by store name, actor, or description...' : 'Search by member name, description, or role...'}
+            placeholder={
+              isStaffTab
+                ? 'Search by store name, actor name, or description...'
+                : isSystemAdmin
+                ? 'Search by store name, actor, or description...'
+                : 'Search by member name, description, or role...'
+            }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
 
-        <div className="flex items-center space-x-2 self-start md:self-auto overflow-x-auto max-w-full">
-          {activeCategories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setCategoryFilter(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${
-                categoryFilter === cat
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        {/* Category filter pills — hidden on staff tab (all are Staff Management) */}
+        {!isStaffTab && (
+          <div className="flex items-center space-x-2 self-start md:self-auto overflow-x-auto max-w-full">
+            {activeCategories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setCategoryFilter(cat)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${
+                  categoryFilter === cat
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Activity Timeline List */}
@@ -186,17 +273,43 @@ const StoreActivity = () => {
           </div>
         ) : filteredActivities.length === 0 ? (
           <div className="text-center py-16 text-slate-400 font-bold uppercase tracking-wider">
-            No activity logs found for this filter.
+            {isStaffTab ? 'No staff management events found.' : 'No activity logs found for this filter.'}
           </div>
         ) : (
           <div className="relative border-l-2 border-slate-200 dark:border-slate-800 ml-4 space-y-6">
             {filteredActivities.map((act) => {
-              const catField = isSystemAdmin ? act.eventCategory : act.actionCategory;
-              const CategoryIcon = activeIcons[catField] || Activity;
-              const colorClass = activeColors[catField] || 'bg-slate-500/10 text-slate-600 border-slate-500/20';
-              const nameField = isSystemAdmin ? act.actorName : act.userName;
-              const roleField = isSystemAdmin ? act.actorRole : act.userRole;
-              const descField = act.eventDescription || act.actionDescription || '';
+              // ─── Determine which tab / type we're rendering ───
+              let CategoryIcon, colorClass, nameField, roleField, descField, catLabel, storeLabel;
+
+              if (isStaffTab) {
+                const desc = act.actionDescription || '';
+                CategoryIcon = staffLogIcon(desc);
+                colorClass = staffLogColor(desc);
+                nameField = act.userName || 'Unknown';
+                roleField = act.userRole || 'Staff';
+                descField = desc;
+                catLabel = 'Staff Management';
+                storeLabel = act.storeId?.name || null;
+              } else if (isPlatformTab) {
+                const cat = act.eventCategory;
+                CategoryIcon = platformCategoryIcons[cat] || Activity;
+                colorClass = platformCategoryColors[cat] || 'bg-slate-500/10 text-slate-600 border-slate-500/20';
+                nameField = act.actorName || 'System';
+                roleField = act.actorRole || 'System';
+                descField = act.eventDescription || '';
+                catLabel = cat;
+                storeLabel = act.affectedStoreName || null;
+              } else {
+                // Store staff own log
+                const cat = act.actionCategory;
+                CategoryIcon = storeCategoryIcons[cat] || Activity;
+                colorClass = storeCategoryColors[cat] || 'bg-slate-500/10 text-slate-600 border-slate-500/20';
+                nameField = act.userName || 'Unknown';
+                roleField = act.userRole || 'Staff';
+                descField = act.actionDescription || '';
+                catLabel = cat;
+                storeLabel = null;
+              }
 
               const dateStr = new Date(act.createdAt).toLocaleString('en-US', {
                 month: 'short',
@@ -216,13 +329,13 @@ const StoreActivity = () => {
                   <div className="bg-slate-50/70 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl space-y-2 hover:border-indigo-500/30 transition-all">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       {/* Actor Info */}
-                      <div className="flex items-center space-x-2.5">
+                      <div className="flex items-center flex-wrap gap-2">
                         <div className="w-7 h-7 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center font-black text-xs border border-indigo-500/20">
-                          {nameField ? nameField.charAt(0).toUpperCase() : 'S'}
+                          {nameField.charAt(0).toUpperCase()}
                         </div>
 
                         <span className="font-black text-slate-800 dark:text-white text-xs">
-                          {nameField || 'System'}
+                          {nameField}
                         </span>
 
                         <span
@@ -230,24 +343,22 @@ const StoreActivity = () => {
                             roleBadges[roleField] || 'bg-slate-100 text-slate-700 border-slate-200'
                           }`}
                         >
-                          {roleField || 'System'}
+                          {roleField}
                         </span>
 
-                        {/* Admin view: show affected store name as a badge */}
-                        {isSystemAdmin && act.affectedStoreName && (
-                          <span className="text-[9px] px-2 py-0.5 rounded-md border font-extrabold bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-900/50 flex items-center space-x-1">
+                        {/* Store name badge for admin views */}
+                        {storeLabel && (
+                          <span className="text-[9px] px-2 py-0.5 rounded-md border font-extrabold bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-900/50 flex items-center">
                             <Store className="w-2.5 h-2.5 mr-0.5" />
-                            {act.affectedStoreName}
+                            {storeLabel}
                           </span>
                         )}
                       </div>
 
                       {/* Category Badge & Timestamp */}
                       <div className="flex items-center space-x-3">
-                        <span
-                          className={`text-[9px] px-2.5 py-0.5 rounded-lg border font-black tracking-wider ${colorClass}`}
-                        >
-                          {catField}
+                        <span className={`text-[9px] px-2.5 py-0.5 rounded-lg border font-black tracking-wider ${colorClass}`}>
+                          {catLabel}
                         </span>
 
                         <span className="text-[10px] text-slate-400 font-semibold flex items-center">

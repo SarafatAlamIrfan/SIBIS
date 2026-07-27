@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Product = require('../models/Product');
 const Sale = require('../models/Sale');
 const PlatformLog = require('../models/PlatformLog');
+const ActivityLog = require('../models/ActivityLog');
 
 // Helper: write a platform-level log entry
 const logPlatformEvent = async ({ actor, eventCategory, eventDescription, affectedStore, details }) => {
@@ -218,10 +219,27 @@ const getPlatformLogs = async (req, res) => {
   }
 };
 
+// @desc    Get ALL staff create/delete logs across all stores (admin only)
+// @route   GET /api/admin/staff-logs
+// @access  Private (System Admin)
+const getStaffLogs = async (req, res) => {
+  try {
+    const logs = await ActivityLog.find({ actionCategory: 'Staff Management' })
+      .populate('storeId', 'name code city')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(logs);
+  } catch (error) {
+    console.error('Error fetching staff logs:', error.message);
+    res.status(500).json({ error: 'Failed to fetch staff activity logs.' });
+  }
+};
+
 module.exports = {
   getAllStores,
   createStore,
   toggleStoreStatus,
   getPlatformStats,
   getPlatformLogs,
+  getStaffLogs,
 };

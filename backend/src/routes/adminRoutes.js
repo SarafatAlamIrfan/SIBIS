@@ -6,6 +6,7 @@ const {
   toggleStoreStatus,
   getPlatformStats,
   getPlatformLogs,
+  getStaffLogs,
 } = require('../controllers/adminController');
 const { protect, restrictTo } = require('../middleware/authMiddleware');
 
@@ -17,5 +18,8 @@ router.get('/stats', protect, getPlatformStats);
 
 // Platform activity log — System Admin only
 router.get('/platform-logs', protect, restrictTo('System Admin'), getPlatformLogs);
+
+// Staff create/delete logs across all stores — System Admin only
+router.get('/staff-logs', protect, restrictTo('System Admin'), getStaffLogs);
 
 module.exports = router;
