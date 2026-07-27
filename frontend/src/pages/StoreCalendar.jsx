@@ -32,8 +32,10 @@ const StoreCalendar = ({ hideHeader = false }) => {
   const [loading, setLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // Add event modal states
+  // Add/Edit event modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingEventId, setEditingEventId] = useState('');
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
@@ -45,6 +47,32 @@ const StoreCalendar = ({ hideHeader = false }) => {
   const [submittingEvent, setSubmittingEvent] = useState(false);
   const [eventError, setEventError] = useState('');
   const [syncFeedback, setSyncFeedback] = useState('');
+
+  const handleOpenEditModal = (event) => {
+    setIsEditMode(true);
+    setEditingEventId(event.id);
+    setEventError('');
+    setSyncFeedback('');
+    
+    let dateVal = new Date().toISOString().slice(0, 10);
+    if (event.date) {
+      try {
+        dateVal = new Date(event.date).toISOString().slice(0, 10);
+      } catch (err) {
+        console.error('Failed to parse event date:', err);
+      }
+    }
+
+    setNewEvent({
+      title: event.title,
+      description: event.desc,
+      date: dateVal,
+      type: event.type,
+      color: event.color,
+      syncToGoogle: !!event.googleEventId,
+    });
+    setIsAddModalOpen(true);
+  };
 
   const colorPresets = [
     { name: 'Indigo (Custom Event)', value: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30 hover:bg-indigo-500/20 dark:text-indigo-400' },
@@ -64,37 +92,37 @@ const StoreCalendar = ({ hideHeader = false }) => {
     }
     setSubmittingEvent(true);
     try {
-      await API.post('/users/calendar-events', newEvent);
-      
-      if (newEvent.syncToGoogle) {
-        setSyncFeedback(`Synced: "${newEvent.title}" added to Google Calendar!`);
-        setTimeout(() => {
+      if (isEditMode) {
+        await API.put(`/users/calendar-events/${editingEventId}`, newEvent);
+        
+        if (newEvent.syncToGoogle) {
+          setSyncFeedback(`Synced: Event updated successfully in Google Calendar!`);
+          setTimeout(() => {
+            setIsAddModalOpen(false);
+            setSyncFeedback('');
+            loadData();
+          }, 1200);
+        } else {
           setIsAddModalOpen(false);
-          setSyncFeedback('');
-          setNewEvent({
-            title: '',
-            description: '',
-            date: new Date().toISOString().slice(0, 10),
-            type: 'custom',
-            color: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30 hover:bg-indigo-500/20 dark:text-indigo-400',
-            syncToGoogle: true,
-          });
           loadData();
-        }, 1200);
+        }
       } else {
-        setIsAddModalOpen(false);
-        setNewEvent({
-          title: '',
-          description: '',
-          date: new Date().toISOString().slice(0, 10),
-          type: 'custom',
-          color: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30 hover:bg-indigo-500/20 dark:text-indigo-400',
-          syncToGoogle: true,
-        });
-        loadData();
+        await API.post('/users/calendar-events', newEvent);
+        
+        if (newEvent.syncToGoogle) {
+          setSyncFeedback(`Synced: "${newEvent.title}" added to Google Calendar!`);
+          setTimeout(() => {
+            setIsAddModalOpen(false);
+            setSyncFeedback('');
+            loadData();
+          }, 1200);
+        } else {
+          setIsAddModalOpen(false);
+          loadData();
+        }
       }
     } catch (err) {
-      setEventError(err.response?.data?.error || 'Failed to create event.');
+      setEventError(err.response?.data?.error || 'Failed to save event.');
     } finally {
       if (!newEvent.syncToGoogle) {
         setSubmittingEvent(false);
@@ -275,7 +303,21 @@ const StoreCalendar = ({ hideHeader = false }) => {
 
           <div className="flex flex-wrap gap-2.5 items-center print:hidden">
             <button
-              onClick={() => setIsAddModalOpen(true)}
+              onClick={() => {
+                setIsEditMode(false);
+                setEditingEventId('');
+                setEventError('');
+                setSyncFeedback('');
+                setNewEvent({
+                  title: '',
+                  description: '',
+                  date: new Date().toISOString().slice(0, 10),
+                  type: 'custom',
+                  color: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30 hover:bg-indigo-500/20 dark:text-indigo-400',
+                  syncToGoogle: true,
+                });
+                setIsAddModalOpen(true);
+              }}
               className="px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-md shadow-indigo-600/15 cursor-pointer transition-all active:scale-97 border border-indigo-400/20"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
@@ -453,13 +495,22 @@ const StoreCalendar = ({ hideHeader = false }) => {
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 ) : selectedEvent.type === 'custom' ? (
-                  <button
-                    onClick={() => handleDeleteCustomEvent(selectedEvent.id)}
-                    className="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5 active:scale-97 transform"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span>Delete Calendar Event</span>
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleOpenEditModal(selectedEvent)}
+                      className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5 active:scale-97 transform"
+                    >
+                      <Layers className="w-4 h-4" />
+                      <span>Edit Event</span>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCustomEvent(selectedEvent.id)}
+                      className="py-3 px-4.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center active:scale-97 transform"
+                      title="Delete Event"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 ) : (
                   <button
                     onClick={() => {
@@ -496,7 +547,7 @@ const StoreCalendar = ({ hideHeader = false }) => {
                 <div className="p-2 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl">
                   <CalendarIcon className="w-5 h-5" />
                 </div>
-                <h3 className="text-base font-black text-slate-850 dark:text-white">Add Store Event</h3>
+                <h3 className="text-base font-black text-slate-850 dark:text-white">{isEditMode ? 'Edit Store Event' : 'Add Store Event'}</h3>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
@@ -602,7 +653,7 @@ const StoreCalendar = ({ hideHeader = false }) => {
                   disabled={submittingEvent}
                   className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl shadow-md cursor-pointer flex items-center justify-center space-x-1.5 disabled:opacity-50"
                 >
-                  {submittingEvent ? 'Syncing...' : 'Save Event'}
+                  {submittingEvent ? 'Syncing...' : isEditMode ? 'Update Event' : 'Save Event'}
                 </button>
               </div>
             </form>

@@ -25,6 +25,7 @@ const {
   updateStoreProfile,
   createCalendarEvent,
   deleteCalendarEvent,
+  updateCalendarEvent,
 } = require('../controllers/userController');
 const { protect, restrictTo } = require('../middleware/authMiddleware');
 
@@ -55,6 +56,7 @@ router.put('/change-password', changePassword);
 router.get('/activity', restrictTo('System Admin', 'Owner', 'Manager'), getStoreActivity);
 router.get('/store-calendar-events', getStoreCalendarEvents);
 router.post('/calendar-events', createCalendarEvent);
+router.put('/calendar-events/:id', updateCalendarEvent);
 router.delete('/calendar-events/:id', deleteCalendarEvent);
 
 // Staff management endpoints (Store Owner & Manager)
