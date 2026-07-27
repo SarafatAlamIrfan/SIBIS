@@ -483,12 +483,35 @@ exports.toggleStaffStatus = async (req, res, next) => {
       return res.status(404).json({ error: 'Staff member not found.' });
     }
 
+    // Store isolation — cannot touch staff from another store
     if (req.user.role !== 'System Admin' && staffUser.storeId?.toString() !== req.user.storeId?._id?.toString()) {
       return res.status(403).json({ error: 'Unauthorized to modify staff of another store.' });
     }
 
+    // Cannot deactivate your own account
+    if (staffUser._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ error: 'You cannot deactivate your own account.' });
+    }
+
+    // Role hierarchy: Owner is untouchable
+    if (staffUser.role === 'Owner') {
+      return res.status(403).json({ error: 'The Owner account cannot be deactivated.' });
+    }
+
+    // Role hierarchy: Manager can only be toggled by Owner or System Admin
+    if (staffUser.role === 'Manager' && !['Owner', 'System Admin'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Only the Owner can activate or deactivate a Manager account.' });
+    }
+
     staffUser.isActive = typeof isActive === 'boolean' ? isActive : !staffUser.isActive;
     await staffUser.save();
+
+    await logActivity({
+      storeId: staffUser.storeId,
+      user: req.user,
+      actionCategory: 'Staff Management',
+      actionDescription: `${req.user.name} ${staffUser.isActive ? 'activated' : 'deactivated'} ${staffUser.role} account "${staffUser.name}"`,
+    });
 
     res.status(200).json(staffUser);
   } catch (error) {
@@ -507,8 +530,24 @@ exports.deleteStaff = async (req, res, next) => {
       return res.status(404).json({ error: 'Staff member not found.' });
     }
 
+    // Cannot delete your own account
     if (staffUser._id.toString() === req.user._id.toString()) {
-      return res.status(400).json({ error: 'You cannot delete your own owner account.' });
+      return res.status(400).json({ error: 'You cannot delete your own account.' });
+    }
+
+    // Store isolation — cannot delete staff from another store
+    if (req.user.role !== 'System Admin' && staffUser.storeId?.toString() !== req.user.storeId?._id?.toString()) {
+      return res.status(403).json({ error: 'Unauthorized to delete staff from another store.' });
+    }
+
+    // Role hierarchy: Owner account can NEVER be deleted
+    if (staffUser.role === 'Owner') {
+      return res.status(403).json({ error: 'The Owner account cannot be deleted. Transfer ownership first.' });
+    }
+
+    // Role hierarchy: Only Owner or System Admin can delete a Manager
+    if (staffUser.role === 'Manager' && !['Owner', 'System Admin'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Only the Owner can remove a Manager account.' });
     }
 
     await User.findByIdAndDelete(req.params.id);
@@ -517,7 +556,7 @@ exports.deleteStaff = async (req, res, next) => {
       storeId: staffUser.storeId,
       user: req.user,
       actionCategory: 'Staff Management',
-      actionDescription: `Removed staff member account "${staffUser.name}" (${staffUser.role})`,
+      actionDescription: `${req.user.name} removed ${staffUser.role} account "${staffUser.name}" from store staff`,
     });
 
     res.status(200).json({ message: 'Staff member account deleted successfully.' });

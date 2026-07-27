@@ -65,9 +65,9 @@ router.route('/staff')
   .post(restrictTo('System Admin', 'Owner', 'Manager'), createStaff);
 
 router.route('/staff/:id/status')
-  .put(restrictTo('System Admin', 'Owner'), toggleStaffStatus);
+  .put(restrictTo('System Admin', 'Owner', 'Manager'), toggleStaffStatus);
 
 router.route('/staff/:id')
-  .delete(restrictTo('System Admin', 'Owner'), deleteStaff);
+  .delete(restrictTo('System Admin', 'Owner', 'Manager'), deleteStaff);
 
 module.exports = router;

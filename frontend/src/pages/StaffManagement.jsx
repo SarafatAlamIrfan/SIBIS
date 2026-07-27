@@ -35,7 +35,8 @@ const StaffManagement = () => {
   // Form State for creating staff
   const [formData, setFormData] = useState({
     name: '',
-    role: 'Cashier',
+    // Managers can only create Cashier/Inventory Staff, not Manager
+    role: ['Owner', 'System Admin'].includes(currentUser?.role) ? 'Manager' : 'Cashier',
     email: currentUser?.email || '',
     password: '',
   });
@@ -136,6 +137,24 @@ const StaffManagement = () => {
 
     return matchesSearch && matchesRole;
   });
+
+  // ─── Role Hierarchy ──────────────────────────────────────────────────────
+  // Owner > Manager > Cashier = Inventory Staff
+  // Returns true if currentUser is allowed to deactivate/delete the target staff member
+  const canActOn = (targetStaff) => {
+    // Cannot act on yourself
+    if (targetStaff._id === currentUser?._id) return false;
+    // Owner is untouchable by anyone except System Admin
+    if (targetStaff.role === 'Owner') return false;
+    // Manager rows: only Owner or System Admin can act
+    if (targetStaff.role === 'Manager') {
+      return ['Owner', 'System Admin'].includes(currentUser?.role);
+    }
+    // Cashier / Inventory Staff: Owner and Manager can both act
+    return ['Owner', 'Manager', 'System Admin'].includes(currentUser?.role);
+  };
+
+  const isCurrentUser = (staff) => staff._id === currentUser?._id;
 
   return (
     <div className="space-y-8 animate-[fade-in_0.3s_ease-out]">
@@ -256,7 +275,11 @@ const StaffManagement = () => {
               ) : (
                 filteredStaff.map((staff) => {
                   const RoleIcon = roleIcons[staff.role] || User;
-                  const isCurrentOwner = staff._id === currentUser?._id;
+                  const isSelf = isCurrentUser(staff);
+                  const canEdit = canActOn(staff);
+                  const isOwnerRow = staff.role === 'Owner';
+                  const isManagerRow = staff.role === 'Manager';
+                  const lockedByHierarchy = !canEdit && !isSelf;
 
                   return (
                     <tr key={staff._id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
@@ -267,7 +290,9 @@ const StaffManagement = () => {
                           </div>
                           <div>
                             <p className="font-extrabold text-slate-800 dark:text-white text-sm">
-                              {staff.name} {isCurrentOwner && <span className="text-[10px] text-indigo-500 font-bold">(You - Owner)</span>}
+                              {staff.name}{' '}
+                              {isSelf && <span className="text-[10px] text-indigo-500 font-bold">(You)</span>}
+                              {isOwnerRow && !isSelf && <span className="text-[10px] text-rose-500 font-bold ml-1">· Owner</span>}
                             </p>
                           </div>
                         </div>
@@ -301,7 +326,7 @@ const StaffManagement = () => {
                       </td>
 
                       <td className="px-6 py-4 text-right space-x-2">
-                        {!isCurrentOwner && (
+                        {canEdit ? (
                           <>
                             <button
                               onClick={() => handleToggleStatus(staff._id, staff.isActive)}
@@ -322,7 +347,15 @@ const StaffManagement = () => {
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </>
-                        )}
+                        ) : lockedByHierarchy ? (
+                          <span
+                            className="inline-flex items-center space-x-1 text-[10px] text-slate-400 dark:text-slate-600 font-bold px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900"
+                            title={isOwnerRow ? 'Owner account cannot be modified' : 'Insufficient role to manage this member'}
+                          >
+                            <Lock className="w-3 h-3" />
+                            <span>{isOwnerRow ? 'Owner Protected' : 'No Permission'}</span>
+                          </span>
+                        ) : null}
                       </td>
                     </tr>
                   );
@@ -385,7 +418,10 @@ const StaffManagement = () => {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-500 font-semibold"
                 >
-                  <option value="Manager">Manager (Purchase Orders & Suppliers)</option>
+                  {/* Manager can only create Cashier or Inventory Staff — not Manager or above */}
+                  {['Owner', 'System Admin'].includes(currentUser?.role) && (
+                    <option value="Manager">Manager (Purchase Orders & Suppliers)</option>
+                  )}
                   <option value="Cashier">Cashier (POS Billing & Sales)</option>
                   <option value="Inventory Staff">Inventory Staff (Stock Intake & Catalogs)</option>
                 </select>
