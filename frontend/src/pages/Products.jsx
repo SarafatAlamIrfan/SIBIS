@@ -501,8 +501,8 @@ const Products = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4 text-xs text-slate-700 dark:text-slate-300">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="col-span-1 sm:col-span-2">
                   <label className="block font-bold mb-1.5">Product Name *</label>
                   <input
                     type="text"
@@ -611,7 +611,7 @@ const Products = () => {
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
-                <div className="col-span-2">
+                <div className="col-span-1 sm:col-span-2">
                   <label className="block font-bold mb-1.5">Expiration Date</label>
                   <input
                     type="date"
@@ -620,7 +620,7 @@ const Products = () => {
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
-                <div className="col-span-2">
+                <div className="col-span-1 sm:col-span-2">
                   <label className="block font-bold mb-1.5">Description</label>
                   <textarea
                     rows="3"

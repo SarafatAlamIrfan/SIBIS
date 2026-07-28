@@ -383,7 +383,7 @@ const RegisteredStores = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="font-extrabold text-slate-700 dark:text-slate-300">Business Type</label>
                   <select
@@ -416,7 +416,7 @@ const RegisteredStores = () => {
               <div className="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-3">
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Store Owner Account Details</p>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="font-extrabold text-slate-700 dark:text-slate-300">Owner Full Name *</label>
                     <div className="relative">
@@ -464,7 +464,7 @@ const RegisteredStores = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                 <div className="space-y-1">
                   <label className="font-extrabold text-slate-700 dark:text-slate-300">Contact Phone</label>
                   <div className="relative">
@@ -494,7 +494,7 @@ const RegisteredStores = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                 <div className="space-y-1">
                   <label className="font-extrabold text-slate-700 dark:text-slate-300">City *</label>
                   <div className="relative">
