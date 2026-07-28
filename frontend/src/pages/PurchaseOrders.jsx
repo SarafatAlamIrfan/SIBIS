@@ -121,9 +121,14 @@ const PurchaseOrders = () => {
   };
 
   const handleUpdateStatus = async (id, newStatus) => {
-    const confirmMsg = newStatus === 'Received'
-      ? 'Marking this PO as Received will add ordered quantities into product inventory stocks. Proceed?'
-      : 'Are you sure you want to cancel this PO?';
+    let confirmMsg = 'Are you sure you want to update this Purchase Order status?';
+    if (newStatus === 'Received') {
+      confirmMsg = 'Marking this PO as Received will add ordered quantities into product inventory stocks. Proceed?';
+    } else if (newStatus === 'Ordered') {
+      confirmMsg = 'Approve this Purchase Order request and send it to the supplier?';
+    } else if (newStatus === 'Cancelled') {
+      confirmMsg = 'Are you sure you want to cancel this PO?';
+    }
 
     if (!window.confirm(confirmMsg)) return;
 
@@ -190,6 +195,7 @@ const PurchaseOrders = () => {
                   if (po.status === 'Received') statusBadge = 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400 shadow-neon-emerald/10';
                   if (po.status === 'Cancelled') statusBadge = 'bg-rose-550/10 text-rose-600 border-rose-500/20 dark:text-rose-400 shadow-neon-rose/10';
                   if (po.status === 'Ordered') statusBadge = 'bg-blue-550/10 text-blue-600 border-blue-500/20 dark:text-blue-400 shadow-neon-indigo/10';
+                  if (po.status === 'Draft') statusBadge = 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400 shadow-neon-amber/10';
 
                   return (
                     <tr 
@@ -220,7 +226,38 @@ const PurchaseOrders = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right space-x-2" onClick={(e) => e.stopPropagation()}>
-                        {po.status === 'Ordered' ? (
+                        {po.status === 'Draft' && (
+                          (currentUser.role === 'Owner' || currentUser.role === 'Manager') ? (
+                            <div className="inline-flex space-x-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateStatus(po._id, 'Ordered');
+                                }}
+                                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold rounded-xl shadow-md shadow-indigo-550/10 transition-all cursor-pointer inline-flex items-center transform active:scale-97"
+                              >
+                                <Check className="w-3.5 h-3.5 mr-1" />
+                                Approve
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateStatus(po._id, 'Cancelled');
+                                }}
+                                className="px-3.5 py-2 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 text-[10px] font-bold rounded-xl transition-all cursor-pointer inline-flex items-center dark:bg-slate-900 dark:border-slate-805 dark:hover:bg-rose-950/20 transform active:scale-97"
+                              >
+                                <X className="w-3.5 h-3.5 mr-1" />
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-amber-600 dark:text-amber-450 font-black flex items-center justify-end uppercase tracking-wider">
+                              Awaiting Approval
+                            </span>
+                          )
+                        )}
+
+                        {po.status === 'Ordered' && (
                           <div className="inline-flex space-x-2">
                             <button
                               onClick={(e) => {
@@ -232,18 +269,22 @@ const PurchaseOrders = () => {
                               <Check className="w-3.5 h-3.5 mr-1" />
                               Receive
                             </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUpdateStatus(po._id, 'Cancelled');
-                              }}
-                              className="px-3.5 py-2 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 text-[10px] font-bold rounded-xl transition-all cursor-pointer inline-flex items-center dark:bg-slate-900 dark:border-slate-805 dark:hover:bg-rose-950/20 transform active:scale-97"
-                            >
-                              <X className="w-3.5 h-3.5 mr-1" />
-                              Cancel
-                            </button>
+                            {(currentUser.role === 'Owner' || currentUser.role === 'Manager') && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateStatus(po._id, 'Cancelled');
+                                }}
+                                className="px-3.5 py-2 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 text-[10px] font-bold rounded-xl transition-all cursor-pointer inline-flex items-center dark:bg-slate-900 dark:border-slate-805 dark:hover:bg-rose-950/20 transform active:scale-97"
+                              >
+                                <X className="w-3.5 h-3.5 mr-1" />
+                                Cancel
+                              </button>
+                            )}
                           </div>
-                        ) : (
+                        )}
+
+                        {['Received', 'Cancelled'].includes(po.status) && (
                           <span className="text-[10px] text-slate-400 font-bold flex items-center justify-end uppercase tracking-wider">
                             <FileText className="w-3.5 h-3.5 mr-1 text-slate-400" />
                             Archived {po.receivedDate && `(${new Date(po.receivedDate).toLocaleDateString([], { month: 'short', day: 'numeric' })})`}

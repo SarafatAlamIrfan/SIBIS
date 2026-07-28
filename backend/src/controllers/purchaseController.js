@@ -57,6 +57,9 @@ exports.createPurchaseOrder = async (req, res, next) => {
       return res.status(400).json({ error: 'Store reference is required to create a purchase order.' });
     }
 
+    // Force status to Draft if logged in user is Inventory Staff
+    const status = (req.user && req.user.role === 'Inventory Staff') ? 'Draft' : 'Ordered';
+
     // 4. Save Purchase Order
     const purchaseOrder = await PurchaseOrder.create({
       poNumber,
@@ -64,7 +67,7 @@ exports.createPurchaseOrder = async (req, res, next) => {
       storeId,
       items: poItems,
       totalAmount,
-      status: 'Ordered',
+      status,
     });
 
     res.status(201).json(purchaseOrder);
@@ -113,8 +116,8 @@ exports.updatePurchaseOrderStatus = async (req, res, next) => {
   try {
     const { status, performedBy } = req.body;
 
-    if (!status || !['Received', 'Cancelled'].includes(status)) {
-      return res.status(400).json({ error: 'Invalid status. Choose "Received" or "Cancelled".' });
+    if (!status || !['Ordered', 'Received', 'Cancelled'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Choose "Ordered", "Received", or "Cancelled".' });
     }
 
     if (!performedBy) {
@@ -132,11 +135,32 @@ exports.updatePurchaseOrderStatus = async (req, res, next) => {
       return res.status(404).json({ error: 'Purchase Order not found.' });
     }
 
-    // 2. Validate current status is 'Ordered'
-    if (purchaseOrder.status !== 'Ordered') {
-      return res.status(400).json({
-        error: `Cannot update a Purchase Order that is already marked as "${purchaseOrder.status}".`,
-      });
+    // Role-based state transition validations
+    if (status === 'Ordered') {
+      if (purchaseOrder.status !== 'Draft') {
+        return res.status(400).json({ error: 'Purchase Order must be in "Draft" status to be approved.' });
+      }
+      if (user.role !== 'Owner' && user.role !== 'Manager') {
+        return res.status(403).json({ error: 'Only Owner or Manager can approve purchase orders.' });
+      }
+    }
+
+    if (status === 'Received') {
+      if (purchaseOrder.status !== 'Ordered') {
+        return res.status(400).json({ error: 'Purchase Order must be in "Ordered" status to be marked as Received.' });
+      }
+      if (user.role !== 'Owner' && user.role !== 'Manager' && user.role !== 'Inventory Staff') {
+        return res.status(403).json({ error: 'Your role is not authorized to receive shipments.' });
+      }
+    }
+
+    if (status === 'Cancelled') {
+      if (!['Draft', 'Ordered'].includes(purchaseOrder.status)) {
+        return res.status(400).json({ error: 'Cannot cancel a purchase order that is already received or cancelled.' });
+      }
+      if (user.role !== 'Owner' && user.role !== 'Manager') {
+        return res.status(403).json({ error: 'Only Owner or Manager can cancel purchase orders.' });
+      }
     }
 
     // 3. Process status change

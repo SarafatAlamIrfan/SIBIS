@@ -107,7 +107,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       name: 'Purchase Orders',
       path: '/purchase-orders',
       icon: ClipboardList,
-      roles: ['Owner', 'Manager'],
+      roles: ['Owner', 'Manager', 'Inventory Staff'],
       category: 'MANAGEMENT'
     },
     {

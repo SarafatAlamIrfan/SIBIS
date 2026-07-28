@@ -46,7 +46,7 @@ const purchaseOrderSchema = new mongoose.Schema(
       type: String,
       required: [true, 'PO status is required'],
       enum: {
-        values: ['Ordered', 'Received', 'Cancelled'],
+        values: ['Draft', 'Ordered', 'Received', 'Cancelled'],
         message: '{VALUE} is not a valid status',
       },
       default: 'Ordered',
