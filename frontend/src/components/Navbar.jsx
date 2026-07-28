@@ -81,7 +81,7 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode, 
     window.addEventListener('alerts_updated', fetchAlerts);
     window.addEventListener('storage', fetchAlerts);
     
-    const interval = setInterval(fetchAlerts, 15000);
+    const interval = setInterval(fetchAlerts, 5000);
     return () => {
       window.removeEventListener('alerts_updated', fetchAlerts);
       window.removeEventListener('storage', fetchAlerts);

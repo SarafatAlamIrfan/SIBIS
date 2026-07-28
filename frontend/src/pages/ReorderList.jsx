@@ -27,9 +27,9 @@ const ReorderList = () => {
   const [message, setMessage] = useState(null);
 
   // Load saved reorder list from localStorage & fetch latest DB product data
-  const loadData = async () => {
+  const loadData = async (showSpinner = true) => {
     try {
-      setLoading(true);
+      if (showSpinner) setLoading(true);
       const [prodRes, supRes] = await Promise.all([
         API.get('/products'),
         API.get('/suppliers'),
@@ -55,16 +55,26 @@ const ReorderList = () => {
       }).filter(Boolean);
 
       setReorderItems(mergedItems);
-      setSelectedItems(mergedItems.map(item => item.productId));
+      setSelectedItems(prev => {
+        if (prev.length === 0) {
+          return mergedItems.map(item => item.productId);
+        }
+        const mergedIds = mergedItems.map(item => item.productId);
+        return prev.filter(id => mergedIds.includes(id));
+      });
     } catch (err) {
       console.error('Failed to load Reorder List data:', err);
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadData();
+    loadData(true);
+    const interval = setInterval(() => {
+      loadData(false);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   // Save current reorder items to localStorage

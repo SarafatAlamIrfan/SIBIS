@@ -22,20 +22,24 @@ const InventoryHistory = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
 
-  const fetchHistory = async () => {
-    setLoading(true);
+  const fetchHistory = async (showSpinner = true) => {
+    if (showSpinner) setLoading(true);
     try {
       const res = await API.get('/products/inventory-history');
       setLogs(res.data);
     } catch (err) {
       console.error('Failed to load inventory history:', err);
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchHistory();
+    fetchHistory(true);
+    const interval = setInterval(() => {
+      fetchHistory(false);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const changeTypeStyles = {

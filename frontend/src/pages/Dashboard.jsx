@@ -314,10 +314,10 @@ const Dashboard = () => {
 
     fetchDashboardData(true);
 
-    // Set polling interval for live/real-time updates (every 10 seconds)
+    // Set polling interval for live/real-time updates (every 5 seconds)
     const intervalId = setInterval(() => {
       fetchDashboardData(false);
-    }, 10000);
+    }, 5000);
 
     return () => clearInterval(intervalId);
   }, [isSystemAdmin]);

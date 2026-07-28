@@ -28,9 +28,9 @@ const PurchaseOrders = () => {
   const [poItems, setPoItems] = useState([{ productId: '', quantityOrdered: 1, purchasePrice: 0.00 }]);
   const [formError, setFormError] = useState('');
 
-  const loadData = async () => {
+  const loadData = async (showSpinner = true) => {
     try {
-      setLoading(true);
+      if (showSpinner) setLoading(true);
       const [poRes, supRes, prodRes] = await Promise.all([
         API.get('/purchase-orders'),
         API.get('/suppliers'),
@@ -39,18 +39,20 @@ const PurchaseOrders = () => {
       setPurchaseOrders(poRes.data);
       setSuppliers(supRes.data.filter(s => s.status === 'Active'));
       setProducts(prodRes.data);
-      if (supRes.data.length > 0) {
-        setSelectedSupplierId(supRes.data[0]._id);
-      }
+      setSelectedSupplierId(prev => prev || (supRes.data.length > 0 ? supRes.data[0]._id : ''));
     } catch (err) {
       console.error('Failed to load PO page data:', err);
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadData();
+    loadData(true);
+    const interval = setInterval(() => {
+      loadData(false);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const openAddModal = () => {

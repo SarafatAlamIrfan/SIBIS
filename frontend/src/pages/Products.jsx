@@ -88,9 +88,9 @@ const Products = () => {
   });
   const [formError, setFormError] = useState('');
 
-  const loadData = async () => {
+  const loadData = async (showSpinner = true) => {
     try {
-      setLoading(true);
+      if (showSpinner) setLoading(true);
       const [prodRes, supRes] = await Promise.all([
         API.get('/products'),
         API.get('/suppliers'),
@@ -100,12 +100,16 @@ const Products = () => {
     } catch (err) {
       console.error('Failed to load products page data:', err);
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadData();
+    loadData(true);
+    const interval = setInterval(() => {
+      loadData(false);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const openAddModal = () => {
