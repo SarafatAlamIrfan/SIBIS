@@ -216,7 +216,9 @@ const Dashboard = () => {
           const productQtyMap = {};
           salesList.forEach(sale => {
             sale.items.forEach(item => {
-              const pId = item.productId?.toString();
+              const pId = typeof item.productId === 'object' && item.productId !== null
+                ? (item.productId._id || item.productId.id)?.toString()
+                : item.productId?.toString();
               if (pId) {
                 productQtyMap[pId] = (productQtyMap[pId] || 0) + item.quantity;
               }
@@ -950,7 +952,14 @@ const Dashboard = () => {
       {/* Top Selling and Expiring Products Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Top Selling Products */}
-        <div className="glass-panel p-6 rounded-3xl shadow-sm space-y-6">
+        <div 
+          onClick={() => navigate('/reports?tab=profitability')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/reports?tab=profitability')}
+          title="Click to view Top Selling Products report"
+          className="glass-panel p-6 rounded-3xl shadow-sm space-y-6 hover:shadow-md hover:border-indigo-500/30 transition-all cursor-pointer group active:scale-[0.99] duration-200"
+        >
           <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div className="p-2 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl text-white shadow-md">
               <TrendingUp className="w-5 h-5" />

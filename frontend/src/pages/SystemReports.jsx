@@ -15,10 +15,13 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 
 const SystemReports = () => {
   const { currentUser } = useAuth();
-  const [reportType, setReportType] = useState('sales');
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab') || 'sales';
+  const [reportType, setReportType] = useState(tabParam);
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
@@ -113,11 +116,13 @@ const SystemReports = () => {
       });
 
       // 3. Compute Profitability Report
-      // Map sales qty per product
+      // Map sales qty per product (handling populated productId object)
       const productQtyMap = {};
       salesList.forEach(sale => {
         sale.items.forEach(item => {
-          const pId = item.productId?.toString();
+          const pId = typeof item.productId === 'object' && item.productId !== null
+            ? (item.productId._id || item.productId.id)?.toString()
+            : item.productId?.toString();
           if (pId) {
             productQtyMap[pId] = (productQtyMap[pId] || 0) + item.quantity;
           }

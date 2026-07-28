@@ -197,7 +197,9 @@ const StoreCalendar = ({ hideHeader = false }) => {
   const salesQtyMap = {};
   sales.forEach(sale => {
     sale.items.forEach(item => {
-      const pId = item.productId?.toString();
+      const pId = typeof item.productId === 'object' && item.productId !== null
+        ? (item.productId._id || item.productId.id)?.toString()
+        : item.productId?.toString();
       if (pId) {
         salesQtyMap[pId] = (salesQtyMap[pId] || 0) + item.quantity;
       }
