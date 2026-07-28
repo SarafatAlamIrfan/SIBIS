@@ -28,6 +28,14 @@ import {
   Clock
 } from 'lucide-react';
 
+// Helper to get local date string YYYY-MM-DD
+const getLocalDateString = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const Dashboard = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -118,18 +126,18 @@ const Dashboard = () => {
           }
           setExpiringProducts(expiringList);
 
-          // Calculate stats
-          const now = new Date();
-          const todayStr = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10);
+          // Calculate stats using local dates to prevent timezone mismatches
+          const todayStr = getLocalDateString(new Date());
 
-          const yesterday = new Date(now);
+          const yesterday = new Date();
           yesterday.setDate(yesterday.getDate() - 1);
-          const yesterdayStr = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()).toISOString().slice(0, 10);
+          const yesterdayStr = getLocalDateString(yesterday);
 
+          const now = new Date();
           const currentMonth = now.getMonth();
           const currentYear = now.getFullYear();
 
-          const lastMonthDate = new Date(now);
+          const lastMonthDate = new Date();
           lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
           const lastMonth = lastMonthDate.getMonth();
           const lastMonthYear = lastMonthDate.getFullYear();
@@ -141,15 +149,19 @@ const Dashboard = () => {
           let monthlySum = 0;
           let lastMonthSum = 0;
 
+          // Align boundary dates to local midnight for accuracy
           const sevenDaysAgo = new Date();
+          sevenDaysAgo.setHours(0, 0, 0, 0);
           sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
           const fourteenDaysAgo = new Date();
+          fourteenDaysAgo.setHours(0, 0, 0, 0);
           fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
           salesList.forEach((sale) => {
             if (!sale || !sale.createdAt) return;
             const sDate = new Date(sale.createdAt);
-            const saleDateStr = new Date(sDate.getFullYear(), sDate.getMonth(), sDate.getDate()).toISOString().slice(0, 10);
+            const saleDateStr = getLocalDateString(sDate);
 
             if (saleDateStr === todayStr) {
               todaySum += Number(sale.totalAmount || 0);
@@ -223,11 +235,11 @@ const Dashboard = () => {
 
           setTopSelling(topSellers);
 
-          // 7-day sales trend for SVG Chart
+          // 7-day sales trend for SVG Chart using local dates
           const last7Days = Array.from({ length: 7 }, (_, i) => {
             const d = new Date();
             d.setDate(d.getDate() - i);
-            return d.toISOString().slice(0, 10);
+            return getLocalDateString(d);
           }).reverse();
 
           const dailySalesMap = {};
@@ -235,16 +247,21 @@ const Dashboard = () => {
 
           salesList.forEach(sale => {
             if (!sale || !sale.createdAt) return;
-            const dateStr = new Date(sale.createdAt).toISOString().slice(0, 10);
+            const sDate = new Date(sale.createdAt);
+            const dateStr = getLocalDateString(sDate);
             if (dateStr in dailySalesMap) {
               dailySalesMap[dateStr] += Number(sale.totalAmount || 0);
             }
           });
 
           const trend = last7Days.map(date => {
-            const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
+            // Split date parts to construct local date and avoid browser UTC parsing shift
+            const parts = date.split('-');
+            const d = new Date(parts[0], parts[1] - 1, parts[2]);
+            const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+            const formattedDate = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
             return {
-              label: dayName,
+              label: `${dayName}, ${formattedDate}`,
               value: dailySalesMap[date]
             };
           });
