@@ -90,7 +90,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       category: 'CONSOLE'
     },
     {
-      name: 'Operations Calendar',
+      name: 'Calendar',
       path: '/calendar',
       icon: Calendar,
       roles: ['Owner', 'Manager', 'Inventory Staff'],
