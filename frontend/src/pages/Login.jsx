@@ -27,9 +27,9 @@ import { useTheme } from '../context/ThemeContext';
 import ThemeSelector from '../components/ThemeSelector';
 
 const Login = () => {
-  const [email, setEmail] = useState('owner@sibis.com');
-  const [password, setPassword] = useState('password123');
-  const [mockRole, setMockRole] = useState('Owner');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [mockRole, setMockRole] = useState('');
   const [devDrawerOpen, setDevDrawerOpen] = useState(false);
   const [error, setError] = useState('');
 
