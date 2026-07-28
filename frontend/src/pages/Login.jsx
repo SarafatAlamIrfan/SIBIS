@@ -45,9 +45,43 @@ const Login = () => {
   const [forgotDemoOtp, setForgotDemoOtp] = useState('');
   const [forgotSubmitting, setForgotSubmitting] = useState(false);
 
-  const { login, loginWithGoogle, sendForgotPasswordOtp, resetPasswordWithOtp, mockMode } = useAuth();
+  const { 
+    login, 
+    loginWithGoogle, 
+    sendForgotPasswordOtp, 
+    resetPasswordWithOtp, 
+    mockMode,
+    currentUser,
+    googleRedirectUser,
+    redirectError
+  } = useAuth();
   const { darkMode, toggleMode } = useTheme();
   const navigate = useNavigate();
+
+  // Redirect logged-in users to their dashboard
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.role === 'System Admin') {
+        navigate('/admin/stores');
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  }, [currentUser, navigate]);
+
+  // Navigate new Google users to complete store registration
+  useEffect(() => {
+    if (googleRedirectUser) {
+      navigate('/register');
+    }
+  }, [googleRedirectUser, navigate]);
+
+  // Display Google redirect authentication error
+  useEffect(() => {
+    if (redirectError) {
+      setError(redirectError);
+    }
+  }, [redirectError]);
 
   const handleRoleSelect = (role) => {
     setMockRole(role);
@@ -63,7 +97,7 @@ const Login = () => {
     setDevDrawerOpen(false);
   };
 
-  // Google Sign In Handler (Triggers Google Auth Popup Window)
+  // Google Sign In Handler (Triggers Google Auth Redirect)
   const handleGoogleSignIn = async () => {
     setError('');
     try {
@@ -79,7 +113,7 @@ const Login = () => {
         navigate('/dashboard');
       }
     } catch (err) {
-      setError(err.message || 'Google Popup authentication failed.');
+      setError(err.message || 'Google Redirect authentication failed.');
     }
   };
 

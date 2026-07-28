@@ -26,7 +26,14 @@ import { useTheme } from '../context/ThemeContext';
 import ThemeSelector from '../components/ThemeSelector';
 
 const RegisterStorePage = () => {
-  const { registerStore, loginWithGoogle } = useAuth();
+  const { 
+    registerStore, 
+    loginWithGoogle,
+    currentUser,
+    googleRedirectUser,
+    clearGoogleRedirectUser,
+    redirectError 
+  } = useAuth();
   const { darkMode, toggleMode } = useTheme();
   const navigate = useNavigate();
 
@@ -34,7 +41,40 @@ const RegisterStorePage = () => {
   const [step, setStep] = useState(1);
   const [googleVerifiedUser, setGoogleVerifiedUser] = useState(null);
 
-  // Google Sign In Handler (Triggers Google Auth Popup Window)
+  // Redirect logged-in users away from registration page
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/dashboard');
+    }
+  }, [currentUser, navigate]);
+
+  // Handle Google redirect sign-in result to pre-fill registration details
+  useEffect(() => {
+    if (googleRedirectUser) {
+      setGoogleVerifiedUser({
+        email: googleRedirectUser.email,
+        name: googleRedirectUser.name,
+        googleId: googleRedirectUser.googleId,
+        avatar: googleRedirectUser.avatar,
+      });
+      setFormData((prev) => ({
+        ...prev,
+        ownerName: googleRedirectUser.name || prev.ownerName,
+        ownerEmail: googleRedirectUser.email || prev.ownerEmail,
+      }));
+      setStep(1);
+      clearGoogleRedirectUser();
+    }
+  }, [googleRedirectUser, clearGoogleRedirectUser]);
+
+  // Display redirect errors
+  useEffect(() => {
+    if (redirectError) {
+      setError(redirectError);
+    }
+  }, [redirectError]);
+
+  // Google Sign In Handler (Triggers Google Auth Redirect)
   const handleGoogleSignIn = async () => {
     setError('');
     try {
@@ -56,7 +96,7 @@ const RegisterStorePage = () => {
         navigate('/dashboard');
       }
     } catch (err) {
-      setError(err.message || 'Google Popup authentication failed.');
+      setError(err.message || 'Google Redirect authentication failed.');
     }
   };
 

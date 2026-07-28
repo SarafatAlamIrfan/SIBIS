@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import API from '../services/api';
-import { auth, googleProvider, signInWithPopup } from '../config/firebase';
+import { auth, googleProvider, signInWithRedirect, getRedirectResult } from '../config/firebase';
 
 const AuthContext = createContext(null);
 
@@ -8,6 +8,8 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mockMode] = useState(import.meta.env.DEV); // Only true during local vite dev server, false in production
+  const [googleRedirectUser, setGoogleRedirectUser] = useState(null);
+  const [redirectError, setRedirectError] = useState(null);
 
   // Sync user profile from MongoDB backend using the local storage JWT
   const loadProfile = async () => {
@@ -22,12 +24,55 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('sibis_token');
-    if (token) {
-      loadProfile().finally(() => setLoading(false));
-    } else {
+    const initializeAuth = async () => {
+      let hasLoggedInFromRedirect = false;
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          const firebaseUser = result.user;
+          const googleUserData = {
+            email: firebaseUser.email,
+            name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+            googleId: firebaseUser.uid,
+            avatar: firebaseUser.photoURL || '',
+          };
+
+          const response = await API.post('/users/google-auth', googleUserData);
+          if (response.data?.isNewUser) {
+            setGoogleRedirectUser({
+              email: response.data.email,
+              name: response.data.name,
+              googleId: response.data.googleId,
+              avatar: response.data.avatar,
+            });
+          } else {
+            const { token, user } = response.data;
+            if (token) {
+              localStorage.setItem('sibis_token', token);
+              setCurrentUser(user);
+              hasLoggedInFromRedirect = true;
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to handle Google redirect sign-in:', err);
+        setRedirectError(err.message || 'Google redirect authentication failed.');
+      }
+
+      if (!hasLoggedInFromRedirect) {
+        const token = localStorage.getItem('sibis_token');
+        if (token) {
+          try {
+            await loadProfile();
+          } catch (err) {
+            console.error('Failed to load profile on mount:', err);
+          }
+        }
+      }
       setLoading(false);
-    }
+    };
+
+    initializeAuth();
   }, []);
 
   // Login handler supporting standard email/password authentication
@@ -79,7 +124,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Google Login / Registration Handler (Triggers Google Auth Popup)
+  // Google Login / Registration Handler (Triggers Google Auth Redirect)
   const loginWithGoogle = async (manualUserData = null) => {
     setLoading(true);
     try {
@@ -87,26 +132,15 @@ export const AuthProvider = ({ children }) => {
 
       if (!googleUserData) {
         try {
-          const result = await signInWithPopup(auth, googleProvider);
-          const firebaseUser = result.user;
-          googleUserData = {
-            email: firebaseUser.email,
-            name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
-            googleId: firebaseUser.uid,
-            avatar: firebaseUser.photoURL || '',
-          };
-        } catch (popupErr) {
-          console.warn('Firebase popup error:', popupErr.code, popupErr.message);
-          if (popupErr.code === 'auth/popup-closed-by-user') {
-            throw new Error('Google Sign-In popup was closed before completing.');
-          }
-          if (popupErr.code === 'auth/unauthorized-domain') {
-            throw new Error('Please add sibis-bd.netlify.app to Firebase Console > Authentication > Settings > Authorized domains.');
-          }
+          await signInWithRedirect(auth, googleProvider);
+          // Page redirects, execution halts here.
+          return;
+        } catch (redirectErr) {
+          console.warn('Firebase redirect error:', redirectErr.code, redirectErr.message);
           if (
-            popupErr.code === 'auth/api-key-not-valid' ||
-            popupErr.code === 'auth/invalid-api-key' ||
-            popupErr.message?.includes('api-key-not-valid')
+            redirectErr.code === 'auth/api-key-not-valid' ||
+            redirectErr.code === 'auth/invalid-api-key' ||
+            redirectErr.message?.includes('api-key-not-valid')
           ) {
             // Prompt fallback for instant testing when real Firebase API Key is not set in Netlify env
             const emailInput = prompt(
@@ -125,7 +159,7 @@ export const AuthProvider = ({ children }) => {
               avatar: '',
             };
           } else {
-            throw new Error(popupErr.message || 'Google Popup Sign-in failed.');
+            throw new Error(redirectErr.message || 'Google Redirect Sign-in failed.');
           }
         }
       }
@@ -177,6 +211,10 @@ export const AuthProvider = ({ children }) => {
     setCurrentUser(null);
   };
 
+  const clearGoogleRedirectUser = () => {
+    setGoogleRedirectUser(null);
+  };
+
   const value = {
     currentUser,
     loading,
@@ -190,6 +228,9 @@ export const AuthProvider = ({ children }) => {
     updateUserProfile,
     logout,
     toggleMockMode: () => {},
+    googleRedirectUser,
+    clearGoogleRedirectUser,
+    redirectError,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
