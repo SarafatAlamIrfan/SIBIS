@@ -810,7 +810,7 @@ const Dashboard = () => {
 
           <div className="mt-6 w-full overflow-hidden flex items-center justify-center">
             {chartPoints.length > 0 ? (
-              <svg viewBox={`0 0 ${chartWidth} ${chartHeight + 30}`} className="w-full h-44 overflow-visible">
+              <svg viewBox={`0 -15 ${chartWidth} ${chartHeight + 45}`} className="w-full h-44 overflow-visible">
                 <defs>
                   <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#6366f1" stopOpacity="0.25" />
@@ -862,7 +862,7 @@ const Dashboard = () => {
                     />
                     <text 
                       x={pt.x} 
-                      y={pt.y - 15} 
+                      y={pt.y - 18} 
                       className="text-[10px] font-black fill-indigo-600 dark:fill-indigo-400 opacity-0 group-hover/dot:opacity-100 transition-opacity duration-300"
                       textAnchor="middle"
                     >
