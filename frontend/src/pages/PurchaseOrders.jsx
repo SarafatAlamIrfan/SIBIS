@@ -227,7 +227,7 @@ const PurchaseOrders = () => {
                       </td>
                       <td className="px-6 py-4 text-right space-x-2" onClick={(e) => e.stopPropagation()}>
                         {po.status === 'Draft' && (
-                          (currentUser.role === 'Owner' || currentUser.role === 'Manager') ? (
+                          (currentUser.role === 'System Admin' || currentUser.role === 'Owner' || currentUser.role === 'Manager') ? (
                             <div className="inline-flex space-x-2">
                               <button
                                 onClick={(e) => {
@@ -269,7 +269,7 @@ const PurchaseOrders = () => {
                               <Check className="w-3.5 h-3.5 mr-1" />
                               Receive
                             </button>
-                            {(currentUser.role === 'Owner' || currentUser.role === 'Manager') && (
+                            {(currentUser.role === 'System Admin' || currentUser.role === 'Owner' || currentUser.role === 'Manager') && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();

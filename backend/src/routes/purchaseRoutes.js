@@ -11,8 +11,8 @@ const { protect, restrictTo } = require('../middleware/authMiddleware');
 // Protect all routes
 router.use(protect);
 
-// Owner/Manager/Inventory Staff routes
-router.use(restrictTo('Owner', 'Manager', 'Inventory Staff'));
+// System Admin/Owner/Manager/Inventory Staff routes
+router.use(restrictTo('System Admin', 'Owner', 'Manager', 'Inventory Staff'));
 
 router.route('/')
   .post(createPurchaseOrder)

@@ -140,8 +140,8 @@ exports.updatePurchaseOrderStatus = async (req, res, next) => {
       if (purchaseOrder.status !== 'Draft') {
         return res.status(400).json({ error: 'Purchase Order must be in "Draft" status to be approved.' });
       }
-      if (user.role !== 'Owner' && user.role !== 'Manager') {
-        return res.status(403).json({ error: 'Only Owner or Manager can approve purchase orders.' });
+      if (user.role !== 'System Admin' && user.role !== 'Owner' && user.role !== 'Manager') {
+        return res.status(403).json({ error: 'Only Admin, Owner or Manager can approve purchase orders.' });
       }
     }
 
@@ -149,7 +149,7 @@ exports.updatePurchaseOrderStatus = async (req, res, next) => {
       if (purchaseOrder.status !== 'Ordered') {
         return res.status(400).json({ error: 'Purchase Order must be in "Ordered" status to be marked as Received.' });
       }
-      if (user.role !== 'Owner' && user.role !== 'Manager' && user.role !== 'Inventory Staff') {
+      if (user.role !== 'System Admin' && user.role !== 'Owner' && user.role !== 'Manager' && user.role !== 'Inventory Staff') {
         return res.status(403).json({ error: 'Your role is not authorized to receive shipments.' });
       }
     }
@@ -158,8 +158,8 @@ exports.updatePurchaseOrderStatus = async (req, res, next) => {
       if (!['Draft', 'Ordered'].includes(purchaseOrder.status)) {
         return res.status(400).json({ error: 'Cannot cancel a purchase order that is already received or cancelled.' });
       }
-      if (user.role !== 'Owner' && user.role !== 'Manager') {
-        return res.status(403).json({ error: 'Only Owner or Manager can cancel purchase orders.' });
+      if (user.role !== 'System Admin' && user.role !== 'Owner' && user.role !== 'Manager') {
+        return res.status(403).json({ error: 'Only Admin, Owner or Manager can cancel purchase orders.' });
       }
     }
 
