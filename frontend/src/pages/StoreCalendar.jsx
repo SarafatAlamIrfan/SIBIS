@@ -31,6 +31,7 @@ const StoreCalendar = ({ hideHeader = false }) => {
   const [locationInfo, setLocationInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   // Add/Edit event modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -378,19 +379,25 @@ const StoreCalendar = ({ hideHeader = false }) => {
                   );
                 }
 
-                // Check if this date represents today
-                const isToday = 
-                  new Date().getDate() === cell.dayNum &&
-                  new Date().getMonth() === currentMonth &&
-                  new Date().getFullYear() === currentYear;
+                // Check if this date represents selected day
+                const isSelectedDay = selectedDate &&
+                  selectedDate.getDate() === cell.dayNum &&
+                  selectedDate.getMonth() === currentMonth &&
+                  selectedDate.getFullYear() === currentYear;
 
                 return (
                   <div 
                     key={`day-${cell.dayNum}`} 
-                    className={`h-16 sm:h-24 p-1 sm:p-2 bg-slate-50/50 dark:bg-slate-950/20 border rounded-xl sm:rounded-2xl flex flex-col justify-between overflow-hidden hover:border-indigo-500/25 transition-all ${
-                      isToday 
-                        ? 'border-indigo-500 dark:border-indigo-500 bg-indigo-500/5 shadow-inner' 
-                        : 'border-slate-200/60 dark:border-slate-800/60'
+                    onClick={() => {
+                      setSelectedDate(cell.date);
+                      setSelectedEvent(null);
+                    }}
+                    className={`h-16 sm:h-24 p-1 sm:p-2 border rounded-xl sm:rounded-2xl flex flex-col justify-between overflow-hidden hover:border-indigo-500/25 transition-all cursor-pointer ${
+                      isSelectedDay
+                        ? 'border-indigo-500 dark:border-indigo-500 bg-indigo-500/10 shadow-[0_0_10px_rgba(99,102,241,0.2)]'
+                        : isToday 
+                          ? 'border-indigo-400 dark:border-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/40 shadow-inner' 
+                          : 'border-slate-200/60 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-950/20'
                     }`}
                   >
                     <span className={`text-[10px] sm:text-xs font-black self-end px-1 sm:px-1.5 py-0.5 rounded-md sm:rounded-lg ${
@@ -404,7 +411,11 @@ const StoreCalendar = ({ hideHeader = false }) => {
                       {cell.events.map(event => (
                         <button
                           key={event.id}
-                          onClick={() => setSelectedEvent(event)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDate(cell.date);
+                            setSelectedEvent(event);
+                          }}
                           className={`w-full text-left truncate text-[9px] font-extrabold px-1.5 py-0.5 rounded-lg border tracking-wide block transition-colors cursor-pointer ${event.color}`}
                         >
                           {event.title}
@@ -524,6 +535,95 @@ const StoreCalendar = ({ hideHeader = false }) => {
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 )}
+                
+                {/* Back to daily schedule button */}
+                <button
+                  onClick={() => setSelectedEvent(null)}
+                  className="w-full mt-2.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center"
+                >
+                  Back to Day Schedule
+                </button>
+              </div>
+            </div>
+          ) : selectedDate ? (
+            <div className="space-y-5 animate-[fade-in_0.2s_ease-out]">
+              <div className="flex items-center space-x-2 pb-4 border-b border-slate-100 dark:border-slate-800/80">
+                <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 border-indigo-500/20">
+                  <CalendarIcon className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-sm text-slate-855 dark:text-white">Day Schedule</h4>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+                    {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </div>
+              </div>
+
+              {/* Day Events list */}
+              <div className="space-y-3">
+                <h5 className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Scheduled Events</h5>
+                
+                {(() => {
+                  const dayEvents = events.filter(e => {
+                    return (
+                      e.date.getDate() === selectedDate.getDate() &&
+                      e.date.getMonth() === selectedDate.getMonth() &&
+                      e.date.getFullYear() === selectedDate.getFullYear()
+                    );
+                  });
+
+                  if (dayEvents.length === 0) {
+                    return (
+                      <p className="text-xs text-slate-450 dark:text-slate-550 italic bg-slate-50 dark:bg-slate-950/20 p-4 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+                        No events scheduled for this date.
+                      </p>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                      {dayEvents.map(e => (
+                        <button
+                          key={e.id}
+                          onClick={() => setSelectedEvent(e)}
+                          className={`w-full text-left p-2.5 rounded-xl border text-xs font-bold transition-all hover:scale-99 flex items-center justify-between cursor-pointer ${e.color}`}
+                        >
+                          <span className="truncate pr-2">{e.title}</span>
+                          <span className="text-[8px] opacity-75 font-mono uppercase bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded-md">{e.type}</span>
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Action Button: Add Event for this Date */}
+              <div className="pt-2">
+                <button
+                  onClick={() => {
+                    setIsEditMode(false);
+                    setEditingEventId('');
+                    setEventError('');
+                    setSyncFeedback('');
+                    // Format date to local YYYY-MM-DD
+                    const offset = selectedDate.getTimezoneOffset();
+                    const localDate = new Date(selectedDate.getTime() - (offset*60*1000));
+                    const dateStr = localDate.toISOString().split('T')[0];
+                    setNewEvent({
+                      title: '',
+                      description: '',
+                      date: dateStr,
+                      type: 'custom',
+                      color: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30 hover:bg-indigo-500/20 dark:text-indigo-400',
+                      syncToGoogle: true,
+                    });
+                    setIsAddModalOpen(true);
+                  }}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5 active:scale-97 transform"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Event for this Day</span>
+                </button>
               </div>
             </div>
           ) : (
@@ -531,9 +631,9 @@ const StoreCalendar = ({ hideHeader = false }) => {
               <div className="p-4 bg-slate-50 dark:bg-slate-950 inline-block rounded-full border border-slate-100 dark:border-slate-800">
                 <Info className="w-8 h-8 stroke-1" />
               </div>
-              <p className="text-xs font-bold uppercase tracking-wider">No Event Selected</p>
+              <p className="text-xs font-bold uppercase tracking-wider">No Day Selected</p>
               <p className="text-[11px] font-semibold text-slate-400 max-w-[200px]">
-                Click on any calendar day event chip to inspect warning logs and access AI scheduling options.
+                Click on any calendar cell to select a date and view scheduled items, or click on a specific event chip.
               </p>
             </div>
           )}
