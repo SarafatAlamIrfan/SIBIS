@@ -810,7 +810,7 @@ const Dashboard = () => {
 
           <div className="mt-6 w-full overflow-hidden flex items-center justify-center">
             {chartPoints.length > 0 ? (
-              <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-44 overflow-visible">
+              <svg viewBox={`0 0 ${chartWidth} ${chartHeight + 30}`} className="w-full h-44 overflow-visible">
                 <defs>
                   <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#6366f1" stopOpacity="0.25" />
