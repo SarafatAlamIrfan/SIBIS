@@ -3,7 +3,10 @@ import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult } fr
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyBjgtfCkpbeq5Dq0tQQkIPwAw5Rw4cSZrs',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'sibis-bd.firebaseapp.com',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'sibis-bd.firebaseapp.com'
+      : window.location.hostname),
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'sibis-bd',
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'sibis-bd.firebasestorage.app',
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '762879897283',
