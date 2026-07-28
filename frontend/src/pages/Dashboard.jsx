@@ -40,6 +40,7 @@ const Dashboard = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const isSystemAdmin = currentUser?.role === 'System Admin';
+  const isInventoryStaff = currentUser?.role === 'Inventory Staff';
   const [showCalendarModal, setShowCalendarModal] = useState(false);
 
   // System Admin State
@@ -72,6 +73,21 @@ const Dashboard = () => {
   const [chartData, setChartData] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reorderCount, setReorderCount] = useState(0);
+
+  useEffect(() => {
+    const updateCount = () => {
+      const list = JSON.parse(localStorage.getItem('sibis_reorder_list') || '[]');
+      setReorderCount(list.length);
+    };
+    updateCount();
+    window.addEventListener('storage', updateCount);
+    const interval = setInterval(updateCount, 2000);
+    return () => {
+      window.removeEventListener('storage', updateCount);
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchDashboardData = async (showSpinner = false) => {
@@ -640,400 +656,680 @@ const Dashboard = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-        {/* Today's Sales Card */}
-        <div 
-          onClick={() => navigate('/pos')}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/pos')}
-          title="Click to open POS checkout"
-          className="glass-panel p-5 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-indigo hover:border-indigo-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
-        >
-          <div className="space-y-1 relative z-10">
-            <div className="flex items-center space-x-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Today's Sales</p>
-              <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+        {isInventoryStaff ? (
+          <>
+            {/* Card 1: Total Products */}
+            <div 
+              onClick={() => navigate('/products')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/products')}
+              title="Click to view product inventory"
+              className="glass-panel p-5 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-indigo hover:border-indigo-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
+            >
+              <div className="space-y-1 relative z-10">
+                <div className="flex items-center space-x-1">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Products</p>
+                  <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-none">{stats.totalProducts}</h3>
+                <span className="text-[9px] text-slate-400 font-bold inline-flex items-center mt-2">
+                  Active in catalog
+                </span>
+              </div>
+              <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300">
+                <Package className="w-5 h-5" />
+              </div>
             </div>
-            <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-none">৳{stats.todaySales.toFixed(2)}</h3>
-            {stats.todayPct !== null ? (
-              <span className={`text-[9px] font-bold inline-flex items-center mt-2 ${stats.todayPct >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {stats.todayPct >= 0 ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
-                {stats.todayPct >= 0 ? `+${stats.todayPct.toFixed(1)}%` : `${stats.todayPct.toFixed(1)}%`} vs yesterday
-              </span>
-            ) : (
-              <span className="text-[9px] text-slate-400 font-bold inline-flex items-center mt-2">
-                Live POS sales today
-              </span>
-            )}
-          </div>
-          <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform duration-300">
-            <DollarSign className="w-5 h-5" />
-          </div>
-        </div>
 
-        {/* Weekly Revenue Card */}
-        <div 
-          onClick={() => navigate('/pos')}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/pos')}
-          title="Click to view weekly revenue"
-          className="glass-panel p-5 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-indigo hover:border-indigo-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
-        >
-          <div className="space-y-1 relative z-10">
-            <div className="flex items-center space-x-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Weekly Sales</p>
-              <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
-            </div>
-            <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-none">৳{stats.weeklyRevenue.toFixed(2)}</h3>
-            {stats.weeklyPct !== null ? (
-              <span className={`text-[9px] font-bold inline-flex items-center mt-2 ${stats.weeklyPct >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {stats.weeklyPct >= 0 ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
-                {stats.weeklyPct >= 0 ? `+${stats.weeklyPct.toFixed(1)}%` : `${stats.weeklyPct.toFixed(1)}%`} vs last week
-              </span>
-            ) : (
-              <span className="text-[9px] text-slate-400 font-bold inline-flex items-center mt-2">
-                Last 7 days revenue
-              </span>
-            )}
-          </div>
-          <div className="p-2.5 bg-violet-50 dark:bg-violet-950/40 rounded-xl text-violet-600 dark:text-violet-400 group-hover:scale-110 transition-transform duration-300">
-            <Calendar className="w-5 h-5" />
-          </div>
-        </div>
+            {/* Card 2: Out of Stock */}
+            {(() => {
+              const outOfStockCount = products.filter(p => p.currentStock === 0).length;
+              return (
+                <div 
+                  onClick={() => navigate('/products')}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/products')}
+                  title="Click to view out of stock items"
+                  className={`glass-panel p-5 rounded-3xl hover:-translate-y-1.5 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none ${
+                    outOfStockCount > 0 
+                      ? 'border-rose-500/50 bg-rose-500/[0.03] dark:bg-rose-500/[0.02] shadow-neon-rose hover:border-rose-500 animate-[pulse-subtle_4s_ease-in-out_infinite]' 
+                      : 'hover:shadow-neon-indigo hover:border-indigo-500/40'
+                  }`}
+                >
+                  <div className="space-y-1 relative z-10">
+                    <div className="flex items-center space-x-1">
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Out of Stock</p>
+                      <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+                    </div>
+                    <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-none">{outOfStockCount}</h3>
+                    {outOfStockCount > 0 ? (
+                      <span className="text-[9px] text-rose-500 font-extrabold inline-flex items-center mt-2 animate-pulse">
+                        Critical restock needed
+                      </span>
+                    ) : (
+                      <span className="text-[9px] text-emerald-500 font-bold inline-flex items-center mt-2">
+                        All products active
+                      </span>
+                    )}
+                  </div>
+                  <div className={`p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300 ${
+                    outOfStockCount > 0 
+                      ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400' 
+                      : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                  }`}>
+                    <XCircle className="w-5 h-5" />
+                  </div>
+                </div>
+              );
+            })()}
 
-        {/* Monthly Revenue Card */}
-        <div 
-          onClick={() => navigate('/pos')}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/pos')}
-          title="Click to open POS sales records"
-          className="glass-panel p-5 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-emerald hover:border-emerald-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
-        >
-          <div className="space-y-1 relative z-10">
-            <div className="flex items-center space-x-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Monthly Sales</p>
-              <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+            {/* Card 3: Low Stock */}
+            <div 
+              onClick={() => navigate('/products?filter=low-stock')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/products?filter=low-stock')}
+              title="Click to view low stock items"
+              className={`glass-panel p-5 rounded-3xl hover:-translate-y-1.5 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none ${
+                stats.lowStockCount > 0 
+                  ? 'border-amber-500/50 bg-amber-500/[0.03] dark:bg-amber-500/[0.02] shadow-neon-amber hover:border-amber-500 animate-[pulse-subtle_4s_ease-in-out_infinite]' 
+                  : 'hover:shadow-neon-indigo hover:border-indigo-500/40'
+              }`}
+            >
+              <div className="space-y-1 relative z-10">
+                <div className="flex items-center space-x-1">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Low Stock</p>
+                  <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-none">{stats.lowStockCount}</h3>
+                {stats.lowStockCount > 0 ? (
+                  <span className="text-[9px] text-amber-600 dark:text-amber-400 font-extrabold inline-flex items-center mt-2 animate-pulse">
+                    Below safety limits
+                  </span>
+                ) : (
+                  <span className="text-[9px] text-emerald-500 font-bold inline-flex items-center mt-2">
+                    Stocks normal
+                  </span>
+                )}
+              </div>
+              <div className={`p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300 ${
+                stats.lowStockCount > 0 
+                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' 
+                  : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+              }`}>
+                <AlertTriangle className="w-5 h-5" />
+              </div>
             </div>
-            <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-none">৳{stats.monthlyRevenue.toFixed(2)}</h3>
-            {stats.monthlyPct !== null ? (
-              <span className={`text-[9px] font-bold inline-flex items-center mt-2 ${stats.monthlyPct >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {stats.monthlyPct >= 0 ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />}
-                {stats.monthlyPct >= 0 ? `+${stats.monthlyPct.toFixed(1)}%` : `${stats.monthlyPct.toFixed(1)}%`} vs last month
-              </span>
-            ) : (
-              <span className="text-[9px] text-slate-400 font-bold inline-flex items-center mt-2">
-                Current month revenue
-              </span>
-            )}
-          </div>
-          <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-        </div>
 
-        {/* Total Products Card */}
-        <div 
-          onClick={() => navigate('/products')}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/products')}
-          title="Click to view product inventory"
-          className="glass-panel p-6 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-indigo hover:border-indigo-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
-        >
-          <div className="space-y-1 relative z-10">
-            <div className="flex items-center space-x-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Products</p>
-              <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+            {/* Card 4: Expiring Soon */}
+            <div 
+              onClick={() => navigate('/products?filter=expiring')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/products?filter=expiring')}
+              title="Click to view expiring items"
+              className={`glass-panel p-5 rounded-3xl hover:-translate-y-1.5 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none ${
+                expiringProducts.length > 0 
+                  ? 'border-amber-500/50 bg-amber-500/[0.03] dark:bg-amber-500/[0.02] shadow-neon-amber hover:border-amber-500 animate-[pulse-subtle_4s_ease-in-out_infinite]' 
+                  : 'hover:shadow-neon-indigo hover:border-indigo-500/40'
+              }`}
+            >
+              <div className="space-y-1 relative z-10">
+                <div className="flex items-center space-x-1">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Expiring Soon</p>
+                  <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-none">{expiringProducts.length}</h3>
+                {expiringProducts.length > 0 ? (
+                  <span className="text-[9px] text-amber-600 dark:text-amber-400 font-extrabold inline-flex items-center mt-2 animate-pulse">
+                    Expires &lt; 30 days
+                  </span>
+                ) : (
+                  <span className="text-[9px] text-emerald-500 font-bold inline-flex items-center mt-2">
+                    No near expiries
+                  </span>
+                )}
+              </div>
+              <div className={`p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300 ${
+                expiringProducts.length > 0 
+                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' 
+                  : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+              }`}>
+                <Clock className="w-5 h-5" />
+              </div>
             </div>
-            <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">{stats.totalProducts}</h3>
-            <span className="text-[10px] text-slate-400 font-bold inline-flex items-center mt-2">
-              In stock categories
-            </span>
-          </div>
-          <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-2xl text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300">
-            <Package className="w-6 h-6" />
-          </div>
-        </div>
 
-        {/* Low Stock Items Card */}
-        <div 
-          onClick={() => navigate('/products?filter=low-stock')}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/products?filter=low-stock')}
-          title="Click to view low stock items"
-          className={`glass-panel p-6 rounded-3xl hover:-translate-y-1.5 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none ${
-            stats.lowStockCount > 0 
-              ? 'border-rose-500/50 bg-rose-500/[0.03] dark:bg-rose-500/[0.02] shadow-neon-rose hover:border-rose-500 animate-[pulse-subtle_4s_ease-in-out_infinite]' 
-              : 'hover:shadow-neon-indigo hover:border-indigo-500/40'
-          }`}
-        >
-          <div className="space-y-1 relative z-10">
-            <div className="flex items-center space-x-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Low Stock Items</p>
-              <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+            {/* Card 5: Reorder Planner */}
+            <div 
+              onClick={() => navigate('/reorder-list')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/reorder-list')}
+              title="Click to open Reorder Planner"
+              className="glass-panel p-5 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-indigo hover:border-indigo-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
+            >
+              <div className="space-y-1 relative z-10">
+                <div className="flex items-center space-x-1">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Reorder Planner</p>
+                  <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-none">{reorderCount}</h3>
+                <span className="text-[9px] text-slate-400 font-bold inline-flex items-center mt-2">
+                  Items in queue
+                </span>
+              </div>
+              <div className="p-2.5 bg-violet-50 dark:bg-violet-950/40 rounded-xl text-violet-600 dark:text-violet-400 group-hover:scale-110 transition-transform duration-300">
+                <Plus className="w-5 h-5" />
+              </div>
             </div>
-            <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">{stats.lowStockCount}</h3>
-            {stats.lowStockCount > 0 ? (
-              <span className="text-[10px] text-rose-500 font-extrabold inline-flex items-center mt-2 animate-pulse">
-                <AlertTriangle className="w-3.5 h-3.5 mr-0.5" /> Action required
-              </span>
-            ) : (
-              <span className="text-[10px] text-emerald-500 font-bold inline-flex items-center mt-2">
-                All stocks normal
-              </span>
-            )}
-          </div>
-          <div className={`p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300 ${
-            stats.lowStockCount > 0 
-              ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400' 
-              : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-          }`}>
-            <AlertTriangle className="w-6 h-6" />
-          </div>
-        </div>
+          </>
+        ) : (
+          <>
+            {/* Today's Sales Card */}
+            <div 
+              onClick={() => navigate('/pos')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/pos')}
+              title="Click to open POS checkout"
+              className="glass-panel p-5 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-indigo hover:border-indigo-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
+            >
+              <div className="space-y-1 relative z-10">
+                <div className="flex items-center space-x-1">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Today's Sales</p>
+                  <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-none">৳{stats.todaySales.toFixed(2)}</h3>
+                {stats.todayPct !== null ? (
+                  <span className={`text-[9px] font-bold inline-flex items-center mt-2 ${stats.todayPct >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {stats.todayPct >= 0 ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
+                    {stats.todayPct >= 0 ? `+${stats.todayPct.toFixed(1)}%` : `${stats.todayPct.toFixed(1)}%`} vs yesterday
+                  </span>
+                ) : (
+                  <span className="text-[9px] text-slate-400 font-bold inline-flex items-center mt-2">
+                    Live POS sales today
+                  </span>
+                )}
+              </div>
+              <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform duration-300">
+                <DollarSign className="w-5 h-5" />
+              </div>
+            </div>
+
+            {/* Weekly Revenue Card */}
+            <div 
+              onClick={() => navigate('/pos')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/pos')}
+              title="Click to view weekly revenue"
+              className="glass-panel p-5 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-indigo hover:border-indigo-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
+            >
+              <div className="space-y-1 relative z-10">
+                <div className="flex items-center space-x-1">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Weekly Sales</p>
+                  <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-none">৳{stats.weeklyRevenue.toFixed(2)}</h3>
+                {stats.weeklyPct !== null ? (
+                  <span className={`text-[9px] font-bold inline-flex items-center mt-2 ${stats.weeklyPct >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {stats.weeklyPct >= 0 ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
+                    {stats.weeklyPct >= 0 ? `+${stats.weeklyPct.toFixed(1)}%` : `${stats.weeklyPct.toFixed(1)}%`} vs last week
+                  </span>
+                ) : (
+                  <span className="text-[9px] text-slate-400 font-bold inline-flex items-center mt-2">
+                    Last 7 days revenue
+                  </span>
+                )}
+              </div>
+              <div className="p-2.5 bg-violet-50 dark:bg-violet-950/40 rounded-xl text-violet-600 dark:text-violet-400 group-hover:scale-110 transition-transform duration-300">
+                <Calendar className="w-5 h-5" />
+              </div>
+            </div>
+
+            {/* Monthly Revenue Card */}
+            <div 
+              onClick={() => navigate('/pos')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/pos')}
+              title="Click to open POS sales records"
+              className="glass-panel p-5 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-emerald hover:border-emerald-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
+            >
+              <div className="space-y-1 relative z-10">
+                <div className="flex items-center space-x-1">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Monthly Sales</p>
+                  <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-none">৳{stats.monthlyRevenue.toFixed(2)}</h3>
+                {stats.monthlyPct !== null ? (
+                  <span className={`text-[9px] font-bold inline-flex items-center mt-2 ${stats.monthlyPct >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {stats.monthlyPct >= 0 ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />}
+                    {stats.monthlyPct >= 0 ? `+${stats.monthlyPct.toFixed(1)}%` : `${stats.monthlyPct.toFixed(1)}%`} vs last month
+                  </span>
+                ) : (
+                  <span className="text-[9px] text-slate-400 font-bold inline-flex items-center mt-2">
+                    Current month revenue
+                  </span>
+                )}
+              </div>
+              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+            </div>
+
+            {/* Total Products Card */}
+            <div 
+              onClick={() => navigate('/products')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/products')}
+              title="Click to view product inventory"
+              className="glass-panel p-6 rounded-3xl hover:-translate-y-1.5 hover:shadow-neon-indigo hover:border-indigo-500/40 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none"
+            >
+              <div className="space-y-1 relative z-10">
+                <div className="flex items-center space-x-1">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Products</p>
+                  <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+                </div>
+                <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">{stats.totalProducts}</h3>
+                <span className="text-[10px] text-slate-400 font-bold inline-flex items-center mt-2">
+                  In stock categories
+                </span>
+              </div>
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-2xl text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300">
+                <Package className="w-6 h-6" />
+              </div>
+            </div>
+
+            {/* Low Stock Items Card */}
+            <div 
+              onClick={() => navigate('/products?filter=low-stock')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/products?filter=low-stock')}
+              title="Click to view low stock items"
+              className={`glass-panel p-6 rounded-3xl hover:-translate-y-1.5 transition-all duration-300 flex items-center justify-between shadow-sm relative overflow-hidden group cursor-pointer active:scale-98 select-none ${
+                stats.lowStockCount > 0 
+                  ? 'border-rose-500/50 bg-rose-500/[0.03] dark:bg-rose-500/[0.02] shadow-neon-rose hover:border-rose-500 animate-[pulse-subtle_4s_ease-in-out_infinite]' 
+                  : 'hover:shadow-neon-indigo hover:border-indigo-500/40'
+              }`}
+            >
+              <div className="space-y-1 relative z-10">
+                <div className="flex items-center space-x-1">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Low Stock Items</p>
+                  <ChevronRight className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+                </div>
+                <h3 className="text-3xl font-black text-slate-800 dark:text-white leading-none">{stats.lowStockCount}</h3>
+                {stats.lowStockCount > 0 ? (
+                  <span className="text-[10px] text-rose-500 font-extrabold inline-flex items-center mt-2 animate-pulse">
+                    <AlertTriangle className="w-3.5 h-3.5 mr-0.5" /> Action required
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-emerald-500 font-bold inline-flex items-center mt-2">
+                    All stocks normal
+                  </span>
+                )}
+              </div>
+              <div className={`p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300 ${
+                stats.lowStockCount > 0 
+                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400' 
+                  : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+              }`}>
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Visual Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Weekly Revenue Trend Chart */}
-        <div className="lg:col-span-7 glass-panel p-6 rounded-3xl shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
-            <div>
-              <h3 className="font-black text-lg text-slate-800 dark:text-white">Sales & Revenue Trend</h3>
-              <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Last 7 Days Overview</p>
-            </div>
-            <span className="text-xs bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-xl font-bold">
-              Weekly Total: ৳{chartData.reduce((sum, d) => sum + d.value, 0).toFixed(0)}
-            </span>
-          </div>
-
-          <div className="mt-6 w-full overflow-hidden flex items-center justify-center">
-            {chartPoints.length > 0 ? (
-              <svg viewBox={`0 -15 ${chartWidth} ${chartHeight + 45}`} className="w-full h-44 overflow-visible">
-                <defs>
-                  <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366f1" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="#6366f1" stopOpacity="0.00" />
-                  </linearGradient>
-                </defs>
-                {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
-                  const y = chartHeight - (ratio * (chartHeight - 40) + 20);
-                  return (
-                    <line 
-                      key={idx} 
-                      x1="20" 
-                      y1={y} 
-                      x2={chartWidth - 20} 
-                      y2={y} 
-                      className="stroke-slate-100 dark:stroke-slate-800/60" 
-                      strokeWidth="1.5" 
-                      strokeDasharray="4 4"
-                    />
-                  );
-                })}
-
-                <path d={fillPath} fill="url(#salesGrad)" />
-
-                <path 
-                  d={linePath} 
-                  fill="none" 
-                  stroke="#6366f1" 
-                  strokeWidth="3.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  className="drop-shadow-[0_4px_8px_rgba(99,102,241,0.3)]"
-                />
-
-                {chartPoints.map((pt, idx) => (
-                  <g key={idx} className="group/dot cursor-pointer">
-                    <circle 
-                      cx={pt.x} 
-                      cy={pt.y} 
-                      r="7" 
-                      className="fill-indigo-500 stroke-white dark:stroke-slate-900" 
-                      strokeWidth="2.5" 
-                    />
-                    <circle 
-                      cx={pt.x} 
-                      cy={pt.y} 
-                      r="14" 
-                      className="fill-indigo-500/20 opacity-0 group-hover/dot:opacity-100 transition-all duration-300"
-                    />
-                    <text 
-                      x={pt.x} 
-                      y={pt.y - 18} 
-                      className="text-[10px] font-black fill-indigo-600 dark:fill-indigo-400 opacity-0 group-hover/dot:opacity-100 transition-opacity duration-300"
-                      textAnchor="middle"
-                    >
-                      ৳{pt.value.toFixed(0)}
-                    </text>
-                  </g>
-                ))}
-
-                {chartPoints.map((pt, idx) => (
-                  <text 
-                    key={idx} 
-                    x={pt.x} 
-                    y={chartHeight + 15} 
-                    className="text-[10px] font-bold fill-slate-400 dark:fill-slate-500"
-                    textAnchor="middle"
-                  >
-                    {pt.label}
-                  </text>
-                ))}
-              </svg>
-            ) : (
-              <div className="h-44 flex items-center justify-center text-slate-400 text-xs">No sales data recorded this week.</div>
-            )}
-          </div>
-        </div>
-
-        {/* Category breakdown bar gauges */}
-        <div className="lg:col-span-5 glass-panel p-6 rounded-3xl shadow-sm flex flex-col justify-between">
-          <div>
-            <h3 className="font-black text-lg text-slate-800 dark:text-white">Category Distribution</h3>
-            <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Top stock classifications</p>
-          </div>
-
-          <div className="mt-6 space-y-4">
-            {categoryData.length === 0 ? (
-              <div className="py-12 text-center text-slate-400 text-xs font-semibold">No inventory products registered.</div>
-            ) : (
-              categoryData.map((cat, idx) => {
-                const colors = [
-                  'from-indigo-500 to-indigo-600',
-                  'from-emerald-500 to-emerald-600',
-                  'from-blue-500 to-blue-600',
-                  'from-amber-500 to-amber-600'
-                ];
-                const bgGrad = colors[idx % colors.length];
-                return (
-                  <div key={cat.name} className="space-y-1">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">{cat.name}</span>
-                      <span className="font-black text-slate-800 dark:text-white">{cat.count} items ({cat.percentage}%)</span>
-                    </div>
-                    <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full bg-gradient-to-r ${bgGrad} rounded-full transition-all duration-1000 ease-out`}
-                        style={{ width: `${cat.percentage}%` }}
-                      ></div>
-                    </div>
+        {isInventoryStaff ? (
+          <>
+            {/* Expiring Products Alert on Left (7 cols) */}
+            <div className="lg:col-span-7 glass-panel p-6 rounded-3xl shadow-sm space-y-6 flex flex-col justify-between select-none">
+              <div>
+                <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-4">
+                  <div className="p-2 bg-gradient-to-br from-rose-500 to-amber-600 rounded-xl text-white shadow-md">
+                    <Clock className="w-5 h-5" />
                   </div>
-                );
-              })
-            )}
-          </div>
-
-          <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-6 flex justify-between items-center text-xs">
-            <span className="font-semibold text-slate-400">Inventory Status:</span>
-            <button
-              onClick={() => navigate(stats.lowStockCount > 0 ? '/products?filter=low-stock' : '/products')}
-              className="font-extrabold text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center cursor-pointer transition-colors group"
-              title="Click to view & manage store inventory products"
-            >
-              {stats.lowStockCount > 0 ? (
-                <span className="text-rose-500 flex items-center font-black animate-pulse">
-                  <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Attention Needed ({stats.lowStockCount} low stock)
-                </span>
-              ) : (
-                <span className="flex items-center">
-                  Active & Healthy <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Top Selling and Expiring Products Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Top Selling Products */}
-        <div 
-          onClick={() => navigate('/reports?tab=profitability')}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/reports?tab=profitability')}
-          title="Click to view Top Selling Products report"
-          className="glass-panel p-6 rounded-3xl shadow-sm space-y-6 hover:shadow-md hover:border-indigo-500/30 transition-all cursor-pointer group active:scale-[0.99] duration-200"
-        >
-          <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-4">
-            <div className="p-2 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl text-white shadow-md">
-              <TrendingUp className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-black text-slate-800 dark:text-white">Top Selling Products</h3>
-              <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Top 5 items by units sold</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {topSelling.length === 0 ? (
-              <div className="py-8 text-center text-slate-400 text-xs font-semibold">No sales recorded yet.</div>
-            ) : (
-              topSelling.map((p, idx) => {
-                const maxSold = topSelling[0]?.soldCount || 1;
-                const percentage = Math.round((p.soldCount / maxSold) * 100);
-                return (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex justify-between items-center text-xs font-semibold">
-                      <span className="font-extrabold text-slate-800 dark:text-slate-200">{p.name}</span>
-                      <span className="font-black text-indigo-500">{p.soldCount} sold <span className="text-[10px] text-slate-400 font-bold">({p.currentStock} left)</span></span>
-                    </div>
-                    <div className="h-2 w-full bg-slate-100 dark:bg-slate-800/45 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full transition-all duration-1000"
-                        style={{ width: `${percentage}%` }}
-                      ></div>
-                    </div>
+                  <div>
+                    <h3 className="text-lg font-black text-slate-805 dark:text-white">Expiring Soon</h3>
+                    <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Products expiring in less than 30 days</p>
                   </div>
-                );
-              })
-            )}
-          </div>
-        </div>
+                </div>
 
-        {/* Expiring Products Alert */}
-        <div className="glass-panel p-6 rounded-3xl shadow-sm space-y-6">
-          <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-4">
-            <div className="p-2 bg-gradient-to-br from-rose-500 to-amber-600 rounded-xl text-white shadow-md">
-              <Clock className="w-5 h-5" />
+                <div className="space-y-3.5 max-h-64 overflow-y-auto pr-2 divide-y divide-slate-100 dark:divide-slate-800/40 mt-4 custom-scrollbar">
+                  {expiringProducts.length === 0 ? (
+                    <div className="py-16 text-center text-slate-400 text-xs font-semibold">No products expiring soon.</div>
+                  ) : (
+                    expiringProducts.map((p, idx) => {
+                      const daysLeft = Math.ceil((new Date(p.expirationDate) - new Date()) / (1000 * 60 * 60 * 24));
+                      return (
+                        <div key={idx} className="flex justify-between items-center text-xs py-3">
+                          <div>
+                            <p className="font-extrabold text-slate-800 dark:text-slate-200">{p.name}</p>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 font-semibold">Expiry: {new Date(p.expirationDate).toLocaleDateString()}</p>
+                          </div>
+                          <span className={`text-[9px] font-black uppercase px-2.5 py-0.5 rounded-lg border tracking-wider ${
+                            daysLeft <= 0
+                              ? 'bg-rose-500/10 text-rose-600 border-rose-500/25 dark:text-rose-455'
+                              : daysLeft <= 7 
+                              ? 'bg-rose-500/10 text-rose-600 border-rose-500/25 dark:text-rose-455' 
+                              : 'bg-amber-500/10 text-amber-600 border-amber-500/25 dark:text-amber-455'
+                          }`}>
+                            {daysLeft <= 0 ? 'Expired' : `${daysLeft} days left`}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-black text-slate-855 dark:text-white">Expiring Soon</h3>
-              <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Products expiring in less than 30 days</p>
-            </div>
-          </div>
 
-          <div className="space-y-3.5 max-h-60 overflow-y-auto pr-2 divide-y divide-slate-100 dark:divide-slate-800/40">
-            {expiringProducts.length === 0 ? (
-              <div className="py-8 text-center text-slate-400 text-xs font-semibold">No products expiring soon.</div>
-            ) : (
-              expiringProducts.map((p, idx) => {
-                const daysLeft = Math.ceil((new Date(p.expirationDate) - new Date()) / (1000 * 60 * 60 * 24));
-                return (
-                  <div key={idx} className="flex justify-between items-center text-xs py-2.5">
-                    <div>
-                      <p className="font-extrabold text-slate-800 dark:text-slate-200">{p.name}</p>
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 font-semibold">Expiry: {new Date(p.expirationDate).toLocaleDateString()}</p>
-                    </div>
-                    <span className={`text-[9px] font-black uppercase px-2.5 py-0.5 rounded-lg border tracking-wider ${
-                      daysLeft <= 7 
-                        ? 'bg-rose-500/10 text-rose-600 border-rose-500/25 dark:text-rose-455' 
-                        : 'bg-amber-500/10 text-amber-600 border-amber-500/25 dark:text-amber-455'
-                    }`}>
-                      {daysLeft <= 0 ? 'Expired' : `${daysLeft} days left`}
+            {/* Category breakdown bar gauges on Right (5 cols) */}
+            <div className="lg:col-span-5 glass-panel p-6 rounded-3xl shadow-sm flex flex-col justify-between">
+              <div>
+                <h3 className="font-black text-lg text-slate-800 dark:text-white">Category Distribution</h3>
+                <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Top stock classifications</p>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                {categoryData.length === 0 ? (
+                  <div className="py-12 text-center text-slate-400 text-xs font-semibold">No inventory products registered.</div>
+                ) : (
+                  categoryData.map((cat, idx) => {
+                    const colors = [
+                      'from-indigo-500 to-indigo-600',
+                      'from-emerald-500 to-emerald-600',
+                      'from-blue-500 to-blue-600',
+                      'from-amber-500 to-amber-600'
+                    ];
+                    const bgGrad = colors[idx % colors.length];
+                    return (
+                      <div key={cat.name} className="space-y-1">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-bold text-slate-700 dark:text-slate-300">{cat.name}</span>
+                          <span className="font-black text-slate-800 dark:text-white">{cat.count} items ({cat.percentage}%)</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full bg-gradient-to-r ${bgGrad} rounded-full transition-all duration-1000 ease-out`}
+                            style={{ width: `${cat.percentage}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-6 flex justify-between items-center text-xs">
+                <span className="font-semibold text-slate-400">Inventory Status:</span>
+                <button
+                  onClick={() => navigate(stats.lowStockCount > 0 ? '/products?filter=low-stock' : '/products')}
+                  className="font-extrabold text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center cursor-pointer transition-colors group"
+                  title="Click to view & manage store inventory products"
+                >
+                  {stats.lowStockCount > 0 ? (
+                    <span className="text-rose-500 flex items-center font-black animate-pulse">
+                      <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Attention Needed ({stats.lowStockCount} low stock)
                     </span>
-                  </div>
-                );
-              })
-            )}
+                  ) : (
+                    <span className="flex items-center">
+                      Active & Healthy <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Weekly Revenue Trend Chart */}
+            <div className="lg:col-span-7 glass-panel p-6 rounded-3xl shadow-sm flex flex-col justify-between">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div>
+                  <h3 className="font-black text-lg text-slate-800 dark:text-white">Sales & Revenue Trend</h3>
+                  <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Last 7 Days Overview</p>
+                </div>
+                <span className="text-xs bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-xl font-bold">
+                  Weekly Total: ৳{chartData.reduce((sum, d) => sum + d.value, 0).toFixed(0)}
+                </span>
+              </div>
+
+              <div className="mt-6 w-full overflow-hidden flex items-center justify-center">
+                {chartPoints.length > 0 ? (
+                  <svg viewBox={`0 -15 ${chartWidth} ${chartHeight + 45}`} className="w-full h-44 overflow-visible">
+                    <defs>
+                      <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#6366f1" stopOpacity="0.25" />
+                        <stop offset="100%" stopColor="#6366f1" stopOpacity="0.00" />
+                      </linearGradient>
+                    </defs>
+                    {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
+                      const y = chartHeight - (ratio * (chartHeight - 40) + 20);
+                      return (
+                        <line 
+                          key={idx} 
+                          x1="20" 
+                          y1={y} 
+                          x2={chartWidth - 20} 
+                          y2={y} 
+                          className="stroke-slate-100 dark:stroke-slate-800/60" 
+                          strokeWidth="1.5" 
+                          strokeDasharray="4 4"
+                        />
+                      );
+                    })}
+
+                    <path d={fillPath} fill="url(#salesGrad)" />
+
+                    <path 
+                      d={linePath} 
+                      fill="none" 
+                      stroke="#6366f1" 
+                      strokeWidth="3.5" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      className="drop-shadow-[0_4px_8px_rgba(99,102,241,0.3)]"
+                    />
+
+                    {chartPoints.map((pt, idx) => (
+                      <g key={idx} className="group/dot cursor-pointer">
+                        <circle 
+                          cx={pt.x} 
+                          cy={pt.y} 
+                          r="7" 
+                          className="fill-indigo-500 stroke-white dark:stroke-slate-900" 
+                          strokeWidth="2.5" 
+                        />
+                        <circle 
+                          cx={pt.x} 
+                          cy={pt.y} 
+                          r="14" 
+                          className="fill-indigo-500/20 opacity-0 group-hover/dot:opacity-100 transition-all duration-300"
+                        />
+                        <text 
+                          x={pt.x} 
+                          y={pt.y - 18} 
+                          className="text-[10px] font-black fill-indigo-600 dark:fill-indigo-400 opacity-0 group-hover/dot:opacity-100 transition-opacity duration-300"
+                          textAnchor="middle"
+                        >
+                          ৳{pt.value.toFixed(0)}
+                        </text>
+                      </g>
+                    ))}
+
+                    {chartPoints.map((pt, idx) => (
+                      <text 
+                        key={idx} 
+                        x={pt.x} 
+                        y={chartHeight + 15} 
+                        className="text-[10px] font-bold fill-slate-400 dark:fill-slate-500"
+                        textAnchor="middle"
+                      >
+                        {pt.label}
+                      </text>
+                    ))}
+                  </svg>
+                ) : (
+                  <div className="h-44 flex items-center justify-center text-slate-400 text-xs">No sales data recorded this week.</div>
+                )}
+              </div>
+            </div>
+
+            {/* Category breakdown bar gauges */}
+            <div className="lg:col-span-5 glass-panel p-6 rounded-3xl shadow-sm flex flex-col justify-between">
+              <div>
+                <h3 className="font-black text-lg text-slate-800 dark:text-white">Category Distribution</h3>
+                <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Top stock classifications</p>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                {categoryData.length === 0 ? (
+                  <div className="py-12 text-center text-slate-400 text-xs font-semibold">No inventory products registered.</div>
+                ) : (
+                  categoryData.map((cat, idx) => {
+                    const colors = [
+                      'from-indigo-500 to-indigo-600',
+                      'from-emerald-500 to-emerald-600',
+                      'from-blue-500 to-blue-600',
+                      'from-amber-500 to-amber-600'
+                    ];
+                    const bgGrad = colors[idx % colors.length];
+                    return (
+                      <div key={cat.name} className="space-y-1">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-bold text-slate-700 dark:text-slate-300">{cat.name}</span>
+                          <span className="font-black text-slate-800 dark:text-white">{cat.count} items ({cat.percentage}%)</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full bg-gradient-to-r ${bgGrad} rounded-full transition-all duration-1000 ease-out`}
+                            style={{ width: `${cat.percentage}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-6 flex justify-between items-center text-xs">
+                <span className="font-semibold text-slate-400">Inventory Status:</span>
+                <button
+                  onClick={() => navigate(stats.lowStockCount > 0 ? '/products?filter=low-stock' : '/products')}
+                  className="font-extrabold text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center cursor-pointer transition-colors group"
+                  title="Click to view & manage store inventory products"
+                >
+                  {stats.lowStockCount > 0 ? (
+                    <span className="text-rose-500 flex items-center font-black animate-pulse">
+                      <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Attention Needed ({stats.lowStockCount} low stock)
+                    </span>
+                  ) : (
+                    <span className="flex items-center">
+                      Active & Healthy <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Top Selling and Expiring Products Row (Only visible for non-Inventory roles since Expiring is moved up and Top Selling is hidden for Inventory) */}
+      {!isInventoryStaff && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Top Selling Products */}
+          <div 
+            onClick={() => navigate('/reports?tab=profitability')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/reports?tab=profitability')}
+            title="Click to view Top Selling Products report"
+            className="glass-panel p-6 rounded-3xl shadow-sm space-y-6 hover:shadow-md hover:border-indigo-500/30 transition-all cursor-pointer group active:scale-[0.99] duration-200"
+          >
+            <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="p-2 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl text-white shadow-md">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-800 dark:text-white">Top Selling Products</h3>
+                <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Top 5 items by units sold</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {topSelling.length === 0 ? (
+                <div className="py-8 text-center text-slate-400 text-xs font-semibold">No sales recorded yet.</div>
+              ) : (
+                topSelling.map((p, idx) => {
+                  const maxSold = topSelling[0]?.soldCount || 1;
+                  const percentage = Math.round((p.soldCount / maxSold) * 100);
+                  return (
+                    <div key={idx} className="space-y-1">
+                      <div className="flex justify-between items-center text-xs font-semibold">
+                        <span className="font-extrabold text-slate-800 dark:text-slate-200">{p.name}</span>
+                        <span className="font-black text-indigo-500">{p.soldCount} sold <span className="text-[10px] text-slate-400 font-bold">({p.currentStock} left)</span></span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 dark:bg-slate-800/45 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full transition-all duration-1000"
+                          style={{ width: `${percentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Expiring Products Alert */}
+          <div className="glass-panel p-6 rounded-3xl shadow-sm space-y-6">
+            <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="p-2 bg-gradient-to-br from-rose-500 to-amber-600 rounded-xl text-white shadow-md">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-855 dark:text-white">Expiring Soon</h3>
+                <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Products expiring in less than 30 days</p>
+              </div>
+            </div>
+
+            <div className="space-y-3.5 max-h-60 overflow-y-auto pr-2 divide-y divide-slate-100 dark:divide-slate-800/40">
+              {expiringProducts.length === 0 ? (
+                <div className="py-8 text-center text-slate-400 text-xs font-semibold">No products expiring soon.</div>
+              ) : (
+                expiringProducts.map((p, idx) => {
+                  const daysLeft = Math.ceil((new Date(p.expirationDate) - new Date()) / (1000 * 60 * 60 * 24));
+                  return (
+                    <div key={idx} className="flex justify-between items-center text-xs py-2.5">
+                      <div>
+                        <p className="font-extrabold text-slate-800 dark:text-slate-200">{p.name}</p>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 font-semibold">Expiry: {new Date(p.expirationDate).toLocaleDateString()}</p>
+                      </div>
+                      <span className={`text-[9px] font-black uppercase px-2.5 py-0.5 rounded-lg border tracking-wider ${
+                        daysLeft <= 7 
+                          ? 'bg-rose-500/10 text-rose-600 border-rose-500/25 dark:text-rose-455' 
+                          : 'bg-amber-500/10 text-amber-600 border-amber-500/25 dark:text-amber-455'
+                      }`}>
+                        {daysLeft <= 0 ? 'Expired' : `${daysLeft} days left`}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* AI Recommendations */}
