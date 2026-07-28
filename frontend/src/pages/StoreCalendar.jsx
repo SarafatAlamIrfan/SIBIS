@@ -489,57 +489,84 @@ const StoreCalendar = ({ hideHeader = false }) => {
               </div>
 
               <div className="pt-2">
-                {selectedEvent.type === 'expiry' ? (
-                  <button
-                    onClick={() => navigate('/products')}
-                    className="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
-                  >
-                    <span>Audit Store Stock</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                ) : selectedEvent.type === 'holiday' ? (
-                  <button
-                    onClick={() => navigate('/dashboard')}
-                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
-                  >
-                    <span>Analyze Store Traffic</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                ) : selectedEvent.type === 'weather' ? (
-                  <button
-                    onClick={() => navigate('/products?filter=low-stock')}
-                    className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
-                  >
-                    <span>Optimize Stock Level</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                ) : selectedEvent.type === 'custom' ? (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleOpenEditModal(selectedEvent)}
-                      className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5 active:scale-97 transform"
-                    >
-                      <Layers className="w-4 h-4" />
-                      <span>Edit Event</span>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteCustomEvent(selectedEvent.id)}
-                      className="py-3 px-4.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center active:scale-97 transform"
-                      title="Delete Event"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                {selectedEvent && (
+                  !selectedEvent.id.startsWith('expire-') &&
+                  !selectedEvent.id.startsWith('reorder-') &&
+                  !selectedEvent.id.startsWith('holiday-') &&
+                  !selectedEvent.id.startsWith('weather-')
+                ) ? (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleOpenEditModal(selectedEvent)}
+                        className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5 active:scale-97 transform"
+                      >
+                        <Layers className="w-4 h-4" />
+                        <span>Edit Event</span>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCustomEvent(selectedEvent.id)}
+                        className="py-3 px-4.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center active:scale-97 transform"
+                        title="Delete Event"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    {/* Render Category Action button if applicable */}
+                    {selectedEvent.type === 'expiry' && (
+                      <button
+                        onClick={() => navigate('/products')}
+                        className="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
+                      >
+                        <span>Audit Store Stock</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    )}
+                    {selectedEvent.type === 'holiday' && (
+                      <button
+                        onClick={() => navigate('/dashboard')}
+                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
+                      >
+                        <span>Analyze Store Traffic</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  <button
-                    onClick={() => {
-                      navigate('/products?filter=low-stock');
-                    }}
-                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
-                  >
-                    <span>One-Click Reorder Menu</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+                  // Generated system events
+                  selectedEvent.type === 'expiry' ? (
+                    <button
+                      onClick={() => navigate('/products')}
+                      className="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
+                    >
+                      <span>Audit Store Stock</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  ) : selectedEvent.type === 'holiday' ? (
+                    <button
+                      onClick={() => navigate('/dashboard')}
+                      className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
+                    >
+                      <span>Analyze Store Traffic</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  ) : selectedEvent.type === 'weather' ? (
+                    <button
+                      onClick={() => navigate('/products?filter=low-stock')}
+                      className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
+                    >
+                      <span>Optimize Stock Level</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => navigate('/products?filter=low-stock')}
+                      className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-1.5"
+                    >
+                      <span>One-Click Reorder Menu</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  )
                 )}
                 
                 {/* Back to daily schedule button */}
