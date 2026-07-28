@@ -10,6 +10,7 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode, 
   const { currentUser, logout } = useAuth();
   const { darkMode: ctxDarkMode, toggleMode } = useTheme();
   const [activeAlertsCount, setActiveAlertsCount] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   const darkMode = propsDarkMode !== undefined ? propsDarkMode : ctxDarkMode;
@@ -140,7 +141,7 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode, 
         </Link>
       </div>
 
-      <div className="flex items-center space-x-3 sm:space-x-4">
+      <div className="flex items-center space-x-3 sm:space-x-4 relative">
         {/* Notifications Bell Icon */}
         <Link
           to="/notifications"
@@ -156,45 +157,125 @@ const Navbar = ({ darkMode: propsDarkMode, toggleDarkMode: propsToggleDarkMode, 
           )}
         </Link>
 
-        {/* Interactive Theme Palette Selector Dropdown */}
-        <ThemeSelector />
+        {/* Mobile-only profile toggle button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200/40 dark:border-slate-800/60 bg-slate-50/20 dark:bg-slate-900/20 text-slate-500 hover:text-indigo-600 hover:border-slate-350 dark:hover:border-slate-700 cursor-pointer lg:hidden transition-all duration-200 overflow-hidden"
+          title="Open profile menu"
+        >
+          {currentUser.avatar ? (
+            <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full object-cover" />
+          ) : (
+            <User className="w-4.5 h-4.5 text-slate-600 dark:text-slate-400" />
+          )}
+        </button>
 
-        <div className="h-6 w-px bg-slate-200 dark:bg-slate-800"></div>
+        {/* Mobile Dropdown Panel */}
+        {mobileMenuOpen && (
+          <>
+            <div 
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 z-40 bg-slate-900/10 dark:bg-slate-950/20 backdrop-blur-xs lg:hidden"
+            />
+            <div className="absolute right-0 top-14 w-72 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-3xl p-5 shadow-xl z-50 flex flex-col space-y-4 lg:hidden animate-[fade-in-up_0.15s_ease-out_1]">
+              {/* User Details */}
+              <div className="flex items-center space-x-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                  {currentUser.avatar ? (
+                    <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-5 h-5 text-slate-500" />
+                  )}
+                </div>
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="font-extrabold text-slate-800 dark:text-white text-xs truncate">
+                    {currentUser.name}
+                  </span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold truncate mt-0.5">
+                    {currentUser.email}
+                  </span>
+                  <div className="mt-1">
+                    <span className={`inline-block text-[8px] px-2 py-0.5 rounded-md border font-extrabold shadow-sm ${badgeClass}`}>
+                      {currentUser.role}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-        <div className="flex items-center space-x-4">
-          {/* Clickable Profile Pill */}
-          <Link
-            to="/profile"
-            className="flex items-center space-x-3 p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 group cursor-pointer border border-transparent hover:border-slate-200/50 dark:hover:border-slate-700/30"
-            title="Click to view & edit your profile"
-          >
-            <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 flex items-center justify-center flex-shrink-0">
-              {currentUser.avatar ? (
-                <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full object-cover" />
-              ) : (
-                <User className="w-4 h-4 text-slate-655 dark:text-slate-300 group-hover:text-indigo-600 transition-colors" />
-              )}
+              {/* Menu Links / Settings */}
+              <div className="space-y-3.5">
+                <Link
+                  to="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center space-x-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 py-1"
+                >
+                  <User className="w-4 h-4 text-slate-400" />
+                  <span>My Profile settings</span>
+                </Link>
+                
+                <div className="space-y-1 bg-slate-50/50 dark:bg-slate-950/20 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-800/80">
+                  <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Choose Theme</span>
+                  <ThemeSelector />
+                </div>
+              </div>
+
+              {/* Logout button */}
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                className="w-full py-2.5 bg-rose-50/50 hover:bg-rose-50 text-rose-600 border border-rose-200/20 rounded-xl text-xs font-black flex items-center justify-center space-x-1.5 cursor-pointer dark:bg-rose-950/20 dark:hover:bg-rose-950/30 dark:text-rose-400 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout Session</span>
+              </button>
             </div>
-            <div className="hidden md:flex flex-col text-left">
-              <span className="font-bold text-slate-800 text-xs dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-none">
-                {currentUser.name}
-              </span>
-              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-1">
-                {currentUser.email}
-              </span>
-            </div>
-            <span className={`hidden sm:inline-block text-[9px] px-2 py-0.5 rounded-md border font-extrabold shadow-sm ${badgeClass}`}>
-              {currentUser.role}
-            </span>
-          </Link>
+          </>
+        )}
 
-          <button
-            onClick={handleLogout}
-            className="flex items-center text-xs font-black text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors duration-150 cursor-pointer py-2 px-3 rounded-xl hover:bg-rose-50/50 dark:hover:bg-rose-950/20 border border-transparent hover:border-rose-250/20"
-          >
-            <LogOut className="w-3.5 h-3.5 mr-1.5" />
-            <span className="hidden sm:inline">Logout</span>
-          </button>
+        {/* Desktop-only items */}
+        <div className="hidden lg:flex items-center space-x-3 sm:space-x-4">
+          {/* Interactive Theme Palette Selector Dropdown */}
+          <ThemeSelector />
+
+          <div className="h-6 w-px bg-slate-200 dark:bg-slate-800"></div>
+
+          <div className="flex items-center space-x-4">
+            {/* Clickable Profile Pill */}
+            <Link
+              to="/profile"
+              className="flex items-center space-x-3 p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 group cursor-pointer border border-transparent hover:border-slate-200/50 dark:hover:border-slate-700/30"
+              title="Click to view & edit your profile"
+            >
+              <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 flex items-center justify-center flex-shrink-0">
+                {currentUser.avatar ? (
+                  <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-4 h-4 text-slate-655 dark:text-slate-300 group-hover:text-indigo-600 transition-colors" />
+                )}
+              </div>
+              <div className="hidden md:flex flex-col text-left">
+                <span className="font-bold text-slate-800 text-xs dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-none">
+                  {currentUser.name}
+                </span>
+                <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-1">
+                  {currentUser.email}
+                </span>
+              </div>
+              <span className={`hidden sm:inline-block text-[9px] px-2 py-0.5 rounded-md border font-extrabold shadow-sm ${badgeClass}`}>
+                {currentUser.role}
+              </span>
+            </Link>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center text-xs font-black text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors duration-150 cursor-pointer py-2 px-3 rounded-xl hover:bg-rose-50/50 dark:hover:bg-rose-950/20 border border-transparent hover:border-rose-250/20"
+            >
+              <LogOut className="w-3.5 h-3.5 mr-1.5" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          </div>
         </div>
       </div>
     </header>
