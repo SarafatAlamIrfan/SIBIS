@@ -385,6 +385,12 @@ const StoreCalendar = ({ hideHeader = false }) => {
                   selectedDate.getMonth() === currentMonth &&
                   selectedDate.getFullYear() === currentYear;
 
+                // Check if this date represents today
+                const isToday = 
+                  new Date().getDate() === cell.dayNum &&
+                  new Date().getMonth() === currentMonth &&
+                  new Date().getFullYear() === currentYear;
+
                 return (
                   <div 
                     key={`day-${cell.dayNum}`} 
