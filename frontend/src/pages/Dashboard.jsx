@@ -66,8 +66,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      setLoading(true);
+    const fetchDashboardData = async (showSpinner = false) => {
+      if (showSpinner) setLoading(true);
       try {
         if (isSystemAdmin) {
           // System Admin Platform Overview Data
@@ -289,11 +289,18 @@ const Dashboard = () => {
       } catch (err) {
         console.error('Failed to load dashboard data:', err);
       } finally {
-        setLoading(false);
+        if (showSpinner) setLoading(false);
       }
     };
 
-    fetchDashboardData();
+    fetchDashboardData(true);
+
+    // Set polling interval for live/real-time updates (every 10 seconds)
+    const intervalId = setInterval(() => {
+      fetchDashboardData(false);
+    }, 10000);
+
+    return () => clearInterval(intervalId);
   }, [isSystemAdmin]);
 
   const handleToggleStoreStatus = async (storeId, currentStatus) => {
