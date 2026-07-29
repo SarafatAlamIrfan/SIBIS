@@ -12,7 +12,8 @@ import {
   ArrowRight,
   RefreshCw,
   Layers,
-  Sparkles
+  Sparkles,
+  Search
 } from 'lucide-react';
 
 const ReorderList = () => {
@@ -25,6 +26,7 @@ const ReorderList = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Load saved reorder list from localStorage & fetch latest DB product data
   const loadData = async (showSpinner = true) => {
@@ -150,11 +152,25 @@ const ReorderList = () => {
     }
   };
 
+  // Filter reorder items by product name, SKU, or supplier
+  const filteredReorderItems = reorderItems.filter(item => {
+    const prod = item.product;
+    if (!prod) return false;
+    
+    return (
+      prod.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      prod.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (prod.supplierId?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
+
   const handleSelectAll = () => {
-    if (selectedItems.length === reorderItems.length) {
-      setSelectedItems([]);
+    const filteredIds = filteredReorderItems.map(i => i.productId);
+    const allFilteredSelected = filteredIds.every(id => selectedItems.includes(id));
+    if (allFilteredSelected) {
+      setSelectedItems(selectedItems.filter(id => !filteredIds.includes(id)));
     } else {
-      setSelectedItems(reorderItems.map(i => i.productId));
+      setSelectedItems([...new Set([...selectedItems, ...filteredIds])]);
     }
   };
 
@@ -274,18 +290,36 @@ const ReorderList = () => {
         </div>
       )}
 
+      {/* Search Input Bar */}
+      {reorderItems.length > 0 && (
+        <div className="flex justify-end bg-white/40 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm backdrop-blur-md">
+          <div className="relative w-full md:w-80">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-slate-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search by product, SKU, or supplier..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="block w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl text-slate-800 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-xs dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Main Table View */}
       <div className="glass-panel border border-slate-200/40 dark:border-slate-800/40 rounded-3xl shadow-sm overflow-hidden">
         <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-3 text-xs">
             <input 
               type="checkbox"
-              checked={reorderItems.length > 0 && selectedItems.length === reorderItems.length}
+              checked={filteredReorderItems.length > 0 && filteredReorderItems.every(i => selectedItems.includes(i.productId))}
               onChange={handleSelectAll}
               className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
             />
             <span className="font-bold text-slate-700 dark:text-slate-300">
-              Select All ({selectedItems.length}/{reorderItems.length} selected)
+              Select All ({filteredReorderItems.filter(i => selectedItems.includes(i.productId)).length}/{filteredReorderItems.length} selected)
             </span>
           </div>
 
@@ -336,8 +370,14 @@ const ReorderList = () => {
                     </div>
                   </td>
                 </tr>
+              ) : filteredReorderItems.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-16 text-slate-400 font-bold uppercase tracking-wider">
+                    No products matching search query.
+                  </td>
+                </tr>
               ) : (
-                reorderItems.map((item) => {
+                filteredReorderItems.map((item) => {
                   const prod = item.product;
                   const isSelected = selectedItems.includes(item.productId);
                   const isLowStock = prod.currentStock <= prod.minStockThreshold;

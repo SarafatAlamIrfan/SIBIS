@@ -366,7 +366,7 @@ const Products = () => {
             placeholder="Search by product name or SKU..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-slate-805 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+            className="block w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl text-slate-800 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-xs dark:border-slate-700 dark:bg-slate-950 dark:text-white"
           />
         </div>
       </div>
