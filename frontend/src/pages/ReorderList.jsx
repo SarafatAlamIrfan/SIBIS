@@ -158,8 +158,8 @@ const ReorderList = () => {
     if (!prod) return false;
     
     return (
-      prod.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      prod.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (prod.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (prod.sku || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (prod.supplierId?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
   });

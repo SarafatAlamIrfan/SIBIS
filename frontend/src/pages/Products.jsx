@@ -203,8 +203,8 @@ const Products = () => {
 
   // Filter products by category, low stock toggle, expiring soon toggle, AND search query
   const filteredProducts = products.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.sku.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.sku || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
     const isLowStock = p.currentStock <= p.minStockThreshold;
     const matchesLowStock = !showLowStockOnly || isLowStock;
